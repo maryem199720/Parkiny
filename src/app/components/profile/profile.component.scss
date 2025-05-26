@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #3B82F6; /* AppColors.primaryColor */
+  --primary-light: #DBEAFE; /* AppColors.primaryLightColor */
+  --secondary: #F59E0B; /* AppColors.secondaryColor */
+  --accent-light: #FEF3C7; /* AppColors.accentLightColor */
+  --success: #10B981; /* AppColors.successColor */
+  --error: #EF4444; /* AppColors.errorColor */
+  --background: #F8FAFC; /* AppColors.backgroundColor */
+  --text: #1F2937; /* AppColors.textColor */
+  --subtitle: #6B7280; /* AppColors.subtitleColor */
+  --white: #FFFFFF; /* AppColors.whiteColor */
+  --gray: #E5E7EB; /* AppColors.grayColor */
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--background);
+  min-height: 100vh;
+}
+
+.rounded-button {
+  border-radius: 8px;
+}
+
+.rounded-lg {
+  border-radius: 12px;
+}
+
+.shadow-lg {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}

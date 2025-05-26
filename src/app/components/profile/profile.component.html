@@ -1,356 +1,251 @@
-<main class="container mx-auto px-4 py-8">
-  <!-- Profile Header -->
-  <div class="bg-white rounded-lg p-8 mb-8 shadow-lg">
-    <div class="flex flex-col md:flex-row items-center md:items-start gap-8">
-      <div class="flex-1">
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-          <div>
-            <h2 class="text-3xl font-bold text-gray-900">{{ user().name }}</h2>
-            <p class="text-gray-500">Membre depuis {{ user().memberSince }}</p>
-          </div>
-          <button
-            (click)="toggleEdit()"
-            class="mt-4 md:mt-0 bg-gray-100 text-gray-700 px-4 py-2 rounded-button flex items-center gap-2 hover:bg-gray-200 transition-colors whitespace-nowrap"
-          >
-            <div class="w-5 h-5 flex items-center justify-center">
-              <i class="ri-edit-line"></i>
-            </div>
-            {{ isEditing() ? 'Annuler' : 'Modifier le profil' }}
-          </button>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          <div class="bg-gray-50 rounded p-4">
-            <div class="flex items-center gap-3 mb-2">
-              <div class="w-10 h-10 rounded-full bg-primary bg-opacity-20 flex items-center justify-center text-primary">
-                <i class="ri-car-line ri-lg"></i>
-              </div>
-              <div>
-                <h3 class="font-medium text-gray-900">Véhicule principal</h3>
-                <p class="text-gray-400 text-sm">
-                  {{ user().vehicle }}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div class="bg-gray-50 rounded p-4">
-            <div class="flex items-center gap-3 mb-2">
-              <div class="w-10 h-10 rounded-full bg-primary bg-opacity-20 flex items-center justify-center text-primary">
-                <i class="ri-bank-card-line ri-lg"></i>
-              </div>
-              <div>
-                <h3 class="font-medium text-gray-900">Méthode de paiement</h3>
-                <p class="text-gray-400 text-sm">
-                  {{ user().paymentMethod }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+<div class="flex min-h-screen bg-background font-poppins">
+  <!-- Sidebar -->
+  <aside class="w-64 bg-white shadow-lg p-4">
+    <div class="flex items-center gap-2 mb-6">
+      <i class="ri-user-line text-2xl text-primary"></i>
+      <h2 class="text-xl font-bold text-text">{{ user().firstName }} {{ user().lastName }}</h2>
     </div>
-  </div>
+    <nav class="space-y-2">
+      <button
+        (click)="navigateTo('/home')"
+        class="w-full flex items-center gap-2 p-2 text-text hover:bg-gray-100 rounded-lg"
+      >
+        <i class="ri-home-line"></i> Accueil
+      </button>
+      <button
+        class="w-full flex items-center gap-2 p-2 bg-primary text-white rounded-lg"
+      >
+        <i class="ri-user-line"></i> Profil
+      </button>
+      <button
+        (click)="navigateTo('/notification-settings')"
+        class="w-full flex items-center gap-2 p-2 text-text hover:bg-gray-100 rounded-lg"
+      >
+        <i class="ri-notification-line"></i> Notifications
+      </button>
+      <button
+        (click)="navigateTo('/privacy-settings')"
+        class="w-full flex items-center gap-2 p-2 text-text hover:bg-gray-100 rounded-lg"
+      >
+        <i class="ri-shield-line"></i> Confidentialité
+      </button>
+      <button
+        (click)="navigateTo('/language-preferences')"
+        class="w-full flex items-center gap-2 p-2 text-text hover:bg-gray-100 rounded-lg"
+      >
+        <i class="ri-global-line"></i> Langue
+      </button>
+      <button
+        (click)="navigateTo('/help-support')"
+        class="w-full flex items-center gap-2 p-2 text-text hover:bg-gray-100 rounded-lg"
+      >
+        <i class="ri-question-line"></i> Aide
+      </button>
+      <button
+        (click)="logout()"
+        class="w-full flex items-center gap-2 p-2 text-error hover:bg-error hover:bg-opacity-10 rounded-lg"
+      >
+        <i class="ri-logout-box-line"></i> Déconnexion
+      </button>
+    </nav>
+  </aside>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <!-- Coordonnées -->
-    <div class="lg:col-span-1">
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="p-6 border-b border-gray-200">
-          <h3 class="text-xl font-bold text-gray-900">Mes coordonnées</h3>
-        </div>
-        <div class="p-6 space-y-6">
-          @if (isEditing()) {
-            <form (ngSubmit)="saveChanges()">
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm text-gray-400 mb-1">Nom complet</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="user().name"
-                    name="name"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm text-gray-400 mb-1">Email</label>
-                  <input
-                    type="email"
-                    [(ngModel)]="user().email"
-                    name="email"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors"
-                    readonly
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm text-gray-400 mb-1">Téléphone</label>
-                  <input
-                    type="tel"
-                    [(ngModel)]="user().phone"
-                    name="phone"
-                    class="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  class="w-full bg-primary text-gray-900 px-4 py-3 rounded-button flex items-center justify-center gap-2 hover:bg-opacity-90 transition-colors mt-4 whitespace-nowrap"
-                >
-                  Enregistrer les modifications
-                </button>
-              </div>
-            </form>
-          } @else {
-            <div class="flex items-start gap-4">
-              <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-primary">
-                <i class="ri-mail-line ri-lg"></i>
-              </div>
-              <div>
-                <p class="text-sm text-gray-400">Email</p>
-                <p class="text-gray-900">{{ user().email }}</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-4">
-              <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-primary">
-                <i class="ri-smartphone-line ri-lg"></i>
-              </div>
-              <div>
-                <p class="text-sm text-gray-400">Téléphone</p>
-                <p class="text-gray-900">{{ user().phone }}</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-4">
-              <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-primary">
-                <i class="ri-vip-crown-line ri-lg"></i>
-              </div>
-              <div>
-                <p class="text-sm text-gray-400">Abonnement</p>
-                <p class="text-gray-900">{{ user().hasSubscription ? 'Actif' : 'Aucun' }}</p>
-              </div>
-            </div>
-            <button
-              (click)="toggleEdit()"
-              class="w-full bg-gray-100 text-gray-700 px-4 py-3 rounded-button flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors mt-4 whitespace-nowrap"
-            >
-              <div class="w-5 h-5 flex items-center justify-center">
-                <i class="ri-edit-line"></i>
-              </div>
-              Modifier mes coordonnées
-            </button>
-          }
-        </div>
+  <!-- Main Content -->
+  <main class="flex-1 p-8">
+    <!-- Header -->
+    <header class="flex justify-between items-center mb-8">
+      <h1 class="text-2xl font-bold text-text">Mon Profil</h1>
+      <button (click)="logout()" class="text-primary hover:text-primary-dark">
+        <i class="ri-logout-box-line ri-lg"></i>
+      </button>
+    </header>
+
+    <!-- Loading State -->
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center h-64">
+        <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-2 text-text">Chargement</p>
       </div>
-
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden mt-8">
-        <div class="p-6 border-b border-gray-200">
-          <h3 class="text-xl font-bold text-gray-900">Préférences</h3>
+    } @else {
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div class="mb-4 p-4 bg-error bg-opacity-10 border-l-4 border-error rounded-lg flex items-center">
+          <i class="ri-error-warning-line text-error mr-2"></i>
+          <p class="text-error">{{ errorMessage() }}</p>
         </div>
-        <div class="p-6 space-y-6">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-primary">
-                <i class="ri-notification-3-line ri-lg"></i>
+      }
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Profile and Actions -->
+        <div class="lg:col-span-1 space-y-6">
+          <!-- Profile Card -->
+          <div class="bg-white rounded-lg p-6 shadow-lg">
+            <div class="flex flex-col items-center">
+              <div class="w-20 h-20 rounded-full bg-primary-light flex items-center justify-center text-primary text-2xl font-bold">
+                {{ user().firstName[0] || '' }}{{ user().lastName[0] || '' }}
               </div>
-              <div>
-                <p class="text-gray-900">Notifications par email</p>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                class="sr-only peer"
-                [checked]="preferences().emailNotifications"
-                (change)="toggleNotification('email')"
-              />
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-            </label>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-primary">
-                <i class="ri-smartphone-line ri-lg"></i>
-              </div>
-              <div>
-                <p class="text-gray-900">Notifications SMS</p>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                class="sr-only peer"
-                [checked]="preferences().smsNotifications"
-                (change)="toggleNotification('sms')"
-              />
-              <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-            </label>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-primary">
-                <i class="ri-earth-line ri-lg"></i>
-              </div>
-              <div>
-                <p class="text-gray-900">Langue</p>
-              </div>
-            </div>
-            <div class="relative">
+              <h2 class="mt-4 text-2xl font-bold text-text">{{ user().firstName }} {{ user().lastName }}</h2>
+              <p class="text-subtitle text-sm">{{ user().email }}</p>
+              <p class="text-subtitle text-sm">Téléphone: {{ user().phone || 'Non défini' }}</p>
               <button
-                class="bg-gray-100 text-gray-700 px-4 py-2 rounded-button flex items-center gap-2 hover:bg-gray-200 transition-colors whitespace-nowrap"
+                (click)="openEditProfileDialog()"
+                class="mt-4 bg-primary text-gray-900 px-4 py-2 rounded-button flex items-center gap-2 hover:bg-opacity-90 transition-colors"
               >
-                <span>{{ preferences().language }}</span>
-                <div class="w-5 h-5 flex items-center justify-center">
-                  <i class="ri-arrow-down-s-line"></i>
-                </div>
+                <i class="ri-edit-line"></i> Modifier mes informations
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Historique des réservations -->
-    <div class="lg:col-span-2">
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-          <div>
-            <h3 class="text-xl font-bold text-gray-900">Historique des réservations</h3>
-            <p class="text-gray-400">{{ reservations().length }} réservations au total</p>
+          <!-- Password Change -->
+          <div class="bg-white rounded-lg p-6 shadow-lg">
+            <div class="flex items-center gap-4 cursor-pointer" (click)="openPasswordChangeDialog()">
+              <div class="p-2 bg-primary-light rounded-lg">
+                <i class="ri-lock-line text-primary"></i>
+              </div>
+              <div>
+                <h3 class="font-medium text-text">Changer le Mot de Passe</h3>
+                <p class="text-subtitle text-sm">Mettre à jour la sécurité du compte</p>
+              </div>
+              <i class="ri-chevron-right text-subtitle ml-auto"></i>
+            </div>
           </div>
-        </div>
-        <div class="p-4">
-          <div class="flex overflow-x-auto mb-6 py-2 gap-2">
-            <button
-              (click)="filterReservations('all')"
-              [class.bg-primary]="activeTab() === 'all'"
-              [class.text-gray-900]="activeTab() === 'all'"
-              [class.bg-gray-100]="activeTab() !== 'all'"
-              [class.text-gray-700]="activeTab() !== 'all'"
-              class="px-4 py-2 rounded-full font-medium whitespace-nowrap transition-colors"
-            >
-              Toutes
-            </button>
-            <button
-              (click)="filterReservations('ongoing')"
-              [class.bg-blue-100]="activeTab() === 'ongoing'"
-              [class.text-blue-800]="activeTab() === 'ongoing'"
-              [class.bg-gray-100]="activeTab() !== 'ongoing'"
-              [class.text-gray-700]="activeTab() !== 'ongoing'"
-              class="px-4 py-2 rounded-full font-medium whitespace-nowrap transition-colors"
-            >
-              En cours
-            </button>
-            <button
-              (click)="filterReservations('upcoming')"
-              [class.bg-yellow-100]="activeTab() === 'upcoming'"
-              [class.text-yellow-800]="activeTab() === 'upcoming'"
-              [class.bg-gray-100]="activeTab() !== 'upcoming'"
-              [class.text-gray-700]="activeTab() !== 'upcoming'"
-              class="px-4 py-2 rounded-full font-medium whitespace-nowrap transition-colors"
-            >
-              À venir
-            </button>
-            <button
-              (click)="filterReservations('completed')"
-              [class.bg-green-100]="activeTab() === 'completed'"
-              [class.text-green-800]="activeTab() === 'completed'"
-              [class.bg-gray-100]="activeTab() !== 'completed'"
-              [class.text-gray-700]="activeTab() !== 'completed'"
-              class="px-4 py-2 rounded-full font-medium whitespace-nowrap transition-colors"
-            >
-              Terminées
-            </button>
-            <button
-              (click)="filterReservations('cancelled')"
-              [class.bg-red-100]="activeTab() === 'cancelled'"
-              [class.text-red-800]="activeTab() === 'cancelled'"
-              [class.bg-gray-100]="activeTab() !== 'cancelled'"
-              [class.text-gray-700]="activeTab() !== 'cancelled'"
-              class="px-4 py-2 rounded-full font-medium whitespace-nowrap transition-colors"
-            >
-              Annulées
-            </button>
-          </div>
-          <div class="space-y-4">
-            @for (reservation of reservations(); track reservation.id) {
-              @if (activeTab() === 'all' || activeTab() === reservation.status) {
-                <div
-                  class="reservation-card bg-white rounded-lg p-4 shadow"
-                  [class.border-l-4]="true"
-                  [class.border-blue-500]="reservation.status === 'ongoing'"
-                  [class.border-yellow-500]="reservation.status === 'upcoming'"
-                  [class.border-green-500]="reservation.status === 'completed'"
-                  [class.border-red-500]="reservation.status === 'cancelled'"
-                >
-                  <div class="flex flex-col md:flex-row justify-between gap-4">
-                    <div>
-                      <div class="flex items-center">
-                        <span
-                          class="status-indicator"
-                          [class.bg-blue-500]="reservation.status === 'ongoing'"
-                          [class.bg-yellow-500]="reservation.status === 'upcoming'"
-                          [class.bg-green-500]="reservation.status === 'completed'"
-                          [class.bg-red-500]="reservation.status === 'cancelled'"
-                        ></span>
-                        <span
-                          class="font-medium"
-                          [class.text-blue-500]="reservation.status === 'ongoing'"
-                          [class.text-yellow-500]="reservation.status === 'upcoming'"
-                          [class.text-green-500]="reservation.status === 'completed'"
-                          [class.text-red-500]="reservation.status === 'cancelled'"
-                        >
-                          {{ 
-                            reservation.status === 'ongoing' ? 'En cours' :
-                            reservation.status === 'upcoming' ? 'À venir' :
-                            reservation.status === 'completed' ? 'Terminée' : 'Annulée'
-                          }}
-                        </span>
-                      </div>
-                      <h4 class="text-lg font-bold text-gray-900 mt-2">
-                        {{ reservation.parking }}
-                      </h4>
-                      <p class="text-gray-500">{{ reservation.spot }}</p>
-                      <div class="flex items-center gap-2 mt-2 text-gray-400">
-                        <div class="w-4 h-4 flex items-center justify-center">
-                          <i class="ri-time-line"></i>
-                        </div>
-                        <span>{{ reservation.date }}</span>
-                      </div>
-                    </div>
-                    <div class="flex flex-col items-end justify-between">
-                      <span class="text-xl font-bold text-gray-900">{{ reservation.price }}</span>
-                      <div class="flex gap-2 mt-2">
-                        @if (reservation.status === 'upcoming') {
-                          <button
-                            class="bg-gray-100 text-gray-700 px-4 py-2 rounded-button hover:bg-gray-200 transition-colors whitespace-nowrap"
-                          >
-                            Annuler
-                          </button>
-                        }
-                        @if (reservation.status === 'completed' || reservation.status === 'cancelled') {
-                          <button
-                            class="bg-gray-100 text-gray-700 px-4 py-2 rounded-button hover:bg-gray-200 transition-colors whitespace-nowrap"
-                          >
-                            Facture
-                          </button>
-                        }
-                        <button
-                          class="bg-primary text-gray-900 px-4 py-2 rounded-button font-medium hover:bg-opacity-90 transition-colors whitespace-nowrap"
-                        >
-                          Voir détails
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+
+          <!-- Subscription -->
+          <div class="bg-white rounded-lg p-6 shadow-lg">
+            <div class="flex items-center justify-between cursor-pointer" (click)="isSubscriptionExpanded.set(!isSubscriptionExpanded())">
+              <div class="flex items-center gap-4">
+                <div class="p-2 bg-accent-light rounded-lg">
+                  <i class="ri-subscription-line text-secondary"></i>
                 </div>
-              }
+                <h3 class="text-lg font-semibold text-text">Mon Abonnement</h3>
+              </div>
+              <i class="ri-{{ isSubscriptionExpanded() ? 'expand-less' : 'expand-more' }} text-subtitle"></i>
+            </div>
+            @if (isSubscriptionExpanded()) {
+              <div class="mt-4">
+                <div class="p-4 bg-gray-100 rounded-lg">
+                  <h4 class="font-medium text-text">Plan Premium</h4>
+                  <p class="text-subtitle text-sm">Valide jusqu'au {{ user().subscription.subscriptionEndDate }}</p>
+                  <button
+                    (click)="navigateTo('/subscription')"
+                    class="mt-2 flex items-center gap-2 text-primary hover:text-primary-dark"
+                  >
+                    Gérer <i class="ri-chevron-right"></i>
+                  </button>
+                </div>
+                <button
+                  (click)="navigateTo('/subscription-history')"
+                  class="mt-4 flex items-center gap-2 text-subtitle hover:text-subtitle-dark"
+                >
+                  <i class="ri-history-line"></i> Voir l'historique des abonnements
+                </button>
+              </div>
             }
           </div>
-          <div class="mt-6 flex justify-center">
-            <button
-              class="bg-gray-100 text-gray-700 px-6 py-2 rounded-button hover:bg-gray-200 transition-colors whitespace-nowrap"
-            >
-              Voir plus de réservations
-            </button>
+        </div>
+
+        <!-- Reservations and Vehicles -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Reservations -->
+          <div class="bg-white rounded-lg p-6 shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-4">
+                <div class="p-2 bg-success bg-opacity-20 rounded-lg">
+                  <i class="ri-event-line text-success"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-text">Mes Réservations</h3>
+              </div>
+            </div>
+            <div class="flex justify-center gap-4 mb-4">
+              <button
+                (click)="toggleReservationsTab(true)"
+                class="px-6 py-2 rounded-lg font-medium transition-colors"
+                [class.bg-primary]="isActiveReservations()"
+                [class.text-white]="isActiveReservations()"
+                [class.bg-gray]="!isActiveReservations()"
+                [class.text-text]="!isActiveReservations()"
+              >
+                Actives
+              </button>
+              <button
+                (click)="toggleReservationsTab(false)"
+                class="px-6 py-2 rounded-lg font-medium transition-colors"
+                [class.bg-primary]="!isActiveReservations()"
+                [class.text-white]="!isActiveReservations()"
+                [class.bg-gray]="isActiveReservations()"
+                [class.text-text]="isActiveReservations()"
+              >
+                Expirées
+              </button>
+            </div>
+            <div class="max-h-96 overflow-y-auto">
+              @if ((isActiveReservations() ? activeReservations() : expiredReservations()).length === 0) {
+                <div class="flex flex-col items-center py-4">
+                  <i class="ri-event-busy-line text-4xl text-subtitle"></i>
+                  <p class="text-subtitle mt-2">{{ isActiveReservations() ? 'Aucune réservation active' : 'Aucune réservation expirée' }}</p>
+                </div>
+              } @else {
+                @for (reservation of (isActiveReservations() ? activeReservations() : expiredReservations()); track reservation.parkingSpotId) {
+                  <div class="flex items-center gap-4 p-4 bg-white rounded-lg shadow mb-2">
+                    <div class="p-2 bg-primary-light rounded-lg">
+                      <i class="ri-parking-box-line text-primary"></i>
+                    </div>
+                    <div class="flex-1">
+                      <h4 class="font-medium text-text">Place {{ reservation.parkingSpotId }}</h4>
+                      <p class="text-subtitle text-sm">Début: {{ reservation.startTime | date: 'dd/MM/yyyy HH:mm' }}</p>
+                      <p class="text-subtitle text-sm">Fin: {{ reservation.endTime | date: 'dd/MM/yyyy HH:mm' }}</p>
+                      <p class="text-subtitle text-sm">Coût: {{ reservation.totalCost }} DT</p>
+                    </div>
+                    <i class="ri-{{ reservation.status === 'PENDING' ? 'time-line' : 'check-circle-line' }} text-{{ reservation.status === 'PENDING' ? 'secondary' : 'success' }}"></i>
+                  </div>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Vehicles -->
+          <div class="bg-white rounded-lg p-6 shadow-lg">
+            <div class="flex items-center justify-between cursor-pointer" (click)="isVehiclesExpanded.set(!isVehiclesExpanded())">
+              <div class="flex items-center gap-4">
+                <div class="p-2 bg-primary-light rounded-lg">
+                  <i class="ri-car-line text-primary"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-text">Mes Véhicules</h3>
+              </div>
+              <i class="ri-{{ isVehiclesExpanded() ? 'expand-less' : 'expand-more' }} text-subtitle"></i>
+            </div>
+            @if (isVehiclesExpanded()) {
+              <div class="mt-4">
+                @if (user().vehicles.length > 0) {
+                  @for (vehicle of user().vehicles; track vehicle.matricule) {
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 rounded-lg mb-2 cursor-pointer" (click)="navigateTo('/vehicle-details/' + vehicle.matricule)">
+                      <div class="p-2 bg-primary-light rounded-lg">
+                        <i class="ri-car-line text-primary"></i>
+                      </div>
+                      <div>
+                        <h4 class="font-medium text-text">{{ vehicle.brand }} {{ vehicle.model }}</h4>
+                        <p class="text-subtitle text-sm">Matricule: {{ vehicle.matricule }} • Couleur: {{ vehicle.color }}</p>
+                      </div>
+                      <i class="ri-chevron-right text-subtitle ml-auto"></i>
+                    </div>
+                  }
+                } @else {
+                  <div class="flex flex-col items-center py-4">
+                    <i class="ri-car-line text-4xl text-subtitle"></i>
+                    <p class="text-subtitle mt-2">Aucun véhicule</p>
+                  </div>
+                }
+                <button
+                  (click)="openAddVehicleDialog()"
+                  class="mt-4 flex items-center gap-2 text-primary hover:text-primary-dark"
+                >
+                  <i class="ri-add-line"></i> Ajouter un Véhicule
+                </button>
+              </div>
+            }
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</main>
+    }
+  </main>
+</div>

@@ -1,44 +1,129 @@
-<div class="container" [ngClass]="{'active': isSignUp}">
-    <!-- Sign Up Form -->
-    <div class="form-container sign-up">
-      <form [formGroup]="signupForm" (ngSubmit)="register()">
-        <h1>Créer un compte</h1>
-        <input type="text" placeholder="Prénom" formControlName="firstName">
-        <input type="text" placeholder="Nom" formControlName="lastName">
-        <input type="email" placeholder="Email" formControlName="email">
-        <input type="text" placeholder="Téléphone" formControlName="phone">
-        <input type="password" placeholder="Mot de passe" formControlName="password">
-        <input type="password" placeholder="Confirmer le mot de passe" formControlName="confirmPassword">
-        <button type="submit">S'inscrire</button>
-      </form>
-    </div>
-  
-    <!-- Login Form -->
-    <div class="form-container sign-in">
-      <form [formGroup]="loginForm" (ngSubmit)="login()">
-        <h1>Connexion</h1>
-        <input type="email" placeholder="Email" formControlName="email">
-        <input type="password" placeholder="Mot de passe" formControlName="password">
-        <a href="#">Mot de passe oublié ?</a>
-        <button type="submit">Se connecter</button>
-      </form>
-    </div>
-  
-    <!-- Toggle Button -->
-    <div class="toggle-container">
-      <div class="toggle">
-        <div class="toggle-panel toggle-left">
-          <h1>Bienvenue !</h1>
-          <p>Déjà un compte ? Connectez-vous.</p>
-          <button (click)="toggleForm()">Se connecter</button>
-
+<div id="auth-container" class="max-w-4xl mx-auto my-8 p-6 bg-white rounded-3xl shadow-md flex min-h-[600px] relative overflow-hidden">
+  <!-- Sign Up Form -->
+  <div id="sign-up" class="form-container absolute top-0 left-0 w-1/2 h-full flex items-center justify-center transition-all duration-500 ease-in-out" [ngClass]="{'left-0': !isSignUp, 'left-1/2': isSignUp}" [ngStyle]="{'z-index': isSignUp ? '1' : '0', 'opacity': isSignUp ? '1' : '0', 'pointer-events': isSignUp ? 'auto' : 'none'}">
+    <form class="w-full max-w-md p-8 bg-white" [formGroup]="signupForm" (ngSubmit)="register()">
+      <h2 class="text-3xl font-display font-bold text-primary mb-2 text-center">Créer un compte</h2>
+      <p class="text-gray-600 text-center mb-6">Rejoignez notre communauté dès aujourd'hui</p>
+      <div class="space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="relative">
+            <input id="signup-firstname" type="text" formControlName="firstName" class="input-field w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-secondary/50" placeholder=" " />
+            <label for="signup-firstname" class="floating-label">Prénom</label>
+            <div *ngIf="signupForm.get('firstName')?.invalid && signupForm.get('firstName')?.touched" class="text-red-500 text-xs mt-1">
+              Prénom requis
+            </div>
+          </div>
+          <div class="relative">
+            <input id="signup-lastname" type="text" formControlName="lastName" class="input-field w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-secondary/50" placeholder=" " />
+            <label for="signup-lastname" class="floating-label">Nom</label>
+            <div *ngIf="signupForm.get('lastName')?.invalid && signupForm.get('lastName')?.touched" class="text-red-500 text-xs mt-1">
+              Nom requis
+            </div>
+          </div>
         </div>
-        <div class="toggle-panel toggle-right">
-          <h1>Rejoignez-nous !</h1>
-          <p>Créez un compte pour profiter de toutes les fonctionnalités.</p>
-          <button (click)="toggleForm()">S'inscrire</button>
+        <div class="relative">
+          <input id="signup-email" type="email" formControlName="email" class="input-field w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-secondary/50" placeholder=" " />
+          <label for="signup-email" class="floating-label">Email</label>
+          <div *ngIf="signupForm.get('email')?.invalid && signupForm.get('email')?.touched" class="text-red-500 text-xs mt-1">
+            <span *ngIf="signupForm.get('email')?.hasError('required')">Email requis</span>
+            <span *ngIf="signupForm.get('email')?.hasError('email')">Email invalide</span>
+          </div>
+        </div>
+        <div class="relative">
+          <input id="signup-phone" type="tel" formControlName="phone" class="input-field w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-secondary/50" placeholder=" " />
+          <label for="signup-phone" class="floating-label">Téléphone</label>
+          <div *ngIf="signupForm.get('phone')?.invalid && signupForm.get('phone')?.touched" class="text-red-500 text-xs mt-1">
+            <span *ngIf="signupForm.get('phone')?.hasError('required')">Téléphone requis</span>
+            <span *ngIf="signupForm.get('phone')?.hasError('pattern')">Téléphone doit contenir 10 chiffres</span>
+          </div>
+        </div>
+        <div class="relative">
+          <input id="signup-password" [type]="showSignupPassword ? 'text' : 'password'" formControlName="password" class="input-field w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-secondary/50" placeholder=" " />
+          <label for="signup-password" class="floating-label">Mot de passe</label>
+          <i class="password-toggle" [ngClass]="showSignupPassword ? 'ri-eye-off-line' : 'ri-eye-line'" (click)="toggleSignupPassword()"></i>
+          <div *ngIf="signupForm.get('password')?.invalid && signupForm.get('password')?.touched" class="text-red-500 text-xs mt-1">
+            <span *ngIf="signupForm.get('password')?.hasError('required')">Mot de passe requis</span>
+            <span *ngIf="signupForm.get('password')?.hasError('minlength')">Minimum 6 caractères</span>
+          </div>
+        </div>
+        <div class="relative">
+          <input id="signup-confirm-password" [type]="showSignupConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" class="input-field w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-secondary/50" placeholder=" " />
+          <label for="signup-confirm-password" class="floating-label">Confirmer le mot de passe</label>
+          <i class="password-toggle" [ngClass]="showSignupConfirmPassword ? 'ri-eye-off-line' : 'ri-eye-line'" (click)="toggleSignupConfirmPassword()"></i>
+          <div *ngIf="signupForm.get('confirmPassword')?.invalid && signupForm.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1">
+            Mot de passe requis
+          </div>
+          <div *ngIf="signupForm.hasError('mismatch') && signupForm.get('confirmPassword')?.touched" class="text-red-500 text-xs mt-1">
+            Les mots de passe ne correspondent pas
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary w-full py-3 rounded-lg text-white font-medium mt-6 mb-4" [disabled]="signupForm.invalid">
+        S'inscrire
+      </button>
+      <div class="text-center text-sm text-gray-600">
+        En vous inscrivant, vous acceptez nos <a href="#" class="text-primary hover:underline">Conditions d'utilisation</a> et notre <a href="#" class="text-primary hover:underline">Politique de confidentialité</a>.
+      </div>
+    </form>
+  </div>
+
+  <!-- Sign In Form -->
+  <div id="sign-in" class="form-container absolute top-0 right-0 w-1/2 h-full flex items-center justify-center transition-all duration-500 ease-in-out" [ngClass]="{'right-0': isSignUp, 'right-1/2': !isSignUp}" [ngStyle]="{'z-index': !isSignUp ? '1' : '0', 'opacity': !isSignUp ? '1' : '0', 'pointer-events': !isSignUp ? 'auto' : 'none'}">
+    <form class="w-full max-w-md p-8 bg-white" [formGroup]="loginForm" (ngSubmit)="login()">
+      <h2 class="text-3xl font-display font-bold text-primary mb-2 text-center">Content de vous revoir</h2>
+      <p class="text-gray-600 text-center mb-6">Connectez-vous pour accéder à votre compte</p>
+      <div class="space-y-5">
+        <div class="relative">
+          <input id="login-email" type="email" formControlName="email" class="input-field w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-secondary/50" placeholder=" " />
+          <label for="login-email" class="floating-label">Email</label>
+          <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="text-red-500 text-xs mt-1">
+            <span *ngIf="loginForm.get('email')?.hasError('required')">Email requis</span>
+            <span *ngIf="loginForm.get('email')?.hasError('email')">Email invalide</span>
+          </div>
+        </div>
+        <div class="relative">
+          <input id="login-password" [type]="showLoginPassword ? 'text' : 'password'" formControlName="password" class="input-field w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-secondary/50" placeholder=" " />
+          <label for="login-password" class="floating-label">Mot de passe</label>
+          <i class="password-toggle" [ngClass]="showLoginPassword ? 'ri-eye-off-line' : 'ri-eye-line'" (click)="toggleLoginPassword()"></i>
+          <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="text-red-500 text-xs mt-1">
+            <span *ngIf="loginForm.get('password')?.hasError('required')">Mot de passe requis</span>
+            <span *ngIf="loginForm.get('password')?.hasError('minlength')">Minimum 6 caractères</span>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <input type="checkbox" id="remember-me" formControlName="rememberMe" class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" />
+            <label for="remember-me" class="ml-2 block text-sm text-gray-700">Se souvenir de moi</label>
+          </div>
+          <a href="#" class="text-sm text-primary hover:underline">Mot de passe oublié?</a>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary w-full py-3 rounded-lg text-white font-medium mt-6 mb-4" [disabled]="loginForm.invalid">
+        Se connecter
+      </button>
+      <div class="text-center text-sm text-gray-600">
+        Vous n'avez pas de compte? <a class="text-primary hover:underline font-medium" (click)="toggleForm()">S'inscrire</a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Toggle Panel -->
+  <div id="toggle-container" class="absolute top-0 w-1/2 h-full transition-all duration-500 ease-in-out" [ngClass]="{'left-0': isSignUp, 'left-1/2': !isSignUp}">
+    <div id="toggle" class="toggle w-full h-full flex">
+      <div id="toggle-left" class="toggle-panel w-full flex items-center justify-center" [ngClass]="{'opacity-100': isSignUp, 'opacity-0': !isSignUp}">
+        <div class="text-center">
+          <h2 class="text-3xl font-display font-bold mb-4 text-white">Nouveau ici?</h2>
+          <p class="mb-6 text-gold-200">Inscrivez-vous et découvrez toutes les fonctionnalités exclusives que nous proposons à nos membres!</p>
+          <button class="btn-secondary px-8 py-3 rounded-lg font-medium" (click)="toggleForm()">S'inscrire</button>
+        </div>
+      </div>
+      <div id="toggle-right" class="toggle-panel w-full flex items-center justify-center" [ngClass]="{'opacity-100': !isSignUp, 'opacity-0': isSignUp}">
+        <div class="text-center">
+          <h2 class="text-3xl font-display font-bold mb-4 text-white">Déjà membre?</h2>
+          <p class="mb-6 text-gold-200">Connectez-vous avec vos informations pour accéder à votre espace personnel.</p>
+          <button class="btn-secondary px-8 py-3 rounded-lg font-medium" (click)="toggleForm()">Se connecter</button>
         </div>
       </div>
     </div>
   </div>
-  
+</div>

@@ -18,9 +18,22 @@ import { Router } from '@angular/router';
 import { StorageService } from 'src/app/auth/services/storage/storage.service';
 import { SubscriptionService } from 'src/app/services/subscription.service';
 
+export interface ParkingSpot {
+  id: string;
+  status: 'available' | 'reserved';
+}
+
 export interface ReservationResponse {
-  id: number;
-  redirect_url: string;
+  reservationId: string;
+  paymentVerificationCode?: string;
+  reservationConfirmationCode?: string;
+}
+
+export interface ReservationDetails {
+  date: Date;
+  startTime: string;
+  endTime: string;
+  vehicleMatricule: string;
 }
 
 @Component({
@@ -45,19 +58,23 @@ export interface ReservationResponse {
   styleUrls: ['./reservations.component.css']
 })
 export class ReservationComponent implements OnInit {
-  availablePlaces: any[] = [];
-  reservationForm: FormGroup;
-  hasActiveSubscription = false;
   currentStep = 1;
+  reservationForm: FormGroup;
+  availableSpots: ParkingSpot[] = [];
+  selectedSpot: ParkingSpot | null = null;
   selectedPlace: any = null;
-  placeSelected = false;
-  vehicleTypes = ['CAR', 'MOTORCYCLE', 'TRUCK'];
-  paymentMethods = ['CREDIT_CARD', 'MOBILE_PAYMENT', 'CASH'];
-  calculatedMontant = 0;
+  userVehicles: any[] = [];
+  selectedVehicleIndex: number | null = null;
+  hasActiveSubscription = false;
+  totalAmount = 0;
   isLoading = false;
-  paymentInitiated = false;
-  paymentUrl: string | null = null;
-  reservationSuccess = false;
+  errorMessage: string | null = null;
+  reservationId: string | null = null;
+  paymentVerificationCode: string | null = null;
+  reservationConfirmationCode: string | null = null;
+  isReservationConfirmed = false;
+  loggedInUserId: number | null = null;
+  reservationDetails: ReservationDetails | null = null;
 
   constructor(
     private http: HttpClient,
@@ -68,15 +85,12 @@ export class ReservationComponent implements OnInit {
     private subscriptionService: SubscriptionService
   ) {
     this.reservationForm = this.fb.group({
-      date: ['', Validators.required],
-      heureDebut: ['', Validators.required],
-      heureFin: ['', Validators.required],
-      vehicle: ['', Validators.required],
-      vehicleType: ['', Validators.required],
+      date: [new Date(), Validators.required],
+      startTime: ['10:00', Validators.required],
+      endTime: ['12:00', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
-      paymentMethod: ['', Validators.required],
-      specialRequest: ['']
+      paymentVerificationCode: [''],
+      reservationConfirmationCode: ['']
     });
   }
 
@@ -87,70 +101,86 @@ export class ReservationComponent implements OnInit {
       return;
     }
 
-    console.log('Checking active subscription...'); // Debug
-    this.subscriptionService.getActiveSubscription(this.storageService.getUserId() || 1).subscribe({
-      next: (subscription) => {
-        this.hasActiveSubscription = subscription.status === 'ACTIVE';
-        console.log('Subscription status:', subscription.status); // Debug
-      },
-      error: (err) => {
-        console.error('Subscription error:', err);
-        this.hasActiveSubscription = false; // Allow proceeding without subscription
-        this.snackBar.open('Aucun abonnement actif détecté. Vous pouvez réserver sans abonnement, mais envisagez d\'en souscrire un pour des avantages.', 'S\'abonner', {
-          duration: 7000
-        }).onAction().subscribe(() => this.router.navigate(['/app/user/dashboard/abonnements']));
-      }
-    });
-
-    this.reservationForm.patchValue({
-      date: new Date(),
-      heureDebut: '10:00',
-      heureFin: '12:00',
-      vehicle: '123TU1234',
-      vehicleType: 'CAR',
-      email: 'user@example.com',
-      phone: '12345678',
-      paymentMethod: 'CREDIT_CARD'
-    });
-
-    this.checkPlaceAvailability();
+    this.loggedInUserId = this.storageService.getUserId() || 1;
+    this.checkSubscriptionStatus();
+    this.fetchUserVehicles();
+    this.checkSpotAvailability();
   }
 
   getAuthHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
-    console.log('Token retrieved:', token ? 'Present' : 'Missing'); // Debug
     return new HttpHeaders({
-      'Authorization': token ? `Bearer ${token}` : '',
+      'Authorization': `Bearer ${token || ''}`,
       'Content-Type': 'application/json'
     });
   }
 
-  checkPlaceAvailability(): void {
-    const date = formatDate(this.reservationForm.get('date')?.value || new Date(), 'yyyy-MM-dd', 'en');
-    const startTime = this.reservationForm.get('heureDebut')?.value || '10:00';
-    const endTime = this.reservationForm.get('heureFin')?.value || '12:00';
-    const query = `date=${date}&startTime=${startTime}&endTime=${endTime}`;
+  checkSubscriptionStatus(): void {
+    this.subscriptionService.getActiveSubscription(this.loggedInUserId || 1).subscribe({
+      next: (subscription) => {
+        this.hasActiveSubscription = subscription.status === 'ACTIVE';
+      },
+      error: (err) => {
+        console.error('Subscription error:', err);
+        this.hasActiveSubscription = false;
+        this.snackBar.open('Aucun abonnement actif détecté.', 'Fermer', { duration: 5000 });
+      }
+    });
+  }
 
-    this.http.get<any[]>(`http://localhost:8082/parking/api/parking-spots/available?${query}`, {
+  fetchUserVehicles(): void {
+    this.http.get<any>('http://localhost:8082/parking/api/user/profile', {
       headers: this.getAuthHeaders()
     }).subscribe({
       next: (response) => {
-        console.log('Availability response:', response);
-        this.availablePlaces = response.map(place => ({
-          id: place.id,
-          name: place.name,
-          type: place.type.toLowerCase(),
-          price: place.price,
-          available: place.available,
-          reserved: !place.available,
-          selected: false,
-          features: place.type === 'PREMIUM' ? ['Proche entrée', 'Sécurisé'] : []
+        this.userVehicles = (response.vehicles || []).map((v: any) => ({
+          id: v.id || 'UNKNOWN',
+          matricule: v.matricule || 'UNKNOWN',
+          vehicleType: v.vehicleType || 'car',
+          name: `${v.brand || ''} ${v.model || ''}`.trim() || 'Véhicule'
         }));
+        if (this.userVehicles.length > 0) {
+          this.selectedVehicleIndex = 0;
+        }
       },
       error: (err) => {
-        console.error('Availability error:', err);
-        const message = err.status === 401 ? 'Session expirée. Veuillez vous reconnecter.' : 'Impossible de vérifier la disponibilité des places.';
-        this.snackBar.open(message, 'Fermer', { duration: 5000 });
+        this.errorMessage = 'Erreur lors de la récupération des véhicules.';
+        console.error('Fetch vehicles error:', err);
+      }
+    });
+  }
+
+  checkSpotAvailability(): void {
+    this.isLoading = true;
+    this.errorMessage = null;
+
+    const dateValue = this.reservationForm.get('date')?.value || new Date();
+    const startTime = this.reservationForm.get('startTime')?.value || '10:00';
+    const endTime = this.reservationForm.get('endTime')?.value || '12:00';
+
+    const formattedDate = formatDate(dateValue, 'yyyy-MM-dd', 'en');
+    const formattedStartTime = `${formattedDate}T${startTime}:00`;
+    const formattedEndTime = `${formattedDate}T${endTime}:00`;
+
+    const queryParams = `startTime=${encodeURIComponent(formattedStartTime)}&endTime=${encodeURIComponent(formattedEndTime)}`;
+
+    console.log('Fetching spots with query:', queryParams);
+
+    this.http.get<any[]>(`http://localhost:8082/parking/api/parking-spots/available?${queryParams}`, {
+      headers: this.getAuthHeaders()
+    }).subscribe({
+      next: (response) => {
+        console.log('Spots response:', response);
+        this.availableSpots = response.map(spot => ({
+          id: spot.id.toString(),
+          status: spot.available ? 'available' : 'reserved'
+        }));
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Spots fetch error:', err);
+        this.errorMessage = 'Erreur lors de la récupération des places de parking.';
+        this.isLoading = false;
         if (err.status === 401) {
           this.storageService.logout();
           this.router.navigate(['/auth']);
@@ -159,30 +189,61 @@ export class ReservationComponent implements OnInit {
     });
   }
 
-  selectPlace(place: any): void {
-    if (place.reserved) return;
-    this.availablePlaces.forEach(p => p.selected = false);
-    place.selected = true;
-    this.selectedPlace = place;
-    this.placeSelected = true;
-    this.calculateMontant();
+  selectSpot(spot: ParkingSpot): void {
+    if (spot.status !== 'available') return;
+    this.selectedSpot = spot;
+    this.selectedPlace = {
+      id: spot.id,
+      name: spot.id,
+      type: spot.id.includes('A') ? 'premium' : 'standard',
+      price: spot.id.includes('A') ? 8.0 : 5.0,
+      features: spot.id.includes('A') ? ['Couverte', 'Sécurisée', 'Grand gabarit'] : ['Couverte']
+    };
+    this.calculateTotalCost();
+  }
+
+  selectVehicle(index: number): void {
+    this.selectedVehicleIndex = index;
+  }
+
+  calculateTotalCost(): void {
+    if (!this.selectedPlace || !this.reservationForm.get('startTime')?.value || !this.reservationForm.get('endTime')?.value) {
+      this.totalAmount = 0;
+      return;
+    }
+
+    const startTime = this.reservationForm.get('startTime')?.value.split(':').map(Number);
+    const endTime = this.reservationForm.get('endTime')?.value.split(':').map(Number);
+    const duration = (endTime[0] * 60 + endTime[1] - (startTime[0] * 60 + startTime[1])) / 60;
+    let cost = duration * this.selectedPlace.price;
+    if (this.hasActiveSubscription) cost *= 0.5;
+    this.totalAmount = cost > 0 ? cost : 0;
   }
 
   nextStep(): void {
-    console.log('Next step triggered, current step:', this.currentStep); // Debug
-    if (this.currentStep === 1 && !this.placeSelected) {
-      this.snackBar.open('Veuillez sélectionner une place.', 'Fermer', { duration: 5000 });
-      return;
-    }
-    if (this.currentStep === 2 && this.reservationForm.invalid) {
-      this.reservationForm.markAllAsTouched();
-      this.snackBar.open('Veuillez compléter tous les champs obligatoires.', 'Fermer', { duration: 5000 });
-      this.debugForm(); // Debug invalid form
-      return;
-    }
-    this.currentStep++;
-    if (this.currentStep === 2) {
-      this.calculateMontant();
+    if (this.currentStep === 1) {
+      if (!this.selectedSpot) {
+        this.snackBar.open('Veuillez sélectionner une place.', 'Fermer', { duration: 5000 });
+        return;
+      }
+      this.currentStep++;
+    } else if (this.currentStep === 2) {
+      if (this.reservationForm.invalid || this.selectedVehicleIndex === null) {
+        this.reservationForm.markAllAsTouched();
+        this.snackBar.open('Veuillez compléter tous les champs obligatoires.', 'Fermer', { duration: 5000 });
+        return;
+      }
+      this.submitReservation();
+    } else if (this.currentStep === 3) {
+      if (!this.hasActiveSubscription && !this.reservationForm.get('paymentVerificationCode')?.value) {
+        this.snackBar.open('Veuillez entrer le code de vérification.', 'Fermer', { duration: 5000 });
+        return;
+      }
+      if (this.hasActiveSubscription && !this.reservationForm.get('reservationConfirmationCode')?.value) {
+        this.snackBar.open('Veuillez entrer le code de confirmation.', 'Fermer', { duration: 5000 });
+        return;
+      }
+      this.confirmReservation();
     }
   }
 
@@ -194,117 +255,100 @@ export class ReservationComponent implements OnInit {
 
   reset(): void {
     this.currentStep = 1;
+    this.selectedSpot = null;
     this.selectedPlace = null;
-    this.placeSelected = false;
-    this.reservationSuccess = false;
-    this.paymentInitiated = false;
-    this.paymentUrl = null;
-    this.availablePlaces.forEach(p => p.selected = false);
+    this.totalAmount = 0;
+    this.reservationId = null;
+    this.paymentVerificationCode = null;
+    this.reservationConfirmationCode = null;
+    this.isReservationConfirmed = false;
+    this.errorMessage = null;
+    this.reservationDetails = null;
     this.reservationForm.reset({
       date: new Date(),
-      heureDebut: '10:00',
-      heureFin: '12:00',
-      vehicle: '123TU1234',
-      vehicleType: 'CAR',
-      email: 'user@example.com',
-      phone: '12345678',
-      paymentMethod: 'CREDIT_CARD',
-      specialRequest: ''
+      startTime: '10:00',
+      endTime: '12:00',
+      email: '',
+      paymentVerificationCode: '',
+      reservationConfirmationCode: ''
     });
-  }
-
-  getPlaceTooltip(place: any): string {
-    if (place.reserved) return 'Place réservée';
-    return `${place.name} (${place.type === 'standard' ? 'Standard' : 'Premium'}, ${place.price} TND/h)`;
-  }
-
-  getPlaceTypeLabel(type: string): string {
-    return type === 'standard' ? 'Standard' : 'Premium';
-  }
-
-  calculateDuration(): string {
-    const start = this.reservationForm.get('heureDebut')?.value;
-    const end = this.reservationForm.get('heureFin')?.value;
-    if (!start || !end) return '0h';
-    const [startHour, startMin] = start.split(':').map(Number);
-    const [endHour, endMin] = end.split(':').map(Number);
-    const duration = (endHour * 60 + endMin - (startHour * 60 + startMin)) / 60;
-    return `${duration}h`;
-  }
-
-  calculateMontant(): void {
-    if (!this.selectedPlace) {
-      this.calculatedMontant = 0;
-      return;
-    }
-    const duration = parseFloat(this.calculateDuration());
-    this.calculatedMontant = this.selectedPlace.price * duration;
-  }
-
-  debugForm(): void {
-    console.log('Form Values:', this.reservationForm.value);
-    console.log('Form Valid:', this.reservationForm.valid);
-    console.log('Form Errors:', this.reservationForm.errors);
-    Object.keys(this.reservationForm.controls).forEach(key => {
-      const control = this.reservationForm.get(key);
-      console.log(`${key} Errors:`, control?.errors);
-    });
-  }
-
-  initiatePayment(): void {
-    this.paymentInitiated = true;
-    this.snackBar.open('Préparation du paiement...', 'Fermer', { duration: 3000 });
+    this.selectedVehicleIndex = this.userVehicles.length > 0 ? 0 : null;
+    this.checkSpotAvailability();
   }
 
   submitReservation(): void {
-    if (!this.paymentInitiated) return;
     this.isLoading = true;
+    this.errorMessage = null;
 
     const formDate = formatDate(this.reservationForm.get('date')?.value, 'yyyy-MM-dd', 'en');
-    const startTime = this.reservationForm.get('heureDebut')?.value;
-    const endTime = this.reservationForm.get('heureFin')?.value;
+    const startTime = this.reservationForm.get('startTime')?.value;
+    const endTime = this.reservationForm.get('endTime')?.value;
 
     const reservationData = {
-      userId: this.storageService.getUserId() || 1,
-      parkingPlaceId: this.selectedPlace.id,
-      matricule: this.reservationForm.get('vehicle')?.value,
+      userId: this.loggedInUserId || 1,
+      parkingPlaceId: parseInt(this.selectedSpot!.id.split('-').pop() || '0', 10),
+      matricule: this.userVehicles[this.selectedVehicleIndex!].matricule,
       startTime: `${formDate}T${startTime}:00`,
       endTime: `${formDate}T${endTime}:00`,
-      vehicleType: this.reservationForm.get('vehicleType')?.value,
-      email: this.reservationForm.get('email')?.value,
-      phone: this.reservationForm.get('phone')?.value,
-      paymentMethod: this.reservationForm.get('paymentMethod')?.value,
-      specialRequest: this.reservationForm.get('specialRequest')?.value || '',
-      amount: this.calculatedMontant
+      vehicleType: this.userVehicles[this.selectedVehicleIndex!].vehicleType,
+      paymentMethod: 'CARTE_BANCAIRE',
+      email: this.reservationForm.get('email')?.value
     };
+
+    // Set reservation details only if the form and vehicle are valid
+    if (this.reservationForm.valid && this.selectedVehicleIndex !== null) {
+      this.reservationDetails = {
+        date: this.reservationForm.get('date')!.value,
+        startTime: startTime,
+        endTime: endTime,
+        vehicleMatricule: this.userVehicles[this.selectedVehicleIndex].matricule
+      };
+    }
 
     this.http.post<ReservationResponse>('http://localhost:8082/parking/api/createReservation', reservationData, {
       headers: this.getAuthHeaders()
     }).subscribe({
       next: (response) => {
+        console.log('Reservation response:', response);
+        this.reservationId = response.reservationId;
+        this.paymentVerificationCode = response.paymentVerificationCode || null;
+        this.reservationConfirmationCode = response.reservationConfirmationCode || null;
+        this.currentStep = 3;
         this.isLoading = false;
-        this.paymentUrl = response.redirect_url;
-        this.reservationSuccess = true;
-        this.snackBar.open('Réservation confirmée avec succès!', 'Fermer', { duration: 5000 });
-        if (this.paymentUrl) {
-          window.open(this.paymentUrl, '_blank');
-        }
       },
       error: (err) => {
-        this.isLoading = false;
         console.error('Reservation error:', err);
-        const message = err.status === 401 ? 'Session expirée. Veuillez vous reconnecter.' : 'Erreur lors de la confirmation de la réservation.';
-        this.snackBar.open(message, 'Fermer', { duration: 5000 });
-        if (err.status === 401) {
-          this.storageService.logout();
-          this.router.navigate(['/auth']);
-        }
+        this.errorMessage = 'Erreur lors de la réservation: ' + (err.error?.message || err.message);
+        this.isLoading = false;
       }
     });
   }
 
-  generateRandomId(): string {
-    return Math.random().toString(36).substr(2, 9).toUpperCase();
+  confirmReservation(): void {
+    this.isLoading = true;
+    this.errorMessage = null;
+
+    const reservationIdNum = parseInt(this.reservationId!.split('-').pop() || '0', 10);
+    const queryParams = this.hasActiveSubscription
+      ? `reservationId=${reservationIdNum}&reservationConfirmationCode=${this.reservationForm.get('reservationConfirmationCode')?.value}`
+      : `reservationId=${reservationIdNum}&paymentVerificationCode=${this.reservationForm.get('paymentVerificationCode')?.value}`;
+
+    const endpoint = this.hasActiveSubscription ? 'confirmReservation' : 'confirmPayment';
+
+    this.http.post(`http://localhost:8082/parking/api/${endpoint}?${queryParams}`, {}, {
+      headers: this.getAuthHeaders()
+    }).subscribe({
+      next: (response) => {
+        console.log('Confirmation response:', response);
+        this.isReservationConfirmed = true;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Confirmation error:', err);
+        this.errorMessage = 'Erreur lors de la confirmation: ' + (err.error?.message || err.message);
+        this.isLoading = false;
+      }
+    });
   }
 
   getToday(): Date {

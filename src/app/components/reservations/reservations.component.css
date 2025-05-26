@@ -1,504 +1,310 @@
-/* Form status styles */
-.form-status {
-  margin-bottom: 1rem;
-  padding: 0.5rem;
-  border-radius: 4px;
-  font-weight: 500;
-}
-.form-status.valid {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-.form-status.invalid {
-  background: #ffebee;
-  color: #c62828;
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f8f9fa;
 }
 
-/* Reservation container */
-.reservation-container {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-  font-family: 'Roboto', sans-serif;
-}
-.reservation-container [class^="ri-"]::before {
-  content: none;
+.hero-overlay {
+  background: linear-gradient(135deg, rgba(106,27,154,0.85) 0%, rgba(30,13,43,0.95) 100%);
+  backdrop-filter: blur(2px);
 }
 
-/* Reservation header */
-.reservation-header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-}
-.reservation-header h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-.reservation-header p {
-  font-size: 1.1rem;
-  color: #7f8c8d;
-}
-
-/* Stepper */
-.stepper {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 3rem;
-  position: relative;
-}
-.stepper::before {
-  content: '';
-  position: absolute;
-  top: 20px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: #ecf0f1;
-  z-index: 1;
-}
-.stepper .step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  z-index: 2;
-  flex: 1;
-}
-.stepper .step .step-number {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #ecf0f1;
-  color: #95a5a6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  border: 2px solid #ecf0f1;
-}
-.stepper .step .step-label {
-  color: #95a5a6;
-  font-size: 0.9rem;
-  text-align: center;
-  padding: 0 10px;
-}
-.stepper .step.active .step-number {
-  background: #3498db;
-  color: white;
-  border-color: #3498db;
-}
-.stepper .step.active .step-label {
-  color: #2c3e50;
-  font-weight: 500;
-}
-.stepper .step.completed .step-number {
-  background: #2ecc71;
-  color: white;
-  border-color: #2ecc71;
-}
-.stepper .step.completed .step-label {
-  color: #2c3e50;
-}
-
-/* Map section */
-.map-section {
-  margin-bottom: 2rem;
-}
-.map-section .map-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-.map-section .map-header h3 {
-  display: flex;
-  align-items: center;
-  color: #2c3e50;
-  margin: 0;
-}
-.map-section .map-header h3 mat-icon {
-  margin-right: 0.5rem;
-  color: #3498db;
-}
-.map-section .map-header .legend {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.map-section .map-header .legend .legend-item {
-  display: flex;
-  align-items: center;
-  font-size: 0.85rem;
-  color: #7f8c8d;
-}
-.map-section .map-header .legend .legend-item .color-box {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  margin-right: 0.5rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-.map-section .map-header .legend .legend-item .color-box.standard {
-  background: #3498db;
-}
-.map-section .map-header .legend .legend-item .color-box.premium {
-  background: #f39c12;
-}
-.map-section .map-header .legend .legend-item .color-box.reserved {
-  background: #e74c3c;
-}
-.map-section .map-header .legend .legend-item .color-box.included {
-  background: #4caf50;
-}
-.map-section .parking-lot {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-.map-section .parking-lot .parking-space {
-  height: 100px;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+.gold-glow {
   transition: all 0.3s ease;
-  position: relative;
+}
+
+.gold-glow:hover {
+  box-shadow: 0 0 15px rgba(212,175,55,0.7);
+}
+
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(212,175,55,0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(212,175,55,0); }
+  100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+}
+
+.typing-effect {
   overflow: hidden;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  padding: 10px;
-  border: 2px solid transparent;
+  white-space: nowrap;
+  border-right: 3px solid #D4AF37;
+  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
 }
-.map-section .parking-lot .parking-space:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
 }
-.map-section .parking-lot .parking-space.standard {
-  background: #e1f5fe;
-  border-color: #3498db;
+
+@keyframes blink-caret {
+  from, to { border-color: transparent; }
+  50% { border-color: #D4AF37; }
 }
-.map-section .parking-lot .parking-space.premium {
-  background: #fff8e1;
-  border-color: #f39c12;
+
+.parking-space {
+  transition: all 0.3s ease;
+  border: 2px solid #e5e7eb;
 }
-.map-section .parking-lot .parking-space.reserved {
-  background: #ffebee;
-  border-color: #e74c3c;
-  cursor: not-allowed;
+
+.parking-space:hover {
+  transform: scale(1.05);
 }
-.map-section .parking-lot .parking-space.included {
-  border-left: 4px solid #4caf50;
+
+.parking-space.bg-e0e7ff {
+  background-color: #e0e7ff;
+  border-color: #93c5fd;
 }
-.map-section .parking-lot .parking-space.selected {
-  border-width: 3px;
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
-}
-.map-section .parking-lot .parking-space .space-number {
-  font-weight: 600;
-  font-size: 1.5rem;
-  color: #2c3e50;
-  margin-bottom: 5px;
-}
-.map-section .parking-lot .parking-space .space-price {
-  font-size: 0.9rem;
-  color: #7f8c8d;
-  text-align: center;
-}
-.map-section .parking-lot .parking-space .space-price .free-text {
-  color: #4caf50;
-  font-weight: bold;
-}
-.map-section .parking-lot .parking-space .reserved-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 2rem;
-  color: #e74c3c;
-  opacity: 0.7;
-}
-.map-section .parking-lot .parking-space .subscription-badge {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: #4caf50;
+
+.step.active .step-number {
+  background: linear-gradient(135deg, #6a1b9a, #3d1259);
   color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  display: flex;
-  align-items: center;
-  gap: 3px;
 }
-.map露-1 .map-section .place-details {
-  background: #f8f9fa;
-  border-radius: 10px;
+
+.step.completed .step-number {
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+  color: white;
+}
+
+.included-badge {
+  background: linear-gradient(135deg, rgba(106,27,154,0.2), rgba(30,13,43,0.3));
+  border-left: 3px solid #D4AF37;
+}
+
+.success-icon {
+  color: #4CAF50;
+  font-size: 4rem;
+  animation: bounce 1s;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-30px); }
+  60% { transform: translateY(-15px); }
+}
+
+.qr-code-placeholder {
+  background: linear-gradient(135deg, rgba(106,27,154,0.1), rgba(30,13,43,0.2));
+  border: 2px dashed rgba(212,175,55,0.5);
+}
+
+/* Web Form Field Styling */
+.custom-form-field-web .mat-mdc-form-field {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 16px !important;
+  width: 100% !important;
+}
+
+.custom-form-field-web .mat-mdc-text-field-wrapper {
+  border-radius: 0.75rem !important;
+  border: 2px solid #d1d5db !important;
+  background-color: #fff !important;
+  padding: 0.75rem !important;
+  height: 4rem !important;
+  transition: border-color 0.3s ease;
+}
+
+.custom-form-field-web .mat-mdc-form-field-flex {
+  padding: 0.5rem !important;
+  align-items: center !important;
+}
+
+.custom-form-field-web .mat-mdc-form-field-infix {
+  padding: 0.5rem !important;
+}
+
+.custom-form-field-web .mat-mdc-form-field-subscript-wrapper {
+  margin-top: 0.5rem !important;
+}
+
+.custom-form-field-web .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+.custom-form-field-web .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__notch,
+.custom-form-field-web .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+  border-color: transparent !important;
+}
+
+.custom-form-field-web .mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-notched-outline__leading,
+.custom-form-field-web .mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-notched-outline__notch,
+.custom-form-field-web .mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-notched-outline__trailing {
+  border-color: #6a1b9a !important;
+}
+
+.custom-form-field-web .mat-mdc-form-field-label {
+  color: #6a1b9a !important;
+  font-weight: 500 !important;
+  top: 1.25rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-form-field-web .mat-mdc-form-field.mat-focused .mat-mdc-form-field-label,
+.custom-form-field-web .mat-mdc-form-field-has-value .mat-mdc-form-field-label {
+  top: 0.5rem !important;
+  font-size: 14px !important;
+}
+
+.custom-form-field-web .mat-mdc-form-field .mat-mdc-form-field-icon-prefix {
+  margin-right: 0.75rem;
+  color: #6a1b9a;
+  font-size: 20px !important;
+}
+
+.custom-form-field-web .mat-mdc-form-field input,
+.custom-form-field-web .mat-mdc-form-field input::placeholder {
+  color: #374151 !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 16px !important;
+  padding: 0.5rem;
+}
+
+.custom-form-field-web .mat-mdc-form-field-error {
+  color: #dc2626 !important;
+  font-size: 14px !important;
+}
+
+/* Vehicle Selection Styling */
+.vehicle-item {
+  transition: all 0.3s ease;
   padding: 1.5rem;
-  margin-top: 1.5rem;
-  border-left: 4px solid #3498db;
-}
-.map-section .place-details h4 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: #2c3e50;
-}
-.map-section .place-details .details-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-}
-.map-section .place-details .details-grid > div {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.map-section .place-details .details-grid > div.included-text {
-  color: #4caf50;
-  font-weight: 500;
+  margin-bottom: 0.5rem;
 }
 
-/* Form section */
-.form-section {
-  margin-top: 2rem;
-}
-.form-section .form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-.form-section .form-grid mat-form-field {
-  width: 100%;
-}
-.form-section .form-grid .full-width {
-  grid-column: 1 / -1;
-}
-.form-section .summary-card {
-  background: #f8f9fa;
-  border-radius: 10px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  border-left: 4px solid #3498db;
-}
-.form-section .summary-card h4 {
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: #2c3e50;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.form-section .summary-card .summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1rem;
-}
-.form-section .summary-card .summary-grid .summary-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 0.8rem;
-}
-.form-section .summary-card .summary-grid .summary-item > span {
-  flex: 1;
-  color: #7f8c8d;
-}
-.form-section .summary-card .summary-grid .summary-item.included {
-  color: #4caf50;
-}
-.form-section .summary-card .summary-grid .summary-item.discount {
-  color: #ff9800;
-}
-.form-section .summary-card .summary-grid .summary-item.total {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #ecf0f1;
-  font-weight: 500;
-  color: #2c3e50;
-  grid-column: 1 / -1;
+.vehicle-item.bg-purple-200 {
+  background-color: #e9d5ff !important;
+  border-left: 8px solid #9333ea !important;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Confirmation */
-.confirmation {
-  display: flex;
-  justify-content: center;
-}
-.confirmation .confirmation-card,
-.confirmation .success-card {
-  text-align: center;
-  max-width: 500px;
-  width: 100%;
-  padding: 2rem;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-}
-.confirmation .confirmation-card .confirmation-icon,
-.confirmation .success-card .confirmation-icon {
-  font-size: 5rem;
-  color: #2196f3;
-  margin-bottom: 1.5rem;
-}
-.confirmation .confirmation-card .success-icon,
-.confirmation .success-card .success-icon {
-  font-size: 5rem;
-  color: #4caf50;
-  margin-bottom: 1.5rem;
-}
-.confirmation .confirmation-card h3,
-.confirmation .success-card h3 {
-  font-size: 1.5rem;
-  color: #2c3e50;
-  margin-bottom: 2rem;
-}
-.confirmation .confirmation-card .confirmation-details {
-  text-align: left;
-  margin-bottom: 2rem;
-}
-.confirmation .confirmation-card .confirmation-details .detail-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #ecf0f1;
-  gap: 8px;
-}
-.confirmation .confirmation-card .confirmation-details .detail-item mat-icon {
-  color: #3498db;
-}
-.confirmation .confirmation-card .confirmation-details .detail-item.included mat-icon {
-  color: #4caf50;
-}
-.confirmation .confirmation-card .confirmation-details .detail-item.total {
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #2c3e50;
-  border-bottom: none;
-}
-.confirmation .confirmation-card .confirmation-details .detail-item.total mat-icon {
-  color: #f39c12;
-}
-.confirmation .success-card .reservation-number {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 1.5rem 0;
-  font-size: 1.1rem;
-}
-.confirmation .success-card .included-badge {
-  background: #e8f5e9;
-  color: #2e7d32;
-  padding: 8px 12px;
-  border-radius: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: 1rem 0;
-}
-.confirmation .success-card .qr-code-placeholder {
-  margin: 2rem 0;
-  padding: 1.5rem;
-  background: #f5f5f5;
-  border-radius: 8px;
-}
-.confirmation .success-card .qr-code-placeholder mat-icon {
-  font-size: 3rem;
-  color: #333;
-}
-.confirmation .success-card .success-message {
-  color: #555;
-  line-height: 1.6;
+.vehicle-item:hover {
+  background-color: #f3e8ff !important;
 }
 
-/* Subscription banner */
-.subscription-banner {
-  background-color: #e3f2fd;
-  padding: 12px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-left: 4px solid #2196f3;
-}
-.subscription-banner .subscription-info {
-  display: flex;
-  flex-direction: column;
-}
-.subscription-banner .subscription-info strong {
-  font-weight: 500;
-}
-.subscription-banner .subscription-info span {
-  font-size: 0.8rem;
-  color: #555;
+.vehicle-item .material-icons {
+  font-size: 2.5rem !important;
 }
 
-/* Action buttons */
-.action-buttons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
+.vehicle-item p {
+  font-size: 1.25rem !important;
+  margin-bottom: 0.25rem;
 }
-.action-buttons button[mat-raised-button] {
-  padding: 0.5rem 2rem;
-  font-weight: 500;
+
+.vehicle-item small {
+  font-size: 1rem !important;
 }
-.action-buttons button[mat-stroked-button] {
-  padding: 0.5rem 1.5rem;
+
+/* Existing Form Field Styling for Step 3 */
+.custom-form-field .mat-mdc-form-field {
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 16px !important;
 }
-.action-buttons button mat-icon {
+
+.custom-form-field .mat-mdc-text-field-wrapper {
+  border-radius: 0.75rem !important;
+  border: 2px solid #d1d5db !important;
+  background-color: #fff !important;
+  padding: 0.5rem !important;
+  height: 4rem !important;
+  transition: border-color 0.3s ease;
+}
+
+.custom-form-field .mat-mdc-form-field-flex {
+  padding: 0.5rem !important;
+  align-items: center !important;
+}
+
+.custom-form-field .mat-mdc-form-field-infix {
+  padding: 0 !important;
+}
+
+.custom-form-field .mat-mdc-form-field-subscript-wrapper {
+  margin-top: 0.25rem !important;
+}
+
+.custom-form-field .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+.custom-form-field .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__notch,
+.custom-form-field .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+  border-color: transparent !important;
+}
+
+.custom-form-field .mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-notched-outline__leading,
+.custom-form-field .mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-notched-outline__notch,
+.custom-form-field .mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-notched-outline__trailing {
+  border-color: #6a1b9a !important;
+}
+
+.custom-form-field .mat-mdc-form-field-label {
+  color: #6a1b9a !important;
+  font-weight: 500 !important;
+  top: 1.5rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.custom-form-field .mat-mdc-form-field.mat-focused .mat-mdc-form-field-label,
+.custom-form-field .mat-mdc-form-field-has-value .mat-mdc-form-field-label {
+  top: 0.5rem !important;
+  font-size: 14px !important;
+}
+
+.custom-form-field .mat-mdc-form-field .mat-mdc-form-field-icon-prefix {
   margin-right: 0.5rem;
-  font-size: 1.2rem;
-}
-.action-buttons .new-reservation-btn {
-  margin-top: 1.5rem;
+  color: #6a1b9a;
 }
 
-/* Media queries */
-@media (max-width: 768px) {
-  .reservation-container {
-    padding: 1rem;
-  }
-  .stepper {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .stepper::before {
-    display: none;
-  }
-  .stepper .step {
-    flex-direction: row;
-    margin-bottom: 1rem;
-  }
-  .stepper .step .step-number {
-    margin-right: 1rem;
-    margin-bottom: 0;
-  }
-  .form-section .form-grid {
-    grid-template-columns: 1fr;
-  }
-  .action-buttons {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .action-buttons button {
-    width: 100%;
-  }
+.custom-form-field .mat-mdc-form-field input,
+.custom-form-field .mat-mdc-form-field input::placeholder {
+  color: #374151 !important;
+  font-family: 'Poppins', sans-serif !important;
+  font-size: 16px !important;
+  padding: 0.5rem;
+}
+
+.custom-form-field .mat-mdc-form-field-error {
+  color: #dc2626 !important;
+  font-size: 12px !important;
+}
+
+.mat-mdc-button, .mat-mdc-raised-button, .mat-mdc-stroked-button {
+  font-family: 'Poppins', sans-serif !important;
+  border-radius: 0.5rem !important;
+}
+
+.mat-mdc-raised-button {
+  background-color: #6a1b9a !important;
+}
+
+.mat-mdc-raised-button:hover {
+  background-color: #5b1482 !important;
+}
+
+.mat-mdc-stroked-button {
+  border-color: #e2e8f0 !important;
+  color: #374151 !important;
+}
+
+.mat-mdc-stroked-button:hover {
+  background-color: #f3f4f6 !important;
+}
+
+.mat-mdc-spinner circle {
+  stroke: #6a1b9a !important;
+}
+
+.mat-datepicker-toggle .mat-icon-button {
+  color: #6a1b9a !important;
+}
+
+.mat-calendar {
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.mat-calendar-header {
+  background: linear-gradient(135deg, #6a1b9a, #3d1259);
+  color: white !important;
+}
+
+.mat-calendar-body-cell-content:hover,
+.mat-calendar-body-cell-content.mat-calendar-body-selected {
+  background-color: #6a1b9a !important;
+  color: white !important;
 }

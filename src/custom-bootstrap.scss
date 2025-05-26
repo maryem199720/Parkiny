@@ -1,0 +1,9 @@
+// Override Bootstrap variables
+$primary: #6A1B9A; // Purple from mockup
+$secondary: #1E0D2B; // Dark purple
+$warning: #D4AF37; // Gold
+$success: #4CAF50;
+$danger: #dc3545;
+
+// Import Bootstrap source
+@import "~bootstrap/scss/bootstrap";

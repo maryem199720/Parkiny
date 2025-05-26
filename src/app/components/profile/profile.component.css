@@ -1,54 +1,35 @@
-/* Tailwind directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles */
-.reservation-card {
-  transition: all 0.3s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  }
+:root {
+  --primary: #3B82F6; /* AppColors.primaryColor */
+  --primary-light: #DBEAFE; /* AppColors.primaryLightColor */
+  --secondary: #F59E0B; /* AppColors.secondaryColor */
+  --accent-light: #FEF3C7; /* AppColors.accentLightColor */
+  --success: #10B981; /* AppColors.successColor */
+  --error: #EF4444; /* AppColors.errorColor */
+  --background: #F8FAFC; /* AppColors.backgroundColor */
+  --text: #1F2937; /* AppColors.textColor */
+  --subtitle: #6B7280; /* AppColors.subtitleColor */
+  --white: #FFFFFF; /* AppColors.whiteColor */
+  --gray: #E5E7EB; /* AppColors.grayColor */
 }
 
-.status-indicator {
-  @apply w-3 h-3 rounded-full mr-2;
-
-  &.status-ongoing {
-    @apply bg-blue-500;
-  }
-
-  &.status-upcoming {
-    @apply bg-yellow-500;
-  }
-
-  &.status-completed {
-    @apply bg-green-500;
-  }
-
-  &.status-cancelled {
-    @apply bg-red-500;
-  }
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--background);
+  min-height: 100vh;
 }
 
 .rounded-button {
   border-radius: 8px;
 }
 
-/* Fonts */
-.font-pacifico {
-  font-family: 'Pacifico', cursive;
+.rounded-lg {
+  border-radius: 12px;
 }
 
-body {
-  font-family: 'Poppins', sans-serif;
-  background-color: #f8fafc;
-  min-height: 100vh;
-}
-
-/* Remix icons */
-[class^="ri-"]::before {
-  content: "\f3c2";
+.shadow-lg {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }

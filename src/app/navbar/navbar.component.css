@@ -1,58 +1,31 @@
-:host {
-  display: block;
+.disabled-link {
+  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
-.bg-dark {
-  background-color: #1E0D2B;
+/* Keep existing CSS from navbar.component.css */
+.active {
+  color: #F0DB9A !important;
+  font-weight: 600;
+  position: relative;
 }
 
-.text-secondary {
-  color: #D4AF37;
-}
-
-.gold-300 {
-  color: #F0DB9A;
-}
-
-.gold-500 {
-  color: #D4AF37;
-  background-color: #D4AF37;
-}
-
-.gold-600 {
-  color: #B8972E;
-  background-color: #B8972E;
-}
-
-.rounded-button {
-  border-radius: 8px;
+.active::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #F0DB9A;
 }
 
 .gold-glow {
-  transition: all 0.3s ease;
+  box-shadow: 0 0 10px rgba(240, 219, 154, 0.3);
+  transition: box-shadow 0.3s ease;
 }
 
 .gold-glow:hover {
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.7);
-}
-
-.active {
-  color: #D4AF37;
-  font-weight: bold;
-}
-
-nav a {
-  transition: color 0.3s ease;
-}
-
-nav a:hover {
-  color: #F0DB9A;
-}
-
-.bg-primary {
-  background-color: #6A1B9A;
-}
-
-.hover\:bg-purple-800:hover {
-  background-color: #4c1370;
+  box-shadow: 0 0 15px rgba(240, 219, 154, 0.5);
 }

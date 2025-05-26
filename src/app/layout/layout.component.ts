@@ -11,8 +11,8 @@ import { RouterOutlet } from '@angular/router';
     </div>
   `,
   styles: [`
-    .content { 
-      padding-top: 80px;
+    .content {
+      padding-top: 0; /* Removed padding-top to eliminate gap */
       min-height: 100vh;
     }
   `]

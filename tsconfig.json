@@ -1,10 +1,10 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./", // Ajout crucial
+    "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "paths": {
-      "@angular/*": ["node_modules/@angular/*"] // Ajoutez cette section
+      "@angular/*": ["node_modules/@angular/*"]
     },
     "strict": true,
     "noImplicitOverride": true,

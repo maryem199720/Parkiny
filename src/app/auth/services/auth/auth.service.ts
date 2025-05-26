@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { isPlatformBrowser } from '@angular/common';
 
 interface AuthResponse {
@@ -18,12 +18,19 @@ interface AuthResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = 'http://localhost:8082/parking/api/auth';
-  private tokenKey = 'token'; // Consistent key for token storage
+  private tokenKey = 'token';
+  private authStatus = new BehaviorSubject<boolean>(false);
+  public authStatus$ = this.authStatus.asObservable();
+
   constructor(
     private http: HttpClient,
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
-  ) {}
+  ) {
+    if (isPlatformBrowser(this.platformId)) {
+      this.authStatus.next(!!localStorage.getItem(this.tokenKey));
+    }
+  }
 
   login(credentials: { email: string; password: string }): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/signin`, credentials).pipe(
@@ -31,16 +38,17 @@ export class AuthService {
         next: (response) => {
           console.log('Réponse reçue:', response);
           if (isPlatformBrowser(this.platformId)) {
-            localStorage.setItem(this.tokenKey, response.token); // Use tokenKey for consistency
+            localStorage.setItem(this.tokenKey, response.token);
             localStorage.setItem('user', JSON.stringify({
               id: response.id,
-              role: response.roles.includes('ROLE_ADMIN') ? 'ADMIN' : 'USER'
+              firstName: response.firstName,
+              lastName: response.lastName,
+              email: response.email,
+              phone: response.phone,
+              role: this.getUserRole(response.roles)
             }));
-            
-            // Forcer le rechargement de l'état d'authentification
-            setTimeout(() => {
-              this.redirectBasedOnRole(response.roles);
-            }, 100);
+            this.authStatus.next(true);
+            this.redirectBasedOnRole(response.roles);
           }
         },
         error: (err) => console.error('Erreur de connexion:', err)
@@ -48,19 +56,28 @@ export class AuthService {
     );
   }
 
-  private handleLoginSuccess(response: AuthResponse): void {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.setItem(this.tokenKey, response.token); // Use tokenKey
-      localStorage.setItem('user', JSON.stringify({
-        id: response.id,
-        firstName: response.firstName,
-        lastName: response.lastName,
-        email: response.email,
-        phone: response.phone,
-        role: this.getUserRole(response.roles)
-      }));
-      this.redirectBasedOnRole(response.roles);
-    }
+  register(userData: any): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, userData).pipe(
+      tap({
+        next: (response) => {
+          console.log('Inscription réussie:', response);
+          if (isPlatformBrowser(this.platformId)) {
+            localStorage.setItem(this.tokenKey, response.token);
+            localStorage.setItem('user', JSON.stringify({
+              id: response.id,
+              firstName: response.firstName,
+              lastName: response.lastName,
+              email: response.email,
+              phone: response.phone,
+              role: this.getUserRole(response.roles)
+            }));
+            this.authStatus.next(true);
+            this.redirectBasedOnRole(response.roles);
+          }
+        },
+        error: (err) => console.error('Erreur d\'inscription:', err)
+      })
+    );
   }
 
   private getUserRole(roles: string[]): string {
@@ -70,32 +87,40 @@ export class AuthService {
   private redirectBasedOnRole(roles: string[]): void {
     const redirectPath = roles.includes('ROLE_ADMIN') 
       ? '/app/admin/dashboard' 
-      : '/app/user/dashboard';
+      : '/dashboard'; // Updated to match your current route
     
-    this.router.navigateByUrl(redirectPath, { replaceUrl: true })
-      .then(success => {
-        if (!success) {
-          console.error('Échec de la navigation vers:', redirectPath);
-          window.location.href = redirectPath; // Solution de secours
-        }
-      });
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnUrl = urlParams.get('returnUrl') || redirectPath;
+
+    if (isPlatformBrowser(this.platformId)) {
+      this.router.navigateByUrl(returnUrl, { replaceUrl: true })
+        .then(success => {
+          if (!success) {
+            console.error('Échec de la navigation vers:', returnUrl);
+            window.location.href = returnUrl;
+          }
+        });
+    }
   }
 
   logout(): void {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.clear();
+      this.authStatus.next(false);
+      console.log('Logout successful, auth status:', false); // Debug log
     }
-    this.router.navigate(['/auth']);
+    // Removed navigation to /auth to stay on current page
   }
 
   isAuthenticated(): boolean {
     return isPlatformBrowser(this.platformId)
-      ? !!localStorage.getItem(this.tokenKey) // Use tokenKey
+      ? !!localStorage.getItem(this.tokenKey)
       : false;
   }
 
   isAdmin(): boolean {
-    return this.getUser().role === 'ADMIN';
+    const user = this.getUser();
+    return user.role === 'ADMIN';
   }
 
   getUser(): any {
@@ -104,11 +129,7 @@ export class AuthService {
     return JSON.parse(userData);
   }
 
-  register(userData: any): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, userData);
-  }
-
   getToken(): string | null {
-    return isPlatformBrowser(this.platformId) ? localStorage.getItem(this.tokenKey) : null; // Use tokenKey
+    return isPlatformBrowser(this.platformId) ? localStorage.getItem(this.tokenKey) : null;
   }
 }
