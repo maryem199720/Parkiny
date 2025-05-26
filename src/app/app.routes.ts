@@ -2,49 +2,60 @@ import { Routes } from '@angular/router';
 import { AuthGuard } from './core/auth.guard/auth.guard.component';
 
 export const routes: Routes = [
-  // Make user dashboard the home page
-  { 
+  {
     path: '',
-    redirectTo: 'app/user/dashboard',
+    redirectTo: '/app/user/dashboard',
     pathMatch: 'full'
   },
-  { 
-    path: 'auth',
-    loadComponent: () => import('./auth/components/auth/auth.component').then(m => m.AuthComponent),
-    data: { hideNavbar: true }
-  },
+  {
+  path: 'auth',
+  loadComponent: () => import('./auth/components/auth/auth.component').then(m => m.AuthComponent) // <-- CORRIGÉ : Utiliser loadComponent
+},
   {
     path: 'app',
-    loadComponent: () => import('./layout/layout.component').then(m => m.LayoutComponent),
     children: [
       {
-        path: 'user/dashboard',
-        // Removed canActivate to allow non-authenticated users to see the dashboard
+        path: 'user',
+        canActivate: [AuthGuard],
         children: [
-          { path: '', loadComponent: () => import('./components/user-dashboard/user-dashboard.component').then(m => m.UserDashboardComponent) },
-          { 
-            path: 'profile', 
-            canActivate: [AuthGuard],
-            data: { role: 'ROLE_USER' },
-            loadComponent: () => import('./components/profile/profile.component').then(m => m.ProfileComponent) 
+          {
+            path: 'dashboard',
+            loadComponent: () => import('./components/user-dashboard/user-dashboard.component').then(m => m.UserDashboardComponent)
           },
-          { 
-            path: 'reservations', 
-            canActivate: [AuthGuard],
-            data: { role: 'ROLE_USER' },
-            loadComponent: () => import('./components/reservations/reservations.component').then(m => m.ReservationComponent) 
+          {
+            path: 'dashboard/profile',
+            loadComponent: () => import('./components/profile/profile.component').then(m => m.ProfileComponent)
           },
-          { 
-            path: 'abonnements', 
-            canActivate: [AuthGuard],
-            data: { role: 'ROLE_USER' },
-            loadComponent: () => import('./components/subscription/subscription.component').then(m => m.SubscriptionComponent) 
+          {
+            path: 'dashboard/reservations',
+            loadComponent: () => import('./components/reservations/reservations.component').then(m => m.ReservationComponent)
           },
-          { path: '**', redirectTo: '' }
+          {
+            path: 'dashboard/subscriptions',
+            loadComponent: () => import('./components/subscription/subscription.component').then(m => m.SubscriptionComponent)
+          },
+          {
+            path: 'dashboard/about',
+            loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent)
+          },
+          {
+            path: 'dashboard/contact',
+            loadComponent: () => import('./components/contact/contact.component').then(m => m.ContactComponent)
+          },
+          {
+            path: 'dashboard/faq',
+            loadComponent: () => import('./components/faq/faq.component').then(m => m.FaqComponent)
+          },
+          {
+            path: 'dashboard/how-it-works',
+            loadComponent: () => import('./components/how-it-works/how-it-works.component').then(m => m.HowItWorksComponent)
+          }
         ]
-      },
-      { path: '**', redirectTo: 'user/dashboard' }
+      }
     ]
   },
-  { path: '**', redirectTo: '' }
+  {
+    path: '**',
+    redirectTo: '/app/user/dashboard'
+  }
 ];

@@ -17,6 +17,7 @@ interface AuthResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+
   private apiUrl = 'http://localhost:8082/parking/api/auth';
   private tokenKey = 'token';
   private authStatus = new BehaviorSubject<boolean>(false);
@@ -112,11 +113,13 @@ export class AuthService {
     // Removed navigation to /auth to stay on current page
   }
 
-  isAuthenticated(): boolean {
-    return isPlatformBrowser(this.platformId)
-      ? !!localStorage.getItem(this.tokenKey)
-      : false;
-  }
+  // Dans auth.service.ts
+isAuthenticated(): boolean {
+  // Vérifiez si l'utilisateur est authentifié et retournez true ou false
+  const token = localStorage.getItem('token');
+  return !!token; // Convertit en booléen
+}
+
 
   isAdmin(): boolean {
     const user = this.getUser();
@@ -132,4 +135,18 @@ export class AuthService {
   getToken(): string | null {
     return isPlatformBrowser(this.platformId) ? localStorage.getItem(this.tokenKey) : null;
   }
+  // Dans auth.service.ts
+getCurrentUser(): any {
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      return JSON.parse(userStr);
+    } catch (e) {
+      console.error('Error parsing user data', e);
+      return null;
+    }
+  }
+  return null;
+}
+
 }

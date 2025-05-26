@@ -1,31 +1,109 @@
-.disabled-link {
-  pointer-events: none;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-/* Keep existing CSS from navbar.component.css */
-.active {
-  color: #F0DB9A !important;
-  font-weight: 600;
+.nav-link {
   position: relative;
 }
 
-.active::after {
+.nav-link::after {
   content: '';
   position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 100%;
+  width: 0;
   height: 2px;
-  background-color: #F0DB9A;
+  bottom: 0;
+  left: 0;
+  background-color: var(--gold-300);
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after,
+.active-link::after {
+  width: 100%;
+}
+
+.active-link {
+  color: var(--gold-300) !important;
+  font-weight: 600;
 }
 
 .gold-glow {
-  box-shadow: 0 0 10px rgba(240, 219, 154, 0.3);
-  transition: box-shadow 0.3s ease;
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.3);
+  transition: all 0.3s ease;
 }
 
 .gold-glow:hover {
-  box-shadow: 0 0 15px rgba(240, 219, 154, 0.5);
+  box-shadow: 0 0 15px rgba(234, 179, 8, 0.5);
+}
+
+.auth-button {
+  transform: translateY(0);
+  transition: transform 0.2s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-button:hover {
+  transform: translateY(-2px);
+}
+
+.logo-text {
+  background: linear-gradient(90deg, #f59e0b, #eab308);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+/* Mobile menu animation */
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrolled navbar effect */
+nav.scrolled {
+  background-color: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(8px);
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Language selector styles */
+.language-selector button {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease;
+}
+
+.language-selector button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Disabled link styles */
+.disabled-link {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* User dropdown animation */
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.user-menu > div,
+.language-selector > div {
+  animation: dropdownFadeIn 0.2s ease-out;
 }
