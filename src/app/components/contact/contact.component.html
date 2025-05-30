@@ -1,235 +1,92 @@
-<div class="contact-hero mb-16">
+<section class="py-20 bg-gray-100">
   <div class="container mx-auto px-6">
-    <h1 class="text-4xl md:text-5xl font-bold mb-4">{{ translate('contact.hero.title') }}</h1>
-    <p class="text-xl text-gold-200">{{ translate('contact.hero.subtitle') }}</p>
-  </div>
-</div>
+    <h1 class="text-3xl font-bold text-dark text-center mb-12">
+      {{ contactContent?.title || ('CONTACT.TITLE' | translate) }}
+    </h1>
 
-<!-- Loading Spinner -->
-<div class="loading-spinner" *ngIf="isLoading">
-  <div class="spinner"></div>
-</div>
+    <div *ngIf="isLoading" class="text-center text-gray-600">
+      {{ 'COMMON.LOADING' | translate }}
+    </div>
 
-<div class="container mx-auto px-6 py-16" *ngIf="!isLoading">
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
-    <!-- Contact Form -->
-    <div class="lg:col-span-2">
-      <div class="bg-white rounded-xl shadow-lg p-8 contact-form-container">
-        <h2 class="text-2xl font-bold mb-6">{{ contactContent.form?.title || (currentLanguage === 'FR' ? 'Envoyez-nous un message' : 'Send us a message') }}</h2>
-        
-        <!-- Success Message -->
-        <div *ngIf="formSuccess" class="bg-green-100 text-green-700 p-4 rounded-lg mb-6 success-message">
-          <div class="flex items-center">
-            <i class="ri-check-line text-xl mr-2"></i>
-            <p>{{ contactContent.form?.success || (currentLanguage === 'FR' ? 'Votre message a été envoyé avec succès!' : 'Your message has been sent successfully!') }}</p>
+    <div *ngIf="!isLoading" class="max-w-2xl mx-auto bg-white shadow-lg rounded-lg p-8">
+      <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
+        <div *ngIf="formSuccess" class="bg-green-100 text-green-700 p-4 rounded-md mb-6">
+          {{ 'CONTACT.FORM.SUCCESS' | translate }}
+        </div>
+        <div *ngIf="formError && formSubmitted" class="bg-red-100 text-red-700 p-4 rounded-md mb-6">
+          {{ 'CONTACT.FORM.ERROR' | translate }}
+        </div>
+
+        <div class="mb-6">
+          <label for="name" class="block text-gray-700 font-medium mb-2">
+            {{ 'CONTACT.FORM.NAME' | translate }}
+          </label>
+          <input id="name" formControlName="name" type="text" 
+                 class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
+                 [class.border-red-500]="contactForm.get('name')?.invalid && contactForm.get('name')?.touched">
+          <div *ngIf="contactForm.get('name')?.invalid && contactForm.get('name')?.touched" 
+               class="text-red-500 text-sm mt-1">
+            {{ 'CONTACT.FORM.NAME_REQUIRED' | translate }}
           </div>
         </div>
-        
-        <!-- Error Message -->
-        <div *ngIf="formError" class="bg-red-100 text-red-700 p-4 rounded-lg mb-6 error-message">
-          <div class="flex items-center">
-            <i class="ri-error-warning-line text-xl mr-2"></i>
-            <p>{{ contactContent.form?.error || (currentLanguage === 'FR' ? 'Une erreur est survenue. Veuillez réessayer.' : 'An error occurred. Please try again.') }}</p>
+
+        <div class="mb-6">
+          <label for="email" class="block text-gray-700 font-medium mb-2">
+            {{ 'CONTACT.FORM.EMAIL' | translate }}
+          </label>
+          <input id="email" formControlName="email" type="email" 
+                 class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
+                 [class.border-red-500]="contactForm.get('email')?.invalid && contactForm.get('email')?.touched">
+          <div *ngIf="contactForm.get('email')?.invalid && contactForm.get('email')?.touched" 
+               class="text-red-500 text-sm mt-1">
+            <span *ngIf="contactForm.get('email')?.errors?.['required']">
+              {{ 'CONTACT.FORM.EMAIL_REQUIRED' | translate }}
+            </span>
+            <span *ngIf="contactForm.get('email')?.errors?.['email']">
+              {{ 'CONTACT.FORM.EMAIL_INVALID' | translate }}
+            </span>
           </div>
         </div>
-        
-        <form [formGroup]="contactForm" (ngSubmit)="onSubmit()">
-          <div class="mb-4">
-            <label for="name" class="block text-gray-700 font-medium mb-2">
-              {{ contactContent.form?.name || (currentLanguage === 'FR' ? 'Nom complet' : 'Full name') }} *
-            </label>
-            <input 
-              type="text" 
-              id="name" 
-              formControlName="name" 
-              class="w-full px-4 py-3 border rounded-lg form-control"
-              [ngClass]="{'border-red-500': formSubmitted && contactForm.get('name')?.invalid}"
-            >
-            <div *ngIf="formSubmitted && contactForm.get('name')?.invalid" class="text-red-500 text-sm mt-1">
-              {{ currentLanguage === 'FR' ? 'Le nom est requis' : 'Name is required' }}
-            </div>
+
+        <div class="mb-6">
+          <label for="subject" class="block text-gray-700 font-medium mb-2">
+            {{ 'CONTACT.FORM.SUBJECT' | translate }}
+          </label>
+          <input id="subject" formControlName="subject" type="text" 
+                 class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
+                 [class.border-red-500]="contactForm.get('subject')?.invalid && contactForm.get('subject')?.touched">
+          <div *ngIf="contactForm.get('subject')?.invalid && contactForm.get('subject')?.touched" 
+               class="text-red-500 text-sm mt-1">
+            {{ 'CONTACT.FORM.SUBJECT_REQUIRED' | translate }}
           </div>
-          
-          <div class="mb-4">
-            <label for="email" class="block text-gray-700 font-medium mb-2">
-              {{ contactContent.form?.email || (currentLanguage === 'FR' ? 'Adresse email' : 'Email address') }} *
-            </label>
-            <input 
-              type="email" 
-              id="email" 
-              formControlName="email" 
-              class="w-full px-4 py-3 border rounded-lg form-control"
-              [ngClass]="{'border-red-500': formSubmitted && contactForm.get('email')?.invalid}"
-            >
-            <div *ngIf="formSubmitted && contactForm.get('email')?.invalid" class="text-red-500 text-sm mt-1">
-              {{ currentLanguage === 'FR' ? 'Une adresse email valide est requise' : 'A valid email address is required' }}
-            </div>
+        </div>
+
+        <div class="mb-6">
+          <label for="message" class="block text-gray-700 font-medium mb-2">
+            {{ 'CONTACT.FORM.MESSAGE' | translate }}
+          </label>
+          <textarea id="message" formControlName="message" rows="5" 
+                    class="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-gold-500"
+                    [class.border-red-500]="contactForm.get('message')?.invalid && contactForm.get('message')?.touched"></textarea>
+          <div *ngIf="contactForm.get('message')?.invalid && contactForm.get('message')?.touched" 
+               class="text-red-500 text-sm mt-1">
+            <span *ngIf="contactForm.get('message')?.errors?.['required']">
+              {{ 'CONTACT.FORM.MESSAGE_REQUIRED' | translate }}
+            </span>
+            <span *ngIf="contactForm.get('message')?.errors?.['minlength']">
+              {{ 'CONTACT.FORM.MESSAGE_MINLENGTH' | translate }}
+            </span>
           </div>
-          
-          <div class="mb-4">
-            <label for="subject" class="block text-gray-700 font-medium mb-2">
-              {{ contactContent.form?.subject || (currentLanguage === 'FR' ? 'Sujet' : 'Subject') }} *
-            </label>
-            <input 
-              type="text" 
-              id="subject" 
-              formControlName="subject" 
-              class="w-full px-4 py-3 border rounded-lg form-control"
-              [ngClass]="{'border-red-500': formSubmitted && contactForm.get('subject')?.invalid}"
-            >
-            <div *ngIf="formSubmitted && contactForm.get('subject')?.invalid" class="text-red-500 text-sm mt-1">
-              {{ currentLanguage === 'FR' ? 'Le sujet est requis' : 'Subject is required' }}
-            </div>
-          </div>
-          
-          <div class="mb-6">
-            <label for="message" class="block text-gray-700 font-medium mb-2">
-              {{ contactContent.form?.message || (currentLanguage === 'FR' ? 'Votre message' : 'Your message') }} *
-            </label>
-            <textarea 
-              id="message" 
-              formControlName="message" 
-              rows="5" 
-              class="w-full px-4 py-3 border rounded-lg form-control"
-              [ngClass]="{'border-red-500': formSubmitted && contactForm.get('message')?.invalid}"
-            ></textarea>
-            <div *ngIf="formSubmitted && contactForm.get('message')?.invalid" class="text-red-500 text-sm mt-1">
-              {{ currentLanguage === 'FR' ? 'Le message doit contenir au moins 10 caractères' : 'Message must be at least 10 characters long' }}
-            </div>
-          </div>
-          
-          <button 
-            type="submit" 
-            class="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-purple-900 transition-colors submit-button w-full"
-            [disabled]="isLoading"
-          >
-            <span *ngIf="!isLoading">{{ contactContent.form?.submit || (currentLanguage === 'FR' ? 'Envoyer le message' : 'Send message') }}</span>
-            <span *ngIf="isLoading">{{ currentLanguage === 'FR' ? 'Envoi en cours...' : 'Sending...' }}</span>
+        </div>
+
+        <div class="text-center">
+          <button type="submit" 
+                  [disabled]="contactForm.invalid" 
+                  class="bg-gold-500 text-dark px-8 py-3 rounded-md font-medium hover:bg-gold-600 transition-colors disabled:bg-gray-400">
+            {{ 'CONTACT.FORM.SUBMIT' | translate }}
           </button>
-        </form>
-      </div>
-    </div>
-    
-    <!-- Contact Information -->
-    <div class="lg:col-span-1">
-      <div class="bg-primary text-white rounded-xl shadow-lg p-8 contact-info-container mb-8">
-        <h2 class="text-2xl font-bold mb-6">{{ contactContent.info?.title || (currentLanguage === 'FR' ? 'Informations de contact' : 'Contact information') }}</h2>
-        
-        <div class="space-y-6">
-          <div class="contact-info-item flex items-start">
-            <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full mr-4 mt-1 text-gold-300">
-              <i class="ri-map-pin-line"></i>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gold-300">{{ contactContent.info?.address?.title || (currentLanguage === 'FR' ? 'Adresse' : 'Address') }}</h3>
-              <p class="text-white/80">{{ contactContent.info?.address?.value || 'Tunis, Tunisie' }}</p>
-            </div>
-          </div>
-          
-          <div class="contact-info-item flex items-start">
-            <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full mr-4 mt-1 text-gold-300">
-              <i class="ri-mail-line"></i>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gold-300">{{ contactContent.info?.email?.title || (currentLanguage === 'FR' ? 'Email' : 'Email') }}</h3>
-              <p class="text-white/80">{{ contactContent.info?.email?.value || 'contact@parkiny.tn' }}</p>
-            </div>
-          </div>
-          
-          <div class="contact-info-item flex items-start">
-            <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full mr-4 mt-1 text-gold-300">
-              <i class="ri-phone-line"></i>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gold-300">{{ contactContent.info?.phone?.title || (currentLanguage === 'FR' ? 'Téléphone' : 'Phone') }}</h3>
-              <p class="text-white/80">{{ contactContent.info?.phone?.value || '+216 XX XXX XXX' }}</p>
-            </div>
-          </div>
-          
-          <div class="contact-info-item flex items-start">
-            <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full mr-4 mt-1 text-gold-300">
-              <i class="ri-time-line"></i>
-            </div>
-            <div>
-              <h3 class="text-lg font-semibold text-gold-300">{{ contactContent.info?.hours?.title || (currentLanguage === 'FR' ? 'Heures d\'ouverture' : 'Opening hours') }}</h3>
-              <p class="text-white/80">{{ contactContent.info?.hours?.value || (currentLanguage === 'FR' ? '24/7 - Service automatisé' : '24/7 - Automated service') }}</p>
-            </div>
-          </div>
         </div>
-      </div>
-      
-      <!-- Map -->
-      <div class="rounded-xl overflow-hidden shadow-lg mb-8">
-        <iframe src="https://www.google.com/maps?q=36.8075969687945,10.073328443701746&z=15&output=embed" width="100%" height="200" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
-      </div>
+      </form>
     </div>
   </div>
-  
-  <!-- Development Team Section -->
-  <section class="mb-16 mt-16">
-    <h2 class="text-3xl font-bold text-center mb-12 section-title">
-      {{ contactContent.team?.title || (currentLanguage === 'FR' ? 'Équipe de développement PFE' : 'PFE Development Team') }}
-    </h2>
-    
-    <div class="bg-gray-50 p-8 rounded-xl">
-      <p class="text-gray-700 leading-relaxed mb-8 text-center">
-        {{ contactContent.team?.description || (currentLanguage === 'FR' ? 'Projet réalisé dans le cadre de notre formation en informatique, spécialisation en intelligence artificielle et développement web.' : 'Project carried out as part of our computer science education, specializing in artificial intelligence and web development.') }}
-      </p>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <div class="team-member bg-white p-6 rounded-lg shadow-sm border border-gray-100 text-center" *ngFor="let member of contactContent.team?.members">
-          <div class="w-20 h-20 mx-auto bg-gray-200 rounded-full mb-4 overflow-hidden">
-            <img 
-              [src]="member.image || 'https://via.placeholder.com/80x80'" 
-              alt="{{ member.name }}"
-              class="w-full h-full object-cover"
-              onerror="this.src='https://via.placeholder.com/80x80'; this.onerror=null;"
-            >
-          </div>
-          <h3 class="text-lg font-semibold mb-1">{{ member.name }}</h3>
-          <p class="text-primary mb-3">{{ member.role }}</p>
-          <a [href]="'mailto:' + member.email" class="text-gray-600 hover:text-primary transition-colors">
-            <i class="ri-mail-line mr-1"></i> {{ member.email }}
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-  
-  <!-- FAQ Section -->
-  <section class="mb-16">
-    <h2 class="text-3xl font-bold text-center mb-12 section-title">
-      {{ contactContent.faq?.title || (currentLanguage === 'FR' ? 'Questions fréquentes' : 'Frequently Asked Questions') }}
-    </h2>
-    
-    <div class="max-w-3xl mx-auto">
-      <div class="space-y-4">
-        <div class="faq-item bg-white p-6 rounded-lg shadow-sm border border-gray-100" *ngFor="let item of contactContent.faq?.items; let i = index" [class.active]="item.isOpen">
-          <div class="faq-question flex justify-between items-center cursor-pointer" (click)="item.isOpen = !item.isOpen">
-            <h3 class="text-lg font-semibold">{{ item.question }}</h3>
-            <i class="ri-arrow-down-s-line text-xl transition-transform" [class.rotate-180]="item.isOpen"></i>
-          </div>
-          <div class="faq-answer mt-0" [class.active]="item.isOpen" [style.maxHeight]="item.isOpen ? '500px' : '0'">
-            <p class="text-gray-700">{{ item.answer }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  
-  <!-- CTA Section -->
-  <section class="bg-gradient-to-r from-primary to-purple-800 text-white p-12 rounded-xl text-center">
-    <h2 class="text-3xl font-bold mb-4">
-      <span *ngIf="currentLanguage === 'FR'">Besoin d'aide supplémentaire ?</span>
-      <span *ngIf="currentLanguage === 'EN'">Need additional help?</span>
-    </h2>
-    <p class="text-xl text-gold-200 mb-8">
-      <span *ngIf="currentLanguage === 'FR'">Notre équipe est disponible pour répondre à toutes vos questions concernant notre projet de fin d'études.</span>
-      <span *ngIf="currentLanguage === 'EN'">Our team is available to answer all your questions about our final year project.</span>
-    </p>
-    <a href="#" class="bg-gold-500 text-dark px-10 py-4 rounded-lg font-bold text-lg hover:bg-gold-600 transition-colors inline-block">
-      <span *ngIf="currentLanguage === 'FR'">Contactez notre superviseur</span>
-      <span *ngIf="currentLanguage === 'EN'">Contact our supervisor</span>
-    </a>
-  </section>
-</div>
+</section>

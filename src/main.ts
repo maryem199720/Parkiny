@@ -10,8 +10,17 @@ import { provideHttpClient } from '@angular/common/http';
 import { AppComponent } from './app/app.component';
 import { MatNativeDateModule } from '@angular/material/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { HttpClient } from '@angular/common/http';
 
+// Register English locale data
 registerLocaleData(en);
+
+// Factory function for TranslateHttpLoader
+export function HttpLoaderFactory(http: HttpClient) {
+  return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -27,6 +36,17 @@ bootstrapApplication(AppComponent, {
     provideAnimations(),
     provideHttpClient(),
     importProvidersFrom(MatNativeDateModule),
-    provideAnimationsAsync()
+    provideAnimationsAsync(),
+    // Add TranslateModule.forRoot() configuration
+    importProvidersFrom(
+      TranslateModule.forRoot({
+        loader: {
+          provide: TranslateLoader,
+          useFactory: HttpLoaderFactory,
+          deps: [HttpClient]
+        },
+        defaultLanguage: 'fr'
+      })
+    )
   ]
 }).catch((err) => console.error(err));

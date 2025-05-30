@@ -1,181 +1,64 @@
-<nav class="bg-dark text-white shadow-lg sticky top-0 z-50 transition-all duration-300">
-  <div class="container mx-auto px-6 py-3">
+<nav class="bg-dark text-white shadow-lg sticky top-0 z-50">
+  <div class="container mx-auto px-6 py-4">
     <div class="flex items-center justify-between">
-      <!-- Logo -->
-      <a routerLink="/" class="text-2xl font-['Pacifico'] text-gold-500 flex items-center hover:scale-105 transition-transform">
+      <a routerLink="/app/user/dashboard" class="text-2xl font-['Pacifico'] text-gold-500 flex items-center">
         <i class="ri-parking-box-fill text-gold-500 mr-2"></i>
-        <span class="logo-text">Parkiny</span>
+        Parkiny
       </a>
-      
-      <!-- Main Navigation - Desktop -->
-      <nav class="hidden md:flex space-x-6">
-        <a routerLink="/app/user/dashboard" routerLinkActive="active-link" 
-           class="nav-link text-white hover:text-gold-300 transition-all font-medium relative py-2">
-          <i class="ri-home-4-line mr-1"></i> Accueil
-        </a>
-        <a routerLink="/app/user/dashboard/reservations" routerLinkActive="active-link" 
-           [class.disabled-link]="!authService.isAuthenticated()" 
-           [class.text-white]="authService.isAuthenticated()"
-           [class.text-gray-500]="!authService.isAuthenticated()"
-           class="nav-link hover:text-gold-300 transition-all font-medium relative py-2">
-          <i class="ri-calendar-check-line mr-1"></i> Réservations
-        </a>
-        <a routerLink="/app/user/dashboard/abonnements" routerLinkActive="active-link" 
-           [class.disabled-link]="!authService.isAuthenticated()" 
-           [class.text-white]="authService.isAuthenticated()"
-           [class.text-gray-500]="!authService.isAuthenticated()"
-           class="nav-link hover:text-gold-300 transition-all font-medium relative py-2">
-          <i class="ri-vip-crown-line mr-1"></i> Abonnements
-        </a>
-        <a routerLink="/app/user/dashboard/about" routerLinkActive="active-link" 
-           class="nav-link text-white hover:text-gold-300 transition-all font-medium relative py-2">
-          <i class="ri-information-line mr-1"></i> À Propos
-        </a>
-        <a routerLink="/app/user/dashboard/contact" routerLinkActive="active-link" 
-           class="nav-link text-white hover:text-gold-300 transition-all font-medium relative py-2">
-          <i class="ri-customer-service-2-line mr-1"></i> Contact
-        </a>
-      </nav>
-      
-      <!-- Auth Buttons - Not Logged In -->
-      <div class="hidden md:flex items-center space-x-4" *ngIf="!authService.isAuthenticated()">
-        <!-- Language Selector -->
-        <div class="relative language-selector mr-2">
-          <button (click)="toggleLanguageDropdown()" class="flex items-center text-white hover:text-gold-300 transition-colors">
-            <i class="ri-global-line mr-1"></i>
-            <span>{{ currentLanguage }}</span>
-            <i class="ri-arrow-down-s-line ml-1"></i>
+      <div class="flex items-center space-x-8">
+        <nav class="hidden md:flex space-x-8">
+          <a routerLink="/app/user/dashboard" routerLinkActive="active" class="text-white hover:text-gold-300 transition-colors font-medium">
+            {{ 'NAVBAR.HOME' | translate }}
+          </a>
+          <a routerLink="/app/user/reservations" routerLinkActive="active" 
+             [class.disabled-link]="!authService.isAuthenticated()" 
+             [class.text-white]="authService.isAuthenticated()"
+             [class.text-gray-500]="!authService.isAuthenticated()"
+             class="hover:text-gold-300 transition-colors font-medium">
+            {{ 'NAVBAR.RESERVATIONS' | translate }}
+          </a>
+          <a routerLink="/app/user/subscriptions" routerLinkActive="active" 
+             [class.disabled-link]="!authService.isAuthenticated()" 
+             [class.text-white]="authService.isAuthenticated()"
+             [class.text-gray-500]="!authService.isAuthenticated()"
+             class="hover:text-gold-300 transition-colors font-medium">
+            {{ 'NAVBAR.SUBSCRIPTIONS' | translate }}
+          </a>
+          <a routerLink="/app/user/about" routerLinkActive="active" 
+             class="text-white hover:text-gold-300 transition-colors font-medium">
+            {{ 'NAVBAR.ABOUT' | translate }}
+          </a>
+          <a routerLink="/app/user/contact" routerLinkActive="active" 
+             class="text-white hover:text-gold-300 transition-colors font-medium">
+            {{ 'NAVBAR.CONTACT' | translate }}
+          </a>
+        </nav>
+        <div class="flex items-center space-x-2">
+          <button (click)="switchLanguage('fr')" class="text-white hover:text-gold-300">
+            FR
           </button>
-          <div *ngIf="showLanguageDropdown" class="absolute right-0 mt-2 w-32 bg-dark border border-gray-700 rounded-md shadow-lg z-50">
-            <a (click)="changeLanguage('FR')" class="block px-4 py-2 text-white hover:bg-gray-700 cursor-pointer">Français</a>
-            <a (click)="changeLanguage('EN')" class="block px-4 py-2 text-white hover:bg-gray-700 cursor-pointer">English</a>
-          </div>
-        </div>
-        
-        <a routerLink="/auth" class="auth-button bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-purple-900 transition-all hover:scale-105 gold-glow flex items-center">
-          <i class="ri-login-box-line mr-1"></i> Connexion
-        </a>
-        <a routerLink="/auth" [queryParams]="{signup: true}" class="auth-button bg-gold-500 text-dark px-6 py-2 rounded-md font-medium hover:bg-gold-600 transition-all hover:scale-105 gold-glow flex items-center">
-          <i class="ri-user-add-line mr-1"></i> S'inscrire
-        </a>
-      </div>
-      
-      <!-- User Menu - Logged In -->
-      <div class="hidden md:flex items-center space-x-4" *ngIf="authService.isAuthenticated()">
-        <!-- Language Selector -->
-        <div class="relative language-selector mr-2">
-          <button (click)="toggleLanguageDropdown()" class="flex items-center text-white hover:text-gold-300 transition-colors">
-            <i class="ri-global-line mr-1"></i>
-            <span>{{ currentLanguage }}</span>
-            <i class="ri-arrow-down-s-line ml-1"></i>
+          <span class="text-gray-400">|</span>
+          <button (click)="switchLanguage('en')" class="text-white hover:text-gold-300">
+            EN
           </button>
-          <div *ngIf="showLanguageDropdown" class="absolute right-0 mt-2 w-32 bg-dark border border-gray-700 rounded-md shadow-lg z-50">
-            <a (click)="changeLanguage('FR')" class="block px-4 py-2 text-white hover:bg-gray-700 cursor-pointer">Français</a>
-            <a (click)="changeLanguage('EN')" class="block px-4 py-2 text-white hover:bg-gray-700 cursor-pointer">English</a>
-          </div>
-        </div>
-        
-        <!-- User Profile Dropdown -->
-        <div class="relative user-menu">
-          <button (click)="toggleUserDropdown()" class="flex items-center text-white hover:text-gold-300 transition-colors">
-            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center mr-2">
-              <i class="ri-user-3-fill"></i>
-            </div>
-            <span class="hidden lg:inline">{{ userName }}</span>
-            <i class="ri-arrow-down-s-line ml-1"></i>
-          </button>
-          <div *ngIf="showUserDropdown" class="absolute right-0 mt-2 w-48 bg-dark border border-gray-700 rounded-md shadow-lg z-50">
-            <a routerLink="/app/user/dashboard/profile" class="block px-4 py-2 text-white hover:bg-gray-700">
-              <i class="ri-user-settings-line mr-2"></i> Mon Profil
-            </a>
-            <a routerLink="/app/user/dashboard/reservations" class="block px-4 py-2 text-white hover:bg-gray-700">
-              <i class="ri-calendar-check-line mr-2"></i> Mes Réservations
-            </a>
-            <a routerLink="/app/user/dashboard/vehicles" class="block px-4 py-2 text-white hover:bg-gray-700">
-              <i class="ri-car-line mr-2"></i> Mes Véhicules
-            </a>
-            <div class="border-t border-gray-700 my-1"></div>
-            <a (click)="logout()" class="block px-4 py-2 text-white hover:bg-gray-700 cursor-pointer">
-              <i class="ri-logout-box-r-line mr-2"></i> Déconnexion
-            </a>
-          </div>
         </div>
       </div>
-      
-      <!-- Mobile Menu Button -->
-      <button (click)="toggleMobileMenu()" class="md:hidden text-white focus:outline-none">
-        <i class="ri-menu-line text-2xl" *ngIf="!showMobileMenu"></i>
-        <i class="ri-close-line text-2xl" *ngIf="showMobileMenu"></i>
-      </button>
-    </div>
-    
-    <!-- Mobile Menu -->
-    <div *ngIf="showMobileMenu" class="md:hidden mt-4 pb-4 border-t border-gray-700 pt-4 animate-fadeIn">
-      <nav class="flex flex-col space-y-4">
-        <a routerLink="/app/user/dashboard" routerLinkActive="text-gold-300" class="text-white hover:text-gold-300 transition-colors font-medium flex items-center">
-          <i class="ri-home-4-line mr-2"></i> Accueil
+      <div class="flex items-center space-x-4" *ngIf="!authService.isAuthenticated()">
+        <a routerLink="/auth" class="bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-purple-900 transition-colors gold-glow">
+          {{ 'NAVBAR.LOGIN' | translate }}
         </a>
-        <a routerLink="/app/user/dashboard/reservations" routerLinkActive="text-gold-300" 
-           [class.disabled-link]="!authService.isAuthenticated()" 
-           [class.text-white]="authService.isAuthenticated()"
-           [class.text-gray-500]="!authService.isAuthenticated()"
-           class="hover:text-gold-300 transition-colors font-medium flex items-center">
-          <i class="ri-calendar-check-line mr-2"></i> Réservations
+        <a routerLink="/auth" [queryParams]="{signup: true}" class="bg-gold-500 text-dark px-6 py-2 rounded-md font-medium hover:bg-gold-600 transition-colors gold-glow">
+          {{ 'NAVBAR.SIGNUP' | translate }}
         </a>
-        <a routerLink="/app/user/dashboard/abonnements" routerLinkActive="text-gold-300" 
-           [class.disabled-link]="!authService.isAuthenticated()" 
-           [class.text-white]="authService.isAuthenticated()"
-           [class.text-gray-500]="!authService.isAuthenticated()"
-           class="hover:text-gold-300 transition-colors font-medium flex items-center">
-          <i class="ri-vip-crown-line mr-2"></i> Abonnements
+      </div>
+      <div class="flex items-center space-x-4" *ngIf="authService.isAuthenticated()">
+        <a routerLink="/app/user/profile" routerLinkActive="active" class="text-white hover:text-gold-300 transition-colors">
+          <i class="ri-user-3-fill text-xl"></i>
         </a>
-        <a routerLink="/app/user/dashboard/about" routerLinkActive="text-gold-300" class="text-white hover:text-gold-300 transition-colors font-medium flex items-center">
-          <i class="ri-information-line mr-2"></i> À Propos
-        </a>
-        <a routerLink="/app/user/dashboard/contact" routerLinkActive="text-gold-300" class="text-white hover:text-gold-300 transition-colors font-medium flex items-center">
-          <i class="ri-customer-service-2-line mr-2"></i> Contact
-        </a>
-        
-        <!-- Language Selector Mobile -->
-        <div class="border-t border-gray-700 pt-4 mt-2">
-          <p class="text-gray-400 mb-2 text-sm">Langue</p>
-          <div class="flex space-x-4">
-            <button (click)="changeLanguage('FR')" class="px-3 py-1 rounded-md" [ngClass]="{'bg-primary text-white': currentLanguage === 'FR', 'bg-gray-700 text-gray-300': currentLanguage !== 'FR'}">
-              Français
-            </button>
-            <button (click)="changeLanguage('EN')" class="px-3 py-1 rounded-md" [ngClass]="{'bg-primary text-white': currentLanguage === 'EN', 'bg-gray-700 text-gray-300': currentLanguage !== 'EN'}">
-              English
-            </button>
-          </div>
-        </div>
-        
-        <!-- Auth Buttons Mobile -->
-        <div class="flex flex-col space-y-3 pt-4" *ngIf="!authService.isAuthenticated()">
-          <a routerLink="/auth" class="bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-purple-900 transition-colors gold-glow flex items-center justify-center">
-            <i class="ri-login-box-line mr-2"></i> Connexion
-          </a>
-          <a routerLink="/auth" [queryParams]="{signup: true}" class="bg-gold-500 text-dark px-6 py-2 rounded-md font-medium hover:bg-gold-600 transition-colors gold-glow flex items-center justify-center">
-            <i class="ri-user-add-line mr-2"></i> S'inscrire
-          </a>
-        </div>
-        
-        <!-- User Menu Mobile -->
-        <div class="flex flex-col space-y-3 pt-4 border-t border-gray-700" *ngIf="authService.isAuthenticated()">
-          <p class="text-gray-400 mb-2 text-sm">Mon compte</p>
-          <a routerLink="/app/user/dashboard/profile" class="text-white hover:text-gold-300 transition-colors flex items-center">
-            <i class="ri-user-settings-line mr-2"></i> Mon Profil
-          </a>
-          <a routerLink="/app/user/dashboard/reservations" class="text-white hover:text-gold-300 transition-colors flex items-center">
-            <i class="ri-calendar-check-line mr-2"></i> Mes Réservations
-          </a>
-          <a routerLink="/app/user/dashboard/vehicles" class="text-white hover:text-gold-300 transition-colors flex items-center">
-            <i class="ri-car-line mr-2"></i> Mes Véhicules
-          </a>
-          <button (click)="logout()" class="bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-purple-900 transition-colors gold-glow flex items-center justify-center mt-4">
-            <i class="ri-logout-box-r-line mr-2"></i> Déconnexion
-          </button>
-        </div>
-      </nav>
+        <button (click)="logout()" class="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-purple-900 transition-colors gold-glow flex items-center">
+          <i class="ri-logout-box-r-line mr-1"></i> {{ 'NAVBAR.LOGOUT' | translate }}
+        </button>
+      </div>
     </div>
   </div>
 </nav>

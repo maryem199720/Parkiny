@@ -1,0 +1,27 @@
+{
+  "NAVBAR": {
+    "HOME": "",
+    "RESERVATIONS": "",
+    "SUBSCRIPTIONS": "",
+    "ABOUT": "",
+    "CONTACT": "",
+    "LOGIN": "",
+    "SIGNUP": "",
+    "MY_PROFILE": "",
+    "MY_RESERVATIONS": "",
+    "MY_VEHICLES": "",
+    "LOGOUT": "",
+    "LANGUAGE": "",
+    "MY_ACCOUNT": ""
+  },
+  "ABOUT_PAGE": {
+    "TITLE": ""
+   
+  },
+  "CONTACT_PAGE": {
+    "TITLE": ""
+   
+  }
+ 
+}
+

@@ -1,0 +1,166 @@
+{
+  "NAVBAR": {
+    "HOME": "Home",
+    "RESERVATIONS": "My Reservations",
+    "SUBSCRIPTIONS": "My Subscription",
+    "ABOUT": "About Us",
+    "CONTACT": "Contact",
+    "LOGIN": "Login",
+    "SIGNUP": "Sign Up",
+    "MY_PROFILE": "My Profile",
+    "MY_RESERVATIONS": "My Reservations",
+    "MY_VEHICLES": "My Vehicle",
+    "LOGOUT": "Logout",
+    "LANGUAGE": "Language",
+    "MY_ACCOUNT": "My account"
+  },
+  "ABOUT_PAGE": {
+    "TITLE": "About Parkiny"
+  },
+  "CONTACT_PAGE": {
+    "TITLE": "Contact Parkiny"
+  },
+  "CONTACT": {
+    "TITLE": "Contact Us",
+    "FORM": {
+      "NAME": "Name",
+      "EMAIL": "Email",
+      "SUBJECT": "Subject",
+      "MESSAGE": "Message",
+      "SUBMIT": "Send",
+      "SUCCESS": "Your message has been sent successfully!",
+      "ERROR": "Please fill in all required fields correctly.",
+      "NAME_REQUIRED": "Name is required.",
+      "EMAIL_REQUIRED": "Email is required.",
+      "EMAIL_INVALID": "Please enter a valid email address.",
+      "SUBJECT_REQUIRED": "Subject is required.",
+      "MESSAGE_REQUIRED": "Message is required.",
+      "MESSAGE_MINLENGTH": "Message must be at least 10 characters long."
+    }
+  },
+  "COMMON": {
+    "LOADING": "Loading..."
+  },
+  "FAQ_PAGE": {
+    "TITLE": "Frequently Asked Questions",
+    "BOOKING_QUESTION": "How do I reserve my spot in the parking lot?",
+    "BOOKING_ANSWER": "Access is managed via subscription or prior registration. Contact us for access details to our private parking.",
+    "SECURITY_QUESTION": "Is the parking secure?",
+    "SECURITY_ANSWER": "Yes, our private parking is equipped with 24/7 surveillance cameras, access control via license plate recognition, and on-site presence to ensure security.",
+    "HOURS_QUESTION": "What are the access hours?",
+    "HOURS_ANSWER": "The parking is accessible 24 hours a day, 7 days a week for authorized and registered users.",
+    "PAYMENT_QUESTION": "How does the subscription/payment work?",
+    "PAYMENT_ANSWER": "We offer subscription plans tailored to your needs for access to our private parking. Contact us for pricing details.",
+    "PLATE_ISSUE_QUESTION": "What if my license plate is not recognized?",
+    "PLATE_ISSUE_ANSWER": "If there is an issue with plate recognition at the entrance or exit, a call button will connect you with our support for immediate assistance."
+  },
+  "LOCATION_MAP": {
+    "TITLE": "Our Unique Location",
+    "ADDRESS_TITLE": "Private Parking Address",
+    "DIRECTIONS_HINT": "Use the map above to get directions.",
+    "ERROR_TOKEN": "Mapbox access token is not configured. The map cannot be displayed."
+  },
+  "PRICING_PAGE": {
+    "TITLE": "Our Subscription Plans",
+    "SUBTITLE": "Choose the access plan for our private parking that suits you.",
+    "HOURLY": {
+      "NAME": "On-Demand Access",
+      "PRICE": "Variable",
+      "PERIOD": "",
+      "FEATURE_1": "Ideal for occasional visits",
+      "FEATURE_2": "Contact us for availability"
+    },
+    "DAILY": {
+      "NAME": "Daily Pass",
+      "PRICE": "XX TND",
+      "PERIOD": "/ day",
+      "FEATURE_1": "Unlimited access for 24h",
+      "FEATURE_2": "Multiple entries/exits",
+      "FEATURE_3": "Popular option"
+    },
+    "MONTHLY": {
+      "NAME": "Monthly Subscription",
+      "PRICE": "XXX TND",
+      "PERIOD": "/ month",
+      "FEATURE_1": "Unlimited 24/7 access",
+      "FEATURE_2": "Guaranteed spot (depending on plan)",
+      "FEATURE_3": "Monthly billing",
+      "FEATURE_4": "Best value"
+    },
+    "SELECT_PLAN": "Select Plan"
+  },
+  "LEGAL_NOTICE": {
+    "TITLE": "Legal Notice",
+    "SECTION_1": {
+      "TITLE": "Application Publisher (FYP Project)",
+      "CONTENT": "Parkiny application developed as part of a Final Year Project. Contact: [Student Name(s)], [Student Email(s)], [University/School]"
+    },
+    "SECTION_2": {
+      "TITLE": "Hosting (Simulated)",
+      "CONTENT": "The application is hosted locally for development and FYP demonstration purposes."
+    },
+    "SECTION_3": {
+      "TITLE": "Intellectual Property",
+      "CONTENT": "The source code and graphic elements of this application are the intellectual property of the FYP authors, unless otherwise stated (third-party libraries). Any reproduction is prohibited without authorization."
+    },
+    "SECTION_4": {
+      "TITLE": "Limitation of Liability",
+      "CONTENT": "This application is an FYP prototype. Information and features are provided for indicative and demonstration purposes only. The authors cannot be held responsible for any errors or unavailability."
+    },
+    "SECTION_5": {
+      "TITLE": "Applicable Law",
+      "CONTENT": "This project is subject to the regulatory framework of the educational institution [University/School]."
+    }
+  },
+  "PRIVACY_POLICY": {
+    "TITLE": "Privacy Policy (FYP)",
+    "LAST_UPDATED": "Last updated: May 2025",
+    "SECTION_1": {
+      "TITLE": "Introduction",
+      "CONTENT": "This policy describes how data is managed within the Parkiny prototype (FYP). No real personal data is collected or stored long-term in this demonstration version."
+    },
+    "SECTION_2": {
+      "TITLE": "Data Collected (Simulation)",
+      "CONTENT": "For demonstration purposes, the application simulates the collection of: username, email, vehicle information (license plate), and reservation/subscription data. Plate images are processed locally and not stored."
+    },
+    "SECTION_3": {
+      "TITLE": "Use of Data (Simulation)",
+      "CONTENT": "Simulated data is used solely to demonstrate features: authentication, access management, display of reservations/subscriptions."
+    },
+    "SECTION_4": {
+      "TITLE": "Data Sharing",
+      "CONTENT": "No data, even simulated, is shared with third parties as part of this FYP."
+    },
+    "SECTION_5": {
+      "TITLE": "Data Security",
+      "CONTENT": "Standard security measures are implemented (e.g., simulated password hashing), but the application remains a prototype not intended for a production environment."
+    },
+    "SECTION_6": {
+      "TITLE": "User Rights (Simulation)",
+      "CONTENT": "In a real application, users would have rights to access, rectify, and delete their data. These features are not implemented in this FYP."
+    },
+    "SECTION_7": {
+      "TITLE": "Cookies",
+      "CONTENT": "The application uses technical cookies (e.g., authentication token) necessary for its operation. No tracking or advertising cookies are used."
+    },
+    "SECTION_8": {
+      "TITLE": "Contact",
+      "CONTENT": "For any questions regarding this FYP prototype, contact the authors: [Student Email(s)]"
+    }
+  },
+  "FOOTER": {
+    "ABOUT_TITLE": "About Parkiny (FYP)",
+    "ABOUT_TEXT": "Management solution for a unique private parking. Final Year Project.",
+    "QUICK_LINKS_TITLE": "Quick Links",
+    "FAQ_LINK": "FAQ",
+    "PRICING_LINK": "Subscriptions",
+    "LOCATION_LINK": "Our Location",
+    "LEGAL_TITLE": "Legal",
+    "LEGAL_NOTICE_LINK": "Legal Notice",
+    "PRIVACY_POLICY_LINK": "Privacy Policy",
+    "COPYRIGHT": "All rights reserved (within the scope of the FYP)."
+  },
+  "ERROR": {
+    "CONTENT_LOAD_FAILED": "Content could not be loaded."
+  }
+}

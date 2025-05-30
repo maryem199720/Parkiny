@@ -1,16 +1,17 @@
 <div class="bg-gray-50 min-h-screen">
   <main class="container mx-auto px-4 py-8">
     <div class="max-w-4xl mx-auto">
+      <!-- Header -->
       <div class="text-center mb-12">
         <h1 class="text-4xl font-bold text-dark mb-4 font-display">
           Souscrivez à <span class="text-primary">Parki</span>
         </h1>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-          Choisissez l'offre qui correspond à vos besoins et profitez de nos services premium avec des avantages exclusifs.
+          Souscrivez à un abonnement en quelques étapes simples.
         </p>
       </div>
 
-      <!-- Barre de progression -->
+      <!-- Progress Bar -->
       <div class="mb-12">
         <div class="flex justify-between items-center mb-2">
           <div class="flex items-center">
@@ -27,7 +28,7 @@
           </div>
           <div class="flex-1 mx-4">
             <div class="progress-bar">
-              <div class="progress-fill" [style.width]="currentStep === 2 ? '50%' : currentStep === 3 ? '100%' : '0%'"></div>
+              <div class="progress-fill" [style.width]="currentStep >= 2 ? '50%' : '0%'"></div>
             </div>
           </div>
           <div class="flex items-center">
@@ -40,35 +41,35 @@
                 <span *ngIf="currentStep <= 2">2</span>
               </div>
             </div>
-            <span class="ml-2 text-sm font-medium text-gray-700">Informations</span>
+            <span class="ml-2 text-sm font-medium text-gray-700">Paiement</span>
           </div>
           <div class="flex-1 mx-4">
             <div class="progress-bar">
-              <div class="progress-fill" [style.width]="currentStep === 3 ? '100%' : '0%'"></div>
+              <div class="progress-fill" [style.width]="currentStep >= 3 ? '100%' : '0%'"></div>
             </div>
           </div>
           <div class="flex items-center">
             <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center" [ngClass]="{
-                'border-primary bg-white text-primary': currentStep === 3,
+                'border-primary bg-primary text-white': currentStep >= 3,
                 'border-gray-300 text-gray-300': currentStep < 3
               }">
               <div class="w-4 h-4 flex items-center justify-center">
                 <span>3</span>
               </div>
             </div>
-            <span class="ml-2 text-sm font-medium text-gray-700">Paiement</span>
+            <span class="ml-2 text-sm font-medium text-gray-700">Confirmation</span>
           </div>
         </div>
       </div>
 
-      <!-- Section des forfaits -->
+      <!-- Step 1: Plan Selection -->
       <div class="mb-12" *ngIf="currentStep === 1">
         <div class="flex justify-between items-center mb-6">
-          <h2 class="text-2xl font-semibold text-dark font-display">Choisissez votre forfait</h2>
+          <h2 class="text-2xl font-semibold text-dark font-display">Choix du forfait</h2>
           <div class="flex items-center">
             <span class="text-sm text-gray-600 mr-2">Mensuel</span>
             <label class="switch">
-              <input type="checkbox" [checked]="billingType.value === 'annual'" (change)="toggleBillingType()" />
+              <input type="checkbox" [checked]="billingType.value === 'annual'" (change)="toggleBillingType()" [disabled]="hasActiveSubscription" />
               <span class="slider rounded-full"></span>
             </label>
             <span class="text-sm text-gray-600 ml-2">Annuel</span>
@@ -76,15 +77,34 @@
           </div>
         </div>
 
+        <!-- Active Subscription Message -->
+        <div *ngIf="hasActiveSubscription" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div class="flex items-center">
+            <i class="ri-error-warning-line text-red-500 text-2xl mr-3"></i>
+            <div>
+              <p class="text-red-700 font-medium">
+                Vous avez déjà un abonnement actif. Un seul abonnement est autorisé à la fois.
+              </p>
+              <p class="text-gray-600 text-sm mt-1">
+                Votre abonnement actuel : {{ activeSubscription?.subscriptionType }} ({{ activeSubscription?.billingCycle === 'monthly' ? 'Mensuel' : 'Annuel' }})
+              </p>
+              <p class="text-gray-600 text-sm">
+                Consultez les détails dans votre <a routerLink="/app/user/profile" class="text-primary underline">profil</a>.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <div class="grid md:grid-cols-3 gap-6">
           <div *ngFor="let plan of plans.value" class="plan-card bg-white rounded-lg border overflow-hidden"
                [ngClass]="{
-                 'border-primary': selectedPlan.value === plan.id,
+                 'border-primary': selectedPlan.value === plan.id && !hasActiveSubscription,
                  'popular-plan': plan.isPopular,
                  'shadow-sm': !plan.isPopular,
-                 'shadow-md': plan.isPopular
+                 'shadow-md': plan.isPopular,
+                 'opacity-50 cursor-not-allowed': hasActiveSubscription
                }"
-               (click)="selectPlan(plan.id)">
+               (click)="!hasActiveSubscription && selectPlan(plan.id)">
             <div class="p-6">
               <h3 class="text-xl font-semibold text-dark mb-2 font-display">{{ plan.name }}</h3>
               <div class="flex items-end mb-4">
@@ -98,480 +118,195 @@
                   </div>
                   <span class="text-gray-600">{{ feature }}</span>
                 </li>
-                <li *ngFor="let excluded of plan.excludedFeatures" class="flex items-start">
-                  <div class="feature-icon w-6 h-6 flex items-center justify-center text-red-500 mr-2 mt-0.5">
-                    <i class="ri-close-line"></i>
+                <li *ngFor="let excluded of plan.excludedFeatures" class="flex items-center">
+                  <div class="flex-wrapper text-red-500 mr-2 mt-0.5">
+                    <i class="fi fi-rr-cross-circle"></i>
                   </div>
-                  <span class="text-gray-400">{{ excluded }}</span>
+                  <span class="text-sm text-gray-400">{{ excluded }}</span>
                 </li>
               </ul>
-              <button class="w-full font-medium py-2 rounded-lg transition-colors"
-                      [ngClass]="{
-                        'btn-primary': selectedPlan.value === plan.id,
-                        'border border-primary text-primary bg-white hover:bg-gray-50': selectedPlan.value !== plan.id
-                      }">
-                {{ selectedPlan.value === plan.id ? 'Sélectionné' : 'Choisir ce forfait' }}
+              <button class="w-full text-nowrap font-medium py-2 rounded-lg transition-colors"
+                      [class.btn-primary]="selectedPlan.value === plan.id && !hasActiveSubscription"
+                      [class.border-primary]="selectedPlan.value !== plan.id || hasActiveSubscription"
+                      [class.text-primary]="selectedPlan.value !== plan.id || hasActiveSubscription"
+                      [class.bg-white]="selectedPlan.value !== plan.id || hasActiveSubscription"
+                      [class.hover:bg-gray-50]="selectedPlan.value !== plan.id && !hasActiveSubscription"
+                      [disabled]="hasActiveSubscription">
+                {{ selectedPlan.value === plan.id && !hasActiveSubscription ? 'Sélectionné' : 'Choisir ce forfait' }}
               </button>
             </div>
           </div>
         </div>
-        <div class="mt-8 flex justify-end">
+        <div class="mt-8 flex justify-between">
+          <button type="button" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium" (click)="reset()">
+            <i class="ri-refresh-line mr-2"></i> Réinitialiser
+          </button>
           <button 
             type="button" 
-            class="btn-primary px-6 py-3 rounded-lg font-medium" 
+            class="btn-primary px-6 py-3 rounded-lg font-medium flex items-center" 
             (click)="nextStep()"
-            [disabled]="vehicles.value.length === 0"
-            matTooltip="Ajoutez un véhicule dans votre profil pour continuer"
-            [matTooltipDisabled]="vehicles.value.length > 0">
-            Continuer <i class="ri-arrow-right-line ml-2"></i>
+            [disabled]="vehicles.value.length === 0 || !selectedPlan.value || hasActiveSubscription"
+            matTooltip="Ajoutez un véhicule dans votre profil, sélectionnez un forfait ou vérifiez votre abonnement actif pour continuer"
+            [matTooltipDisabled]="vehicles.value.length > 0 && !!selectedPlan.value && !hasActiveSubscription">
+            Suivant <i class="ri-arrow-right-line ml-2"></i>
           </button>
-          <div *ngIf="vehicles.value.length === 0" class="text-red-500 text-sm mt-2">
-            Veuillez ajouter un véhicule dans votre profil avant de continuer.
-          </div>
+        </div>
+        <div *ngIf="vehicles.value.length === 0" class="text-red-500 text-sm mt-2">
+          Veuillez ajouter un véhicule dans votre profil avant de continuer.
+          <a routerLink="/profile" class="text-primary underline">Aller au profil</a>.
         </div>
       </div>
 
-      <!-- Tableau comparatif -->
-      <div class="mb-12" *ngIf="currentStep === 1">
-        <h2 class="text-2xl font-semibold text-dark mb-6 font-display">Comparez nos offres</h2>
-        <div class="overflow-x-auto">
-          <table class="min-w-full bg-white rounded-lg border border-gray-200">
-            <thead>
-              <tr class="bg-gray-50">
-                <th class="py-3 px-4 text-left text-gray-700 font-medium">Caractéristiques</th>
-                <th *ngFor="let plan of plans.value" class="py-3 px-4 text-center text-gray-700 font-medium">{{ plan.name }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr class="border-t border-gray-200">
-                <td class="py-3 px-4 text-gray-700">Accès aux parkings</td>
-                <td *ngFor="let plan of plans.value" class="py-3 px-4 text-center">
-                  <i class="ri-check-line text-gold-500"></i>
-                </td>
-              </tr>
-              <tr class="border-t border-gray-200 bg-gray-50">
-                <td class="py-3 px-4 text-gray-700">Durée de stationnement</td>
-                <td class="py-3 px-4 text-center">5h/jour</td>
-                <td class="py-3 px-4 text-center">Illimitée</td>
-                <td class="py-3 px-4 text-center">Illimitée</td>
-              </tr>
-              <tr class="border-t border-gray-200">
-                <td class="py-3 px-4 text-gray-700">Réservation à l'avance</td>
-                <td class="py-3 px-4 text-center">24h</td>
-                <td class="py-3 px-4 text-center">72h</td>
-                <td class="py-3 px-4 text-center">7 jours</td>
-              </tr>
-              <tr class="border-t border-gray-200 bg-gray-50">
-                <td class="py-3 px-4 text-gray-700">Places premium</td>
-                <td *ngFor="let plan of plans.value" class="py-3 px-4 text-center">
-                  <i class="ri-check-line text-gold-500" *ngIf="!plan.excludedFeatures.includes('Places premium')"></i>
-                  <i class="ri-close-line text-red-500" *ngIf="plan.excludedFeatures.includes('Places premium')"></i>
-                </td>
-              </tr>
-              <tr class="border-t border-gray-200">
-                <td class="py-3 px-4 text-gray-700">Service de voiturier</td>
-                <td *ngFor="let plan of plans.value" class="py-3 px-4 text-center">
-                  <i class="ri-check-line text-gold-500" *ngIf="!plan.excludedFeatures.includes('Service de voiturier')"></i>
-                  <i class="ri-close-line text-red-500" *ngIf="plan.excludedFeatures.includes('Service de voiturier')"></i>
-                </td>
-              </tr>
-              <tr class="border-t border-gray-200 bg-gray-50">
-                <td class="py-3 px-4 text-gray-700">Support client</td>
-                <td class="py-3 px-4 text-center">Standard</td>
-                <td class="py-3 px-4 text-center">Prioritaire</td>
-                <td class="py-3 px-4 text-center">Dédié</td>
-              </tr>
-              <tr class="border-t border-gray-200">
-                <td class="py-3 px-4 text-gray-700">Prix mensuel</td>
-                <td *ngFor="let plan of plans.value" class="py-3 px-4 text-center font-medium">{{ plan.monthlyPrice }} TND</td>
-              </tr>
-              <tr class="border-t border-gray-200 bg-gray-50">
-                <td class="py-3 px-4 text-gray-700">Prix annuel (économie)</td>
-                <td *ngFor="let plan of plans.value" class="py-3 px-4 text-center font-medium">{{ calculateAnnualPrice(plan.monthlyPrice) }} TND (-20%)</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Informations personnelles -->
+      <!-- Step 2: Payment -->
       <div class="mb-12" *ngIf="currentStep === 2">
-        <h2 class="text-2xl font-semibold text-dark mb-6 font-display">Informations personnelles</h2>
+        <h2 class="text-2xl font-semibold text-dark mb-6 font-display">Paiement</h2>
         <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-          <form [formGroup]="subscriptionForm" (ngSubmit)="nextStep()">
+          <form [formGroup]="subscriptionForm" (ngSubmit)="initiateSubscription()">
             <div class="grid md:grid-cols-2 gap-6">
               <div>
-                <label for="firstname" class="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
-                <input id="firstname" formControlName="firstName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="Votre prénom" />
-                <div *ngIf="subscriptionForm.get('firstName')?.touched && subscriptionForm.get('firstName')?.hasError('required')" class="text-red-500 text-sm mt-1">Prénom requis</div>
-              </div>
-              <div>
-                <label for="lastname" class="block text-sm font-medium text-gray-700 mb-2">Nom</label>
-                <input id="lastname" formControlName="lastName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="Votre nom" />
-                <div *ngIf="subscriptionForm.get('lastName')?.touched && subscriptionForm.get('lastName')?.hasError('required')" class="text-red-500 text-sm mt-1">Nom requis</div>
-              </div>
-              <div>
-                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email (pour confirmation)</label>
                 <input id="email" formControlName="email" type="email" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="votre.email@exemple.com" />
                 <div *ngIf="subscriptionForm.get('email')?.touched && subscriptionForm.get('email')?.hasError('required')" class="text-red-500 text-sm mt-1">Email requis</div>
                 <div *ngIf="subscriptionForm.get('email')?.touched && subscriptionForm.get('email')?.hasError('email')" class="text-red-500 text-sm mt-1">Email invalide</div>
               </div>
+            </div>
+            <div class="mt-8">
+              <h3 class="text-lg font-medium text-dark mb-4 font-display">Méthode de paiement</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="payment-method border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer"
+                     [ngClass]="{'border-primary bg-primary bg-opacity-10': paymentMethod.value === 'card'}" (click)="selectPaymentMethod('card')">
+                  <i class="ri-bank-card-line text-2xl text-primary mb-2"></i>
+                  <span class="text-sm text-gray-700">Carte Bancaire</span>
+                </div>
+                <div class="payment-method border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer"
+                     [ngClass]="{'border-primary bg-primary bg-opacity-10': paymentMethod.value === 'd17'}" (click)="selectPaymentMethod('d17')">
+                  <i class="ri-wallet-line text-2xl text-primary mb-2"></i>
+                  <span class="text-sm text-gray-700">D17</span>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="paymentMethod.value === 'card'" class="mt-6 space-y-6">
               <div>
-                <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
-                <input id="phone" formControlName="phone" type="tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="12345678" />
-                <div *ngIf="subscriptionForm.get('phone')?.touched && subscriptionForm.get('phone')?.hasError('required')" class="text-red-500 text-sm mt-1">Téléphone requis</div>
-                <div *ngIf="subscriptionForm.get('phone')?.touched && subscriptionForm.get('phone')?.hasError('pattern')" class="text-red-500 text-sm mt-1">Doit être 8 chiffres</div>
+                <label for="cardname" class="block text-sm font-medium text-gray-700 mb-2">Nom sur la carte</label>
+                <input id="cardname" formControlName="cardName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="Ex: Jean Dupont" />
+                <div *ngIf="subscriptionForm.get('cardName')?.touched && subscriptionForm.get('cardName')?.hasError('required')" class="text-red-500 text-sm mt-1">Nom requis</div>
               </div>
-            </div>
-
-            <div class="mt-8">
-              <h3 class="text-lg font-medium text-dark mb-4 font-display">Sélectionnez votre véhicule</h3>
-              <div class="space-y-3">
-                <div *ngFor="let vehicle of vehicles.value" class="flex items-center">
-                  <input
-                    type="radio"
-                    [id]="'vehicle-' + vehicle.id"
-                    [value]="vehicle.id"
-                    formControlName="vehicleId"
-                    class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
-                    (change)="selectVehicle(vehicle.id)"
-                  />
-                  <label [for]="'vehicle-' + vehicle.id" class="ml-3 text-gray-700">
-                    {{ vehicle.brand }} {{ vehicle.model }} ({{ vehicle.matricule }})
-                  </label>
+              <div>
+                <label for="cardnumber" class="block text-sm font-medium text-gray-700 mb-2">Numéro de carte</label>
+                <div class="relative">
+                  <input id="cardnumber" formControlName="cardNumber" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="XXXX XXXX XXXX XXXX" />
+                  <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-2">
+                    <i class="ri-visa-line text-2xl text-blue-900"></i>
+                    <i class="ri-mastercard-line text-2xl text-red-600"></i>
+                  </div>
                 </div>
-                <div *ngIf="vehicles.value.length === 0" class="text-red-500 text-sm mt-1">
-                  Aucun véhicule trouvé. 
-                  <a routerLink="/profile" class="text-primary underline">Ajoutez un véhicule via votre profil</a>.
-                </div>
-                <div *ngIf="subscriptionForm.get('vehicleId')?.touched && subscriptionForm.get('vehicleId')?.hasError('required')" class="text-red-500 text-sm mt-1">
-                  Veuillez sélectionner un véhicule.
-                </div>
+                <div *ngIf="subscriptionForm.get('cardNumber')?.touched && subscriptionForm.get('cardNumber')?.hasError('required')" class="text-red-500 text-sm mt-1">Numéro de carte requis</div>
+                <div *ngIf="subscriptionForm.get('cardNumber')?.touched && subscriptionForm.get('cardNumber')?.hasError('pattern')" class="text-red-500 text-sm mt-1">Doit être 16 chiffres</div>
               </div>
-            </div>
-
-            <div class="mt-8">
-              <h3 class="text-lg font-medium text-dark mb-4 font-display">Options supplémentaires</h3>
-              <div class="space-y-3">
-                <div class="flex items-center">
-                  <input type="checkbox" id="option1" formControlName="damageProtection" class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary" (change)="updateOption('damageProtection', $event)" />
-                  <label for="option1" class="ml-3 text-gray-700">Protection contre les dommages (+15 TND/mois)</label>
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <label for="expiry" class="block text-sm font-medium text-gray-700 mb-2">Date d'expiration</label>
+                  <input id="expiry" formControlName="cardExpiry" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="MM/AA" />
+                  <div *ngIf="subscriptionForm.get('cardExpiry')?.touched && subscriptionForm.get('cardExpiry')?.hasError('required')" class="text-red-500 text-sm mt-1">Date requise</div>
+                  <div *ngIf="subscriptionForm.get('cardExpiry')?.touched && subscriptionForm.get('cardExpiry')?.hasError('pattern')" class="text-red-500 text-sm mt-1">Format MM/AA</div>
                 </div>
-                <div class="flex items-center">
-                  <input type="checkbox" id="option2" formControlName="chargingStations" class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary" (change)="updateOption('chargingStations', $event)" />
-                  <label for="option2" class="ml-3 text-gray-700">Accès aux bornes de recharge électrique (+24 TND/mois)</label>
-                </div>
-                <div class="flex items-center">
-                  <input type="checkbox" id="option3" formControlName="cleaningService" class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary" (change)="updateOption('cleaningService', $event)" />
-                  <label for="option3" class="ml-3 text-gray-700">Service de nettoyage mensuel (+45 TND/mois)</label>
+                <div>
+                  <label for="cvv" class="block text-sm font-medium text-gray-700 mb-2">CVV</label>
+                  <div class="relative">
+                    <input id="cvv" formControlName="cardCvv" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="123" />
+                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <i class="ri-question-line text-gray-400 hover:text-primary cursor-pointer" title="3 chiffres au dos de votre carte"></i>
+                    </div>
+                  </div>
+                  <div *ngIf="subscriptionForm.get('cardCvv')?.touched && subscriptionForm.get('cardCvv')?.hasError('required')" class="text-red-500 text-sm mt-1">CVV requis</div>
+                  <div *ngIf="subscriptionForm.get('cardCvv')?.touched && subscriptionForm.get('cardCvv')?.hasError('pattern')" class="text-red-500 text-sm mt-1">Doit être 3 chiffres</div>
                 </div>
               </div>
             </div>
-
-            <div *ngIf="subscriptionForm.invalid && subscriptionForm.touched" class="text-red-500 text-sm mt-4">
-              <p>Veuillez corriger les erreurs suivantes :</p>
-              <ul class="list-disc ml-4">
-                <li *ngIf="subscriptionForm.get('firstName')?.hasError('required') && subscriptionForm.get('firstName')?.touched">Prénom requis</li>
-                <li *ngIf="subscriptionForm.get('lastName')?.hasError('required') && subscriptionForm.get('lastName')?.touched">Nom requis</li>
-                <li *ngIf="subscriptionForm.get('email')?.hasError('required') && subscriptionForm.get('email')?.touched">Email requis</li>
-                <li *ngIf="subscriptionForm.get('email')?.hasError('email') && subscriptionForm.get('email')?.touched">Email invalide</li>
-                <li *ngIf="subscriptionForm.get('phone')?.hasError('required') && subscriptionForm.get('phone')?.touched">Téléphone requis</li>
-                <li *ngIf="subscriptionForm.get('phone')?.hasError('pattern') && subscriptionForm.get('phone')?.touched">Téléphone doit être 8 chiffres</li>
-                <li *ngIf="subscriptionForm.get('vehicleId')?.hasError('required') && subscriptionForm.get('vehicleId')?.touched">Veuillez sélectionner un véhicule</li>
-              </ul>
+            <div class="mt-6">
+              <p class="text-gray-600">Montant: {{ getSelectedPlanPrice() }} TND /{{ billingType.value === 'annual' ? 'an' : 'mois' }}</p>
             </div>
-
             <div class="mt-8 flex justify-between">
-              <button type="button" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium" (click)="currentStep = 1">
+              <button type="button" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium" (click)="prevStep()">
                 <i class="ri-arrow-left-line mr-2"></i> Retour
               </button>
               <button 
                 type="submit" 
                 class="btn-primary px-8 py-3 rounded-lg font-medium flex items-center" 
-                [disabled]="subscriptionForm.invalid"
+                [disabled]="isLoading || subscriptionForm.invalid"
                 matTooltip="Complétez tous les champs obligatoires pour continuer"
                 [matTooltipDisabled]="subscriptionForm.valid">
-                Continuer vers le paiement <i class="ri-arrow-right-line ml-2"></i>
+                <span *ngIf="!isLoading">Suivant <i class="ri-arrow-right-line ml-2"></i></span>
+                <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
               </button>
             </div>
           </form>
         </div>
       </div>
 
-      <!-- Méthode de paiement -->
+      <!-- Step 3: Final Confirmation -->
       <div class="mb-12" *ngIf="currentStep === 3">
-        <div class="grid md:grid-cols-3 gap-8">
-          <div class="col-span-2">
-            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-              <h2 class="text-2xl font-semibold text-dark mb-6 font-display">Méthode de paiement</h2>
-
-              <div class="mb-8">
-                <h3 class="text-lg font-medium text-dark mb-4 font-display">Choisissez votre méthode de paiement</h3>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="payment-method border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer"
-                       [ngClass]="{'border-primary bg-primary bg-opacity-10': paymentMethod.value === 'card'}" (click)="selectPaymentMethod('card')">
-                    <i class="ri-bank-card-line text-2xl text-primary mb-2"></i>
-                    <span class="text-sm text-gray-700">Carte Bancaire</span>
-                  </div>
-                  <div class="payment-method border border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer"
-                       [ngClass]="{'border-primary bg-primary bg-opacity-10': paymentMethod.value === 'd17'}" (click)="selectPaymentMethod('d17')">
-                    <i class="ri-wallet-line text-2xl text-primary mb-2"></i>
-                    <span class="text-sm text-gray-700">D17</span>
-                  </div>
+        <h2 class="text-2xl font-semibold text-dark mb-6 font-display">Confirmation de l'abonnement</h2>
+        <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <div *ngIf="!subscriptionConfirmed; else confirmationMessage">
+            <form [formGroup]="subscriptionForm" (ngSubmit)="confirmSubscription()">
+              <p class="text-gray-600 mb-4">
+                Un code de confirmation a été envoyé à {{ subscriptionForm.get('email')?.value }}. Veuillez entrer le code ci-dessous pour finaliser votre abonnement.
+              </p>
+              <div class="mb-6">
+                <label for="subscriptionConfirmationCode" class="block text-sm font-medium text-gray-700 mb-2">Code de confirmation</label>
+                <input id="subscriptionConfirmationCode" formControlName="subscriptionConfirmationCode" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="Entrez le code" />
+                <div *ngIf="subscriptionForm.get('subscriptionConfirmationCode')?.touched && subscriptionForm.get('subscriptionConfirmationCode')?.hasError('required')" class="text-red-500 text-sm mt-1">Code requis</div>
+              </div>
+              <div *ngIf="subscriptionConfirmationCode" class="mb-4 text-sm text-gray-600">
+                Code de confirmation (si email non reçu) : {{ subscriptionConfirmationCode }}
+              </div>
+              <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <div class="flex justify-center mb-4">
+                  <i class="ri-check-circle-line text-5xl text-gold-500"></i>
+                </div>
+                <p class="text-center text-gray-600 font-medium">Paiement en attente de confirmation</p>
+                <p class="text-center text-gray-600 text-sm">Vous recevrez un email avec les détails après confirmation.</p>
+                <div class="flex justify-center items-center mt-4">
+                  <i class="ri-file-list-3-line text-primary mr-2"></i>
+                  <span class="text-gray-700 font-medium">N° de session: {{ sessionId }}</span>
                 </div>
               </div>
-
-              <form [formGroup]="subscriptionForm" (ngSubmit)="submitForm()" *ngIf="paymentMethod.value === 'card'">
-                <div class="space-y-6">
-                  <div>
-                    <label for="cardname" class="block text-sm font-medium text-gray-700 mb-2">Nom sur la carte</label>
-                    <input id="cardname" formControlName="cardName" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="Ex: Jean Dupont" />
-                    <div *ngIf="subscriptionForm.get('cardName')?.touched && subscriptionForm.get('cardName')?.hasError('required')" class="text-red-500 text-sm mt-1">Nom requis</div>
-                  </div>
-                  <div>
-                    <label for="cardnumber" class="block text-sm font-medium text-gray-700 mb-2">Numéro de carte</label>
-                    <div class="relative">
-                      <input id="cardnumber" formControlName="cardNumber" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="XXXX XXXX XXXX XXXX" />
-                      <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex space-x-2">
-                        <i class="ri-visa-line text-2xl text-blue-900"></i>
-                        <i class="ri-mastercard-line text-2xl text-red-600"></i>
-                      </div>
-                    </div>
-                    <div *ngIf="subscriptionForm.get('cardNumber')?.touched && subscriptionForm.get('cardNumber')?.hasError('required')" class="text-red-500 text-sm mt-1">Numéro de carte requis</div>
-                    <div *ngIf="subscriptionForm.get('cardNumber')?.touched && subscriptionForm.get('cardNumber')?.hasError('pattern')" class="text-red-500 text-sm mt-1">Doit être 16 chiffres</div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-6">
-                    <div>
-                      <label for="expiry" class="block text-sm font-medium text-gray-700 mb-2">Date d'expiration</label>
-                      <input id="expiry" formControlName="cardExpiry" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="MM/AA" />
-                      <div *ngIf="subscriptionForm.get('cardExpiry')?.touched && subscriptionForm.get('cardExpiry')?.hasError('required')" class="text-red-500 text-sm mt-1">Date requise</div>
-                      <div *ngIf="subscriptionForm.get('cardExpiry')?.touched && subscriptionForm.get('cardExpiry')?.hasError('pattern')" class="text-red-500 text-sm mt-1">Format MM/AA</div>
-                    </div>
-                    <div>
-                      <label for="cvv" class="block text-sm font-medium text-gray-700 mb-2">CVV</label>
-                      <div class="relative">
-                        <input id="cvv" formControlName="cardCvv" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-colors" placeholder="123" />
-                        <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <i class="ri-question-line text-gray-400 hover:text-primary cursor-pointer" title="3 chiffres au dos de votre carte"></i>
-                        </div>
-                      </div>
-                      <div *ngIf="subscriptionForm.get('cardCvv')?.touched && subscriptionForm.get('cardCvv')?.hasError('required')" class="text-red-500 text-sm mt-1">CVV requis</div>
-                      <div *ngIf="subscriptionForm.get('cardCvv')?.touched && subscriptionForm.get('cardCvv')?.hasError('pattern')" class="text-red-500 text-sm mt-1">Doit être 3 chiffres</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="flex items-center mt-8 mb-6">
-                  <input type="checkbox" id="savecard" [checked]="saveCard.value" (change)="updateSaveCard($event)" class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary" />
-                  <label for="savecard" class="ml-3 text-sm text-gray-700">Sauvegarder cette carte pour mes prochains paiements</label>
-                </div>
-              </form>
-
-              <div class="flex justify-between items-center pt-6 border-t border-gray-200">
-                <button type="button" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium" (click)="currentStep = 2">
+              <div class="flex justify-between">
+                <button type="button" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium" (click)="prevStep()">
                   <i class="ri-arrow-left-line mr-2"></i> Retour
                 </button>
-                <button type="button" class="btn-primary px-8 py-3 rounded-lg font-medium flex items-center" (click)="submitForm()" [disabled]="isLoading || subscriptionForm.invalid">
-                  <span *ngIf="!isLoading">Confirmer et payer <i class="ri-arrow-right-line ml-2"></i></span>
+                <button 
+                  type="submit" 
+                  class="btn-primary px-8 py-3 rounded-lg font-medium flex items-center" 
+                  [disabled]="isLoading || subscriptionForm.get('subscriptionConfirmationCode')?.invalid">
+                  <span *ngIf="!isLoading">Confirmer <i class="ri-check-line ml-2"></i></span>
                   <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
                 </button>
               </div>
-            </div>
+            </form>
           </div>
-
-          <div>
-            <div class="bg-white rounded-xl border border-gray-200 p-6 sticky top-6 shadow-sm">
-              <h3 class="text-xl font-medium text-dark mb-6 font-display">Récapitulatif</h3>
-
-              <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div class="flex justify-between items-center mb-2">
-                  <span class="text-gray-700 font-medium">Forfait {{ getSelectedPlanName() }}</span>
-                  <span class="text-dark font-bold">{{ getSelectedPlanPrice() }} TND</span>
-                </div>
-                <div class="text-sm text-gray-500">{{ billingType.value === 'annual' ? 'Facturation annuelle' : 'Facturation mensuelle' }}</div>
+          <ng-template #confirmationMessage>
+            <div class="text-center">
+              <div class="flex justify-center mb-4">
+                <i class="ri-check-circle-line text-5xl text-green-500"></i>
               </div>
-
-              <div class="space-y-4 mb-6">
-                <div class="flex justify-between" *ngIf="options.value.damageProtection">
-                  <span class="text-gray-600">Protection dommages</span>
-                  <span class="text-dark font-medium">15,00 TND</span>
-                </div>
-                <div class="flex justify-between" *ngIf="options.value.chargingStations">
-                  <span class="text-gray-600">Bornes de recharge</span>
-                  <span class="text-dark font-medium">24,00 TND</span>
-                </div>
-                <div class="flex justify-between" *ngIf="options.value.cleaningService">
-                  <span class="text-gray-600">Service de nettoyage</span>
-                  <span class="text-dark font-medium">45,00 TND</span>
-                </div>
-              </div>
-
-              <div class="border-t border-gray-200 pt-4 mb-6">
-                <div class="flex justify-between mb-2">
-                  <span class="text-gray-700 font-medium">Sous-total</span>
-                  <span class="text-dark font-bold">{{ calculateTotal() }} TND</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-gray-600">TVA (20%)</span>
-                  <span class="text-dark font-medium">{{ calculateVAT() }} TND</span>
-                </div>
-              </div>
-
-              <div class="border-t border-gray-200 pt-4">
-                <div class="flex justify-between">
-                  <span class="text-lg text-dark font-bold">Total {{ billingType.value === 'annual' ? 'annuel' : 'mensuel' }}</span>
-                  <span class="text-xl text-primary font-bold">{{ calculateTotalWithVAT() }} TND</span>
-                </div>
-              </div>
-
-              <div class="mt-6 text-xs text-gray-500">
-                En confirmant votre souscription, vous acceptez nos
-                <a href="#" class="text-primary hover:underline">conditions générales</a>
-                et notre
-                <a href="#" class="text-primary hover:underline">politique de confidentialité</a>.
-              </div>
-
-              <div class="mt-6 p-4 bg-gold-100 rounded-lg border border-gold-300">
-                <div class="flex items-start">
-                  <i class="ri-shield-check-line text-gold-600 mr-3 mt-1"></i>
-                  <div>
-                    <div class="text-sm font-medium text-dark mb-1">Paiement sécurisé</div>
-                    <div class="text-xs text-gray-600">Toutes vos informations sont cryptées et protégées.</div>
-                  </div>
-                </div>
+              <h3 class="text-xl font-semibold text-dark mb-4 font-display">Abonnement confirmé avec succès !</h3>
+              <p class="text-gray-600 mb-6">
+                Votre abonnement a été activé. Vous recevrez un email avec les détails de votre abonnement.
+              </p>
+              <div class="flex justify-center">
+                <button 
+                  type="button" 
+                  class="btn-primary px-6 py-3 rounded-lg font-medium flex items-center" 
+                  (click)="reset()">
+                  Recommencer <i class="ri-refresh-line ml-2"></i>
+                </button>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Confirmation après paiement -->
-      <div class="mb-12" *ngIf="paymentInitiated && currentStep === 3">
-        <div class="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-          <h2 class="text-2xl font-semibold text-dark mb-4 font-display">Paiement initié</h2>
-          <p class="text-gray-600 mb-6">
-            Votre demande de souscription a été initiée. Veuillez compléter le paiement via le lien suivant :
-          </p>
-          <a *ngIf="paymentUrl" [href]="paymentUrl" target="_blank" class="btn-primary px-8 py-3 rounded-lg font-medium inline-flex items-center">
-            Finaliser le paiement <i class="ri-arrow-right-line ml-2"></i>
-          </a>
-          <p *ngIf="!paymentUrl" class="text-gray-600">En attente de l'URL de paiement...</p>
-        </div>
-      </div>
-
-      <!-- Questions fréquentes -->
-      <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-12">
-        <h3 class="text-xl font-medium text-dark mb-4 font-display">Questions fréquentes</h3>
-        <div class="space-y-4">
-          <div class="border-b border-gray-200 pb-4">
-            <button class="flex justify-between items-center w-full text-left" (click)="toggleFAQ(0)">
-              <span class="font-medium text-gray-800">Puis-je changer de forfait plus tard ?</span>
-              <i class="ri-arrow-down-s-line text-gray-500" [ngClass]="{'ri-arrow-up-s-line': faqOpen[0], 'ri-arrow-down-s-line': !faqOpen[0]}"></i>
-            </button>
-            <div class="mt-2 text-gray-600 text-sm" [ngClass]="{'hidden': !faqOpen[0]}">
-              Oui, vous pouvez changer de forfait à tout moment. Le changement prendra effet à la fin de votre période de facturation actuelle.
-            </div>
-          </div>
-          <div class="border-b border-gray-200 pb-4">
-            <button class="flex justify-between items-center w-full text-left" (click)="toggleFAQ(1)">
-              <span class="font-medium text-gray-800">Quand serai-je facturé ?</span>
-              <i class="ri-arrow-down-s-line text-gray-500" [ngClass]="{'ri-arrow-up-s-line': faqOpen[1], 'ri-arrow-down-s-line': !faqOpen[1]}"></i>
-            </button>
-            <div class="mt-2 text-gray-600 text-sm" [ngClass]="{'hidden': !faqOpen[1]}">
-              Vous serez facturé immédiatement après votre inscription, puis à la même date chaque mois (ou année si vous avez choisi un abonnement annuel).
-            </div>
-          </div>
-          <div class="border-b border-gray-200 pb-4">
-            <button class="flex justify-between items-center w-full text-left" (click)="toggleFAQ(2)">
-              <span class="font-medium text-gray-800">Puis-je annuler à tout moment ?</span>
-              <i class="ri-arrow-down-s-line text-gray-500" [ngClass]="{'ri-arrow-up-s-line': faqOpen[2], 'ri-arrow-down-s-line': !faqOpen[2]}"></i>
-            </button>
-            <div class="mt-2 text-gray-600 text-sm" [ngClass]="{'hidden': !faqOpen[2]}">
-              Oui, vous pouvez annuler votre abonnement à tout moment. Vous continuerez à avoir accès au service jusqu'à la fin de votre période de facturation actuelle.
-            </div>
-          </div>
-          <div class="border-b border-gray-200 pb-4">
-            <button class="flex justify-between items-center w-full text-left" (click)="toggleFAQ(3)">
-              <span class="font-medium text-gray-800">Y a-t-il des frais cachés ?</span>
-              <i class="ri-arrow-down-s-line text-gray-500" [ngClass]="{'ri-arrow-up-s-line': faqOpen[3], 'ri-arrow-down-s-line': !faqOpen[3]}"></i>
-            </button>
-            <div class="mt-2 text-gray-600 text-sm" [ngClass]="{'hidden': !faqOpen[3]}">
-              Non, tous les prix affichés sont TTC et incluent toutes les taxes. Vous ne paierez que le montant indiqué lors de votre souscription.
-            </div>
-          </div>
+          </ng-template>
         </div>
       </div>
     </div>
   </main>
-
-  <footer class="bg-dark text-white pt-12 pb-8">
-    <div class="container mx-auto px-4">
-      <div class="grid md:grid-cols-4 gap-8 mb-8">
-        <div>
-          <h3 class="text-xl font-display text-primary mb-4">SmartPark</h3>
-          <p class="text-gray-400 mb-4">
-            La solution intelligente pour gérer vos stationnements en ville.
-            Simplifiez votre quotidien avec Smart Park.
-          </p>
-          <div class="flex space-x-4">
-            <a href="#" class="text-gray-400 hover:text-white transition-colors">
-              <i class="ri-facebook-fill text-xl"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-white transition-colors">
-              <i class="ri-twitter-fill text-xl"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-white transition-colors">
-              <i class="ri-instagram-line text-xl"></i>
-            </a>
-            <a href="#" class="text-gray-400 hover:text-white transition-colors">
-              <i class="ri-linkedin-fill text-xl"></i>
-            </a>
-          </div>
-        </div>
-        <div>
-          <h4 class="text-lg font-medium mb-4 font-display">Liens rapides</h4>
-          <ul class="space-y-2">
-            <li><a routerLink="/" class="text-gray-400 hover:text-white transition-colors">Accueil</a></li>
-            <li><a routerLink="/services" class="text-gray-400 hover:text-white transition-colors">Nos services</a></li>
-            <li><a routerLink="/abonnement" class="text-gray-400 hover:text-white transition-colors">Souscriptions</a></li>
-            <li><a routerLink="/locations" class="text-gray-400 hover:text-white transition-colors">Emplacements</a></li>
-            <li><a routerLink="/about" class="text-gray-400 hover:text-white transition-colors">À propos</a></li>
-            <li><a routerLink="/contact" class="text-gray-400 hover:text-white transition-colors">Contact</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="text-lg font-medium mb-4 font-display">Support</h4>
-          <ul class="space-y-2">
-            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Centre d'aide</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Contactez-nous</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Conditions générales</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Politique de confidentialité</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="text-lg font-medium mb-4 font-display">Newsletter</h4>
-          <p class="text-gray-400 mb-4">
-            Inscrivez-vous pour recevoir nos dernières offres et actualités.
-          </p>
-          <div class="flex">
-            <input type="email" placeholder="Votre email" class="px-4 py-3 rounded-l-lg border-none outline-none text-dark w-full" />
-            <button class="btn-secondary px-4 py-3 rounded-r-lg">
-              <i class="ri-send-plane-line"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center">
-        <div class="text-gray-400 mb-4 md:mb-0">
-          © 2025 Smart Park. Tous droits réservés.
-        </div>
-        <div class="flex space-x-6">
-          <i class="ri-visa-line text-2xl text-gray-400"></i>
-          <i class="ri-mastercard-line text-2xl text-gray-400"></i>
-          <i class="ri-paypal-line text-2xl text-gray-400"></i>
-          <i class="ri-apple-pay-line text-2xl text-gray-400"></i>
-        </div>
-      </div>
-    </div>
-  </footer>
 </div>

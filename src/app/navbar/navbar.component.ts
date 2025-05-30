@@ -1,94 +1,51 @@
-import { Component, OnInit, HostListener } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-
-import { TranslateService } from '../services/translate.service';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../auth/services/auth/auth.service';
+import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink, RouterLinkActive, TranslateModule],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent implements OnInit {
-  showMobileMenu = false;
-  showUserDropdown = false;
-  showLanguageDropdown = false;
-  currentLanguage = 'FR';
-  userName = 'Utilisateur';
-  isScrolled = false;
+export class NavbarComponent implements OnInit, OnDestroy {
+  private authSubscription!: Subscription;
 
   constructor(
     public authService: AuthService,
-    private router: Router,
-    private translateService: TranslateService
+    private translateService: TranslateService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
-  // Get user name if authenticated
-  if (this.authService.isAuthenticated()) {
-    const user = this.authService.getCurrentUser();
-    if (user && user.name) {
-      this.userName = user.name;
+    const savedLang = localStorage.getItem('parkiny_lang') || 'fr'; // Align with AppComponent
+    this.translateService.use(savedLang);
+    this.authSubscription = this.authService.authStatus$.subscribe(status => {
+      console.log('Auth status changed:', status);
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
     }
   }
 
-  // Get current language from service
-  this.currentLanguage = this.translateService.getCurrentLanguage();
-}
-
-
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    this.isScrolled = window.scrollY > 20;
-  }
-
-  toggleMobileMenu(): void {
-    this.showMobileMenu = !this.showMobileMenu;
-    // Close other dropdowns when toggling mobile menu
-    this.showUserDropdown = false;
-    this.showLanguageDropdown = false;
-  }
-
-  toggleUserDropdown(): void {
-    this.showUserDropdown = !this.showUserDropdown;
-    // Close language dropdown when toggling user dropdown
-    this.showLanguageDropdown = false;
-  }
-
-  toggleLanguageDropdown(): void {
-    this.showLanguageDropdown = !this.showLanguageDropdown;
-    // Close user dropdown when toggling language dropdown
-    this.showUserDropdown = false;
+  switchLanguage(lang: string): void {
+    this.translateService.use(lang);
+    localStorage.setItem('parkiny_lang', lang); // Align with AppComponent
   }
 
   changeLanguage(lang: string): void {
-    this.currentLanguage = lang;
-    this.translateService.setLanguage(lang);
-    this.showLanguageDropdown = false;
+    this.switchLanguage(lang); // Implement changeLanguage to call switchLanguage
   }
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/auth']);
-  }
-
-  // Close dropdowns when clicking outside
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    const userMenuElement = document.querySelector('.user-menu');
-    const languageSelectorElement = document.querySelector('.language-selector');
-    
-    // Check if click is outside user menu
-    if (userMenuElement && !userMenuElement.contains(event.target as Node)) {
-      this.showUserDropdown = false;
-    }
-    
-    // Check if click is outside language selector
-    if (languageSelectorElement && !languageSelectorElement.contains(event.target as Node)) {
-      this.showLanguageDropdown = false;
-    }
+    console.log('Logged out, staying on current page');
   }
 }

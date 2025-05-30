@@ -1,43 +1,12 @@
-/* Reset default margins and padding */
-body, html {
-  margin: 0;
-  padding: 0;
-}
-
-.hero-overlay {
-  background: linear-gradient(135deg, rgba(106,27,154,0.85) 0%, rgba(30,13,43,0.95) 100%);
-  backdrop-filter: blur(2px);
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px rgba(106,27,154,0.2);
-  border-color: rgba(212,175,55,0.5);
-}
-
-.gold-glow {
-  transition: all 0.3s ease;
-}
-
-.gold-glow:hover {
-  box-shadow: 0 0 15px rgba(212,175,55,0.7);
-}
-
-.pulse-animation {
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(212,175,55,0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(212,175,55,0); }
-  100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
-}
-
 .typing-effect {
   overflow: hidden;
+  border-right: .15em solid gold;
   white-space: nowrap;
-  border-right: 3px solid #D4AF37;
-  animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+  margin: 0 auto;
+  letter-spacing: .15em;
+  animation: 
+    typing 3.5s steps(40, end),
+    blink-caret .75s step-end infinite;
 }
 
 @keyframes typing {
@@ -47,35 +16,53 @@ body, html {
 
 @keyframes blink-caret {
   from, to { border-color: transparent }
-  50% { border-color: #D4AF37; }
+  50% { border-color: gold; }
 }
 
-.image-reel {
-  animation: scrollReel 30s linear infinite;
+.hero-overlay {
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4));
 }
 
-@keyframes scrollReel {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+.rounded-button {
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.gold-glow {
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+.gold-glow:hover {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
 }
 
 .gold-border {
-  position: relative;
+  border: 2px solid rgba(212, 175, 55, 0.3);
 }
 
-.gold-border::after {
-  content: '';
+.popular-plan {
+  position: relative;
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+.popular-plan::before {
+  content: "Populaire";
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border: 2px solid transparent;
-  background: linear-gradient(135deg, #D4AF37, #F9F3D6, #D4AF37) border-box;
-  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: destination-out;
-  mask-composite: exclude;
-  border-radius: inherit;
+  top: -12px;
+  right: 20px;
+  background-color: #D4AF37;
+  color: #1A1A2E;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  border-radius: 20px;
+}
+
+.feature-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border-color: rgba(212, 175, 55, 0.5);
 }
 
 .subscription-card {
@@ -83,36 +70,113 @@ body, html {
 }
 
 .subscription-card:hover {
-  transform: translateY(-10px);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
-.popular-plan {
+.pulse-animation {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+  }
+  
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(212, 175, 55, 0);
+  }
+  
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+  }
+}
+
+/* Enhanced animations for image reel */
+.image-reel {
+  animation: slideImages 20s linear infinite;
+}
+
+@keyframes slideImages {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Enhanced hover effects for navigation */
+nav a {
+  position: relative;
+}
+
+nav a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background-color: #D4AF37;
+  transition: width 0.3s ease;
+}
+
+nav a:hover::after {
+  width: 100%;
+}
+
+/* Testimonial card hover effects */
+.bg-white.p-8.rounded-xl:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* Enhanced button interactions */
+button, a.bg-gold-500, a.bg-primary, a.bg-gray-100 {
   position: relative;
   overflow: hidden;
 }
 
-.popular-plan::before {
-  content: 'Populaire';
+button::after, 
+a.bg-gold-500::after, 
+a.bg-primary::after, 
+a.bg-gray-100::after {
+  content: '';
   position: absolute;
-  top: 20px;
-  right: -35px;
-  width: 150px;
-  padding: 2px 0;
-  background-color: #D4AF37;
-  color: #1E0D2B;
-  font-size: 12px;
-  font-weight: bold;
-  text-align: center;
-  transform: rotate(45deg);
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease;
 }
 
-/* Ensure hero section starts immediately after navbar */
-section:first-of-type {
-  margin-top: 0 !important;
-  padding-top: 0;
+button:active::after, 
+a.bg-gold-500:active::after, 
+a.bg-primary:active::after, 
+a.bg-gray-100:active::after {
+  width: 300px;
+  height: 300px;
+  opacity: 0;
 }
 
-/* Adjust navbar positioning */
-nav {
-  margin-bottom: 0;
+/* Social media icon hover effects */
+.text-gray-400.hover\:text-gold-300 {
+  transition: all 0.3s ease;
+}
+
+.text-gray-400.hover\:text-gold-300:hover {
+  transform: translateY(-3px);
 }

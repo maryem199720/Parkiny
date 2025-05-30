@@ -1,72 +1,42 @@
-<div class="faq-hero mb-16">
-  <div class="container mx-auto px-6">
-    <h1 class="text-4xl md:text-5xl font-bold mb-4">{{ faqContent.hero?.title || (currentLanguage === 'FR' ? 'Questions Fréquemment Posées' : 'Frequently Asked Questions') }}</h1>
-    <p class="text-xl text-gold-200">{{ faqContent.hero?.subtitle || (currentLanguage === 'FR' ? 'Trouvez des réponses à vos questions sur notre service de stationnement intelligent' : 'Find answers to your questions about our smart parking service') }}</p>
+<div class="container mx-auto px-4 py-8">
+  <div *ngIf="isLoading; else contentLoaded" class="flex justify-center items-center h-64">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
   </div>
-</div>
 
-<!-- Loading Spinner -->
-<div class="loading-spinner" *ngIf="isLoading">
-  <div class="spinner"></div>
-</div>
-
-<div class="container mx-auto px-6 py-16" *ngIf="!isLoading">
-  <!-- Search Bar -->
-  <div class="max-w-2xl mx-auto mb-10">
-    <div class="search-container">
-      <i class="ri-search-line search-icon"></i>
-      <input 
-        type="text" 
-        placeholder="{{ currentLanguage === 'FR' ? 'Rechercher une question...' : 'Search for a question...' }}" 
-        class="w-full px-4 py-3 border rounded-lg search-input"
-      >
-    </div>
-  </div>
-  
-  <!-- Categories -->
-  <div class="category-container flex justify-center mb-10 pb-2">
-    <button 
-      class="category-button px-4 py-2 mx-2 rounded-lg font-medium transition-all"
-      [class.active]="activeCategory === 'all'"
-      (click)="filterByCategory('all')"
-    >
-      {{ currentLanguage === 'FR' ? 'Toutes' : 'All' }}
-    </button>
-    
-    <button 
-      *ngFor="let category of faqContent.categories"
-      class="category-button px-4 py-2 mx-2 rounded-lg font-medium transition-all"
-      [class.active]="activeCategory === category.id"
-      (click)="filterByCategory(category.id)"
-    >
-      {{ category.name }}
-    </button>
-  </div>
-  
-  <!-- FAQ Items -->
-  <div class="max-w-3xl mx-auto">
-    <div *ngIf="filteredQuestions.length === 0" class="text-center py-10">
-      <i class="ri-question-line text-5xl text-gray-300 mb-4"></i>
-      <p class="text-gray-500">{{ currentLanguage === 'FR' ? 'Aucune question trouvée dans cette catégorie.' : 'No questions found in this category.' }}</p>
-    </div>
-    
-    <div *ngFor="let question of filteredQuestions" class="faq-item" [class.expanded]="question.isExpanded">
-      <div class="faq-question" (click)="toggleQuestion(question)">
-        <span>{{ question.question }}</span>
-        <i class="ri-arrow-down-s-line faq-icon"></i>
-      </div>
-      <div class="faq-answer">
-        <p class="text-gray-700">{{ question.answer }}</p>
+  <ng-template #contentLoaded>
+    <div *ngIf="faqContent" class="max-w-3xl mx-auto">
+      <h1 class="text-3xl font-bold text-gold-500 mb-8 text-center">{{ faqContent.title }}</h1>
+      
+      <div class="space-y-4">
+        <div *ngFor="let item of faqContent.items; let i = index" class="border border-gray-700 rounded-lg overflow-hidden bg-gray-800 shadow-md">
+          <button 
+            (click)="toggleItem(item)" 
+            class="w-full flex justify-between items-center p-4 text-start text-white hover:bg-gray-700 focus:outline-none transition-colors duration-200"
+            [attr.aria-expanded]="item.open"
+            [attr.aria-controls]="'faq-answer-' + i">
+            <span class="font-medium">{{ item.question }}</span>
+            <!-- Use margin-start (ms) for RTL compatibility -->
+            <i class="ri-arrow-down-s-line transition-transform duration-300 ms-2" [class.rotate-180]="item.open"></i>
+          </button>
+          <div 
+            [id]="'faq-answer-' + i"
+            class="overflow-hidden transition-all duration-500 ease-in-out" 
+            [style.maxHeight]="item.open ? '500px' : '0'" 
+            [style.paddingTop]="item.open ? '1rem' : '0'" 
+            [style.paddingBottom]="item.open ? '1rem' : '0'" 
+            [style.opacity]="item.open ? 1 : 0">
+            <!-- Use text-start for RTL compatibility -->
+            <div class="px-4 pb-4 text-gray-300 text-start">
+              <p>{{ item.answer }}</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  
-  <!-- Still Have Questions -->
-  <div class="bg-primary text-white p-8 rounded-xl mt-16 text-center">
-    <h2 class="text-2xl font-bold mb-4">{{ currentLanguage === 'FR' ? 'Vous avez encore des questions ?' : 'Still have questions?' }}</h2>
-    <p class="text-gold-200 mb-6">{{ currentLanguage === 'FR' ? 'Contactez-nous directement et nous vous répondrons dans les plus brefs délais.' : 'Contact us directly and we will get back to you as soon as possible.' }}</p>
-    <a routerLink="/app/user/dashboard/contact" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-block">
-      {{ currentLanguage === 'FR' ? 'Nous contacter' : 'Contact Us' }}
-    </a>
-  </div>
+    <div *ngIf="!faqContent && !isLoading" class="text-center text-red-500">
+      <!-- Assuming ERROR.CONTENT_LOAD_FAILED key exists in JSON files -->
+      <p>{{ 'ERROR.CONTENT_LOAD_FAILED' | translate }}</p> 
+    </div>
+  </ng-template>
 </div>
+

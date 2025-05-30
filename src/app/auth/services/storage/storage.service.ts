@@ -4,26 +4,42 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class StorageService {
-  private tokenKey = 'token'; // Align with AuthService
+  private tokenKey = 'token'; // Consistent key for token storage
 
+  // Check if the user is logged in by verifying the presence of the token
   isLoggedIn(): boolean {
-    return !!localStorage.getItem(this.tokenKey); // Use consistent key
+    return !!localStorage.getItem(this.tokenKey);
   }
 
- 
-  
+  // Retrieve the token from localStorage
+  getToken(): string | null {
+    return localStorage.getItem(this.tokenKey);
+  }
 
+  // Retrieve the user ID from the stored user object
   getUserId(): number {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user.id || 0;
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      return user.id ? Number(user.id) : 0;
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error);
+      return 0;
+    }
   }
 
+  // Retrieve the user object from localStorage
   getUser(): any {
-    return JSON.parse(localStorage.getItem('user') || '{}');
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch (error) {
+      console.error('Error parsing user from localStorage:', error);
+      return {};
+    }
   }
 
+  // Log out by removing token and user from localStorage
   logout(): void {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem(this.tokenKey); // Use consistent tokenKey
     localStorage.removeItem('user');
   }
 }
