@@ -1,0 +1,50 @@
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-500 text-sm">Available Spots</p>
+        <h3 class="text-2xl font-bold mt-1 text-dark-purple">{{ stats.availableSpots }}</h3>
+      </div>
+      <div class="bg-light-purple p-3 rounded-full">
+        <i class="ri-parking-box-fill text-primary-purple"></i>
+      </div>
+    </div>
+    <p class="text-green-500 text-sm mt-2"><i class="ri-arrow-up-line"></i> {{ stats.availableSpotsTrend }}</p>
+  </div>
+  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-500 text-sm">Active Reservations</p>
+        <h3 class="text-2xl font-bold mt-1 text-dark-purple">{{ stats.activeReservations }}</h3>
+      </div>
+      <div class="bg-blue-100 p-3 rounded-full">
+        <i class="ri-calendar-check-fill text-blue-500"></i>
+      </div>
+    </div>
+    <p class="text-gray-500 text-sm mt-2">Next reservation: {{ stats.nextReservation }}</p>
+  </div>
+  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-500 text-sm">Monthly Savings</p>
+        <h3 class="text-2xl font-bold mt-1 text-dark-purple">{{ stats.monthlySavings }}</h3>
+      </div>
+      <div class="bg-green-100 p-3 rounded-full">
+        <i class="ri-wallet-fill text-green-500"></i>
+      </div>
+    </div>
+    <p class="text-green-500 text-sm mt-2"><i class="ri-arrow-up-line"></i> {{ stats.savingsTrend }}</p>
+  </div>
+  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-gray-500 text-sm">Favorite Locations</p>
+        <h3 class="text-2xl font-bold mt-1 text-dark-purple">{{ stats.favoriteLocations }}</h3>
+      </div>
+      <div class="bg-yellow-100 p-3 rounded-full">
+        <i class="ri-heart-fill text-orange-500"></i>
+      </div>
+    </div>
+    <p class="text-gray-500 text-sm mt-2">Most used: {{ stats.topLocation }}</p>
+  </div>
+</div>

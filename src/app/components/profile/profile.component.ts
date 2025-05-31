@@ -1,3 +1,4 @@
+/* profile.component.ts */
 import { Component, signal, inject, TemplateRef, ViewChild, Signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +8,6 @@ import { AuthService } from 'src/app/auth/services/auth/auth.service';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
-// Context interfaces for dialog templates
 interface EditProfileDialogContext {
   dialogRef: MatDialogRef<unknown>;
   data: {
@@ -76,13 +76,12 @@ interface ManualInputDialogContext {
     FormsModule,
     RouterModule,
     MatDialogModule,
-    MatSnackBarModule
+    MatSnackBarModule,
   ],
   templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.css']
+  styleUrls: ['./profile.component.scss'],
 })
 export class ProfileComponent {
-[x: string]: any;
   @ViewChild('editProfileDialog') editProfileDialog!: TemplateRef<EditProfileDialogContext>;
   @ViewChild('passwordChangeDialog') passwordChangeDialog!: TemplateRef<PasswordChangeDialogContext>;
   @ViewChild('addVehicleDialog') addVehicleDialog!: TemplateRef<AddVehicleDialogContext>;
@@ -103,16 +102,15 @@ export class ProfileComponent {
     vehicles: [] as any[],
     subscription: { subscriptionEndDate: '', type: 'none' },
     createdAt: '',
-    reservationHistory: [] as any[]
+    reservationHistory: [] as any[],
   });
   isLoading = signal(true);
   errorMessage = signal<string | null>(null);
-  isReservationsExpanded = signal(true);
+  isReservationsExpanded = signal(false);
+  isVehiclesExpanded = signal(false);
   isSubscriptionExpanded = signal(false);
   isVerificationCodeSent = signal(false);
-  isActiveReservations = signal(true);
-  subscriptionType = signal<'none' | 'free' | 'premium'>('none');
-  showSidebar = signal(false); // Mobile sidebar toggle
+  showSidebar = signal(false);
 
   // Form data
   editForm = { firstName: '', lastName: '', email: '', phone: '' };
@@ -124,14 +122,14 @@ export class ProfileComponent {
     color: '',
     matriculeImage: null as File | null,
     isMatriculeProcessed: false,
-    imagePreview: null as string | null
+    imagePreview: null as string | null,
   };
   manualInput = { value: '', label: '' };
 
   // Vehicle options
-  brands = ['Toyota', 'Ford', 'Honda', 'Volkswagen', 'Autre'];
-  models = ['Civic', 'Corolla', 'Focus', 'Golf', 'Autre'];
-  colors = ['Rouge', 'Bleu', 'Noir', 'Blanche', 'Autre'];
+  brands = ['Toyota', 'Honda', 'Ford', 'Volkswagen', 'Other'];
+  models = ['Civic', 'Corolla', 'Focus', 'Golf', 'Other'];
+  colors = ['Rouge', 'Bleu', 'Noir', 'Blanc', 'Other'];
 
   // Reservation lists
   activeReservations = signal<any[]>([]);
@@ -145,44 +143,45 @@ export class ProfileComponent {
     const token = this.authService.getToken();
     return new HttpHeaders({
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     });
   }
 
   loadUserProfile(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.http.get('http://localhost:8082/parking/api/user/profile', { headers: this.getHeaders() }).subscribe({
-      next: (data: any) => {
-        this.user.set({
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          vehicles: data.vehicles || [],
-          subscription: data.subscription || { subscriptionEndDate: 'Non défini', type: 'none' },
-          createdAt: data.createdAt || '',
-          reservationHistory: data.reservationHistory || []
-        });
-        this.editForm = {
-          firstName: data.firstName || '',
-          lastName: data.lastName || '',
-          email: data.email || '',
-          phone: data.phone || ''
-        };
-        this.subscriptionType.set(data.subscription?.type || 'none');
-        this.processReservations(data.reservationHistory || []);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.errorMessage.set(`Erreur de récupération du profil: ${err.message}`);
-        this.isLoading.set(false);
-        if (err.status === 401) {
-          this.authService.logout();
-          this.router.navigate(['/login']);
-        }
-      }
-    });
+    this.http
+      .get('http://localhost:8082/parking/api/user/profile', { headers: this.getHeaders() })
+      .subscribe({
+        next: (data: any) => {
+          this.user.set({
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+            phone: data.phone || '',
+            vehicles: data.vehicles || [],
+            subscription: data.subscription || { subscriptionEndDate: 'Non défini', type: 'none' },
+            createdAt: data.createdAt || '',
+            reservationHistory: data.reservationHistory || [],
+          });
+          this.editForm = {
+            firstName: data.firstName || '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+            phone: data.phone || '',
+          };
+          this.processReservations(data.reservationHistory || []);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          this.errorMessage.set(`Erreur de récupération du profil: ${err.message}`);
+          this.isLoading.set(false);
+          if (err.status === 401) {
+            this.authService.logout();
+            this.router.navigate(['/login']);
+          }
+        },
+      });
   }
 
   private processReservations(reservations: any[]): void {
@@ -194,9 +193,9 @@ export class ProfileComponent {
       const reservation = {
         parkingSpotId: res.parkingSpotId.toString(),
         startTime: new Date(res.startTime),
-        endTime: endTime,
+        endTime,
         status: res.status,
-        totalCost: res.totalCost?.toString() ?? 'N/A'
+        totalCost: res.totalCost?.toString() ?? 'N/A',
       };
       if (endTime > now && res.status === 'PENDING') {
         active.push(reservation);
@@ -211,49 +210,52 @@ export class ProfileComponent {
   saveProfileChanges(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.http.put('http://localhost:8082/parking/api/user/profile', this.editForm, { headers: this.getHeaders() }).subscribe({
-      next: (data: any) => {
-        this.user.set({
-          ...this.user(),
-          firstName: data.firstName,
-          lastName: data.lastName,
-          email: data.email,
-          phone: data.phone,
-          vehicles: data.vehicles || [],
-          subscription: data.subscription || { subscriptionEndDate: 'Non défini', type: 'none' },
-          reservationHistory: data.reservationHistory || []
-        });
-        this.subscriptionType.set(data.subscription?.type || 'none');
-        this.processReservations(data.reservationHistory || []);
-        this.isLoading.set(false);
-        this.snackBar.open('Profil mis à jour avec succès', 'Fermer', { duration: 3000 });
-        this.dialog.closeAll();
-      },
-      error: (err) => {
-        this.errorMessage.set(`Erreur lors de la mise à jour: ${err.message}`);
-        this.isLoading.set(false);
-      }
-    });
+    this.http
+      .put('http://localhost:8082/parking/api/user/profile', this.editForm, { headers: this.getHeaders() })
+      .subscribe({
+        next: (data: any) => {
+          this.user.set({
+            ...this.user(),
+            firstName: data.firstName,
+            lastName: data.lastName,
+            email: data.email,
+            phone: data.phone,
+            vehicles: data.vehicles || [],
+            subscription: data.subscription || { subscriptionEndDate: 'Non défini', type: 'none' },
+            reservationHistory: data.reservationHistory || [],
+          });
+          this.processReservations(data.reservationHistory || []);
+          this.isLoading.set(false);
+          this.snackBar.open('Profil mis à jour avec succès', 'Fermer', { duration: 3000 });
+          this.dialog.closeAll();
+        },
+        error: (err) => {
+          this.errorMessage.set(`Erreur lors de la mise à jour: ${err.message}`);
+          this.isLoading.set(false);
+        },
+      });
   }
 
   requestPasswordReset(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.http.post('http://localhost:8082/parking/api/user/request-password-reset', {
-      method: 'email',
-      email: this.user().email,
-      phone: this.user().phone
-    }, { headers: this.getHeaders() }).subscribe({
-      next: () => {
-        this.isVerificationCodeSent.set(true);
-        this.isLoading.set(false);
-        this.snackBar.open('Code de vérification envoyé par email', 'Fermer', { duration: 3000 });
-      },
-      error: (err) => {
-        this.errorMessage.set(`Erreur lors de la demande: ${err.message}`);
-        this.isLoading.set(false);
-      }
-    });
+    this.http
+      .post(
+        'http://localhost:8082/parking/api/user/request-password-reset',
+        { method: 'email', email: this.user().email, phone: this.user().phone },
+        { headers: this.getHeaders() }
+      )
+      .subscribe({
+        next: () => {
+          this.isVerificationCodeSent.set(true);
+          this.isLoading.set(false);
+          this.snackBar.open('Code de vérification envoyé par email', 'Fermer', { duration: 3000 });
+        },
+        error: (err) => {
+          this.errorMessage.set(`Erreur lors de la demande: ${err.message}`);
+          this.isLoading.set(false);
+        },
+      });
   }
 
   changePassword(): void {
@@ -271,23 +273,29 @@ export class ProfileComponent {
     }
     this.isLoading.set(true);
     this.errorMessage.set(null);
-    this.http.post('http://localhost:8082/parking/api/user/change-password', {
-      currentPassword: this.passwordForm.currentPassword,
-      newPassword: this.passwordForm.newPassword,
-      verificationCode: this.passwordForm.verificationCode
-    }, { headers: this.getHeaders() }).subscribe({
-      next: () => {
-        this.isVerificationCodeSent.set(false);
-        this.passwordForm = { currentPassword: '', newPassword: '', verificationCode: '' };
-        this.isLoading.set(false);
-        this.snackBar.open('Mot de passe mis à jour avec succès', 'Fermer', { duration: 3000 });
-        this.dialog.closeAll();
-      },
-      error: (err) => {
-        this.errorMessage.set(`Erreur lors de la mise à jour: ${err.message}`);
-        this.isLoading.set(false);
-      }
-    });
+    this.http
+      .post(
+        'http://localhost:8082/parking/api/user/change-password',
+        {
+          currentPassword: this.passwordForm.currentPassword,
+          newPassword: this.passwordForm.newPassword,
+          verificationCode: this.passwordForm.verificationCode,
+        },
+        { headers: this.getHeaders() }
+      )
+      .subscribe({
+        next: () => {
+          this.isVerificationCodeSent.set(false);
+          this.passwordForm = { currentPassword: '', newPassword: '', verificationCode: '' };
+          this.isLoading.set(false);
+          this.snackBar.open('Mot de passe mis à jour avec succès', 'Fermer', { duration: 3000 });
+          this.dialog.closeAll();
+        },
+        error: (err) => {
+          this.errorMessage.set(`Erreur lors de la mise à jour: ${err.message}`);
+          this.isLoading.set(false);
+        },
+      });
   }
 
   triggerFileInput(): void {
@@ -312,9 +320,11 @@ export class ProfileComponent {
     const formData = new FormData();
     formData.append('image', this.vehicleForm.matriculeImage, 'car.jpg');
     try {
-      const response = await this.http.post('http://localhost:5000/api/process-matricule', formData, {
-        headers: new HttpHeaders({ 'Authorization': `Bearer ${this.authService.getToken()}` })
-      }).toPromise();
+      const response = await this.http
+        .post('http://localhost:5000/api/process-matricule', formData, {
+          headers: new HttpHeaders({ Authorization: `Bearer ${this.authService.getToken()}` }),
+        })
+        .toPromise();
       this.vehicleForm.matricule = (response as any).matricule;
       this.vehicleForm.isMatriculeProcessed = true;
       this.isLoading.set(false);
@@ -325,7 +335,12 @@ export class ProfileComponent {
   }
 
   submitVehicle(): void {
-    if (!this.vehicleForm.matricule || !this.vehicleForm.brand || !this.vehicleForm.model || !this.vehicleForm.color) {
+    if (
+      !this.vehicleForm.matricule ||
+      !this.vehicleForm.brand ||
+      !this.vehicleForm.model ||
+      !this.vehicleForm.color
+    ) {
       this.errorMessage.set('Veuillez remplir tous les champs');
       return;
     }
@@ -336,51 +351,59 @@ export class ProfileComponent {
       vehicleType: 'car',
       brand: this.vehicleForm.brand,
       model: this.vehicleForm.model,
-      color: this.vehicleForm.color
+      color: this.vehicleForm.color,
     };
-    this.http.post('http://localhost:8082/parking/api/vehicle', vehicleData, { headers: this.getHeaders() }).subscribe({
-      next: () => {
-        this.vehicleForm = {
-          matricule: '',
-          brand: '',
-          model: '',
-          color: '',
-          matriculeImage: null,
-          isMatriculeProcessed: false,
-          imagePreview: null
-        };
-        this.loadUserProfile();
-        this.snackBar.open('Véhicule ajouté avec succès', 'Fermer', { duration: 3000 });
-        this.dialog.closeAll();
-      },
-      error: (err) => {
-        this.errorMessage.set(`Erreur: ${err.message}`);
-        this.isLoading.set(false);
-      }
-    });
+    this.http
+      .post('http://localhost:8082/parking/api/vehicle', vehicleData, { headers: this.getHeaders() })
+      .subscribe({
+        next: () => {
+          this.vehicleForm = {
+            matricule: '',
+            brand: '',
+            model: '',
+            color: '',
+            matriculeImage: null,
+            isMatriculeProcessed: false,
+            imagePreview: null,
+          };
+          this.loadUserProfile();
+          this.snackBar.open('Véhicule ajouté avec succès', 'Fermer', { duration: 3000 });
+          this.dialog.closeAll();
+        },
+        error: (err) => {
+          this.errorMessage.set(`Erreur: ${err.message}`);
+          this.isLoading.set(false);
+        },
+      });
   }
 
   onBrandChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
-    if (value === 'Autre') {
+    if (value === 'Other') {
       this.vehicleForm.brand = '';
       this.openManualInputDialog('Marque', (value: string) => (this.vehicleForm.brand = value));
+    } else {
+      this.vehicleForm.brand = value;
     }
   }
 
   onModelChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
-    if (value === 'Autre') {
+    if (value === 'Other') {
       this.vehicleForm.model = '';
       this.openManualInputDialog('Modèle', (value: string) => (this.vehicleForm.model = value));
+    } else {
+      this.vehicleForm.model = value;
     }
   }
 
   onColorChange(event: Event): void {
     const value = (event.target as HTMLSelectElement).value;
-    if (value === 'Autre') {
+    if (value === 'Other') {
       this.vehicleForm.color = '';
       this.openManualInputDialog('Couleur', (value: string) => (this.vehicleForm.color = value));
+    } else {
+      this.vehicleForm.color = value;
     }
   }
 
@@ -393,13 +416,12 @@ export class ProfileComponent {
     this.dialog.open(this.editProfileDialog, {
       width: '500px',
       panelClass: 'custom-dialog-container',
-      backdropClass: 'bg-black bg-opacity-50',
       data: {
         editForm: { ...this.editForm },
         saveProfileChanges: () => this.saveProfileChanges(),
         errorMessage: this.errorMessage,
-        isLoading: this.isLoading
-      }
+        isLoading: this.isLoading,
+      },
     });
   }
 
@@ -407,7 +429,6 @@ export class ProfileComponent {
     this.dialog.open(this.passwordChangeDialog, {
       width: '500px',
       panelClass: 'custom-dialog-container',
-      backdropClass: 'bg-black bg-opacity-50',
       data: {
         user: this.user(),
         requestPasswordReset: () => this.requestPasswordReset(),
@@ -415,8 +436,8 @@ export class ProfileComponent {
         isVerificationCodeSent: this.isVerificationCodeSent,
         passwordForm: this.passwordForm,
         errorMessage: this.errorMessage,
-        isLoading: this.isLoading
-      }
+        isLoading: this.isLoading,
+      },
     });
   }
 
@@ -424,7 +445,6 @@ export class ProfileComponent {
     this.dialog.open(this.addVehicleDialog, {
       width: '500px',
       panelClass: 'custom-dialog-container',
-      backdropClass: 'bg-black bg-opacity-50',
       data: {
         vehicleForm: this.vehicleForm,
         triggerFileInput: () => this.triggerFileInput(),
@@ -438,8 +458,8 @@ export class ProfileComponent {
         models: this.models,
         colors: this.colors,
         errorMessage: this.errorMessage,
-        isLoading: this.isLoading
-      }
+        isLoading: this.isLoading,
+      },
     });
   }
 
@@ -449,24 +469,33 @@ export class ProfileComponent {
     const dialogRef = this.dialog.open(this.manualInputDialog, {
       width: '300px',
       panelClass: 'custom-dialog-container',
-      backdropClass: 'bg-black bg-opacity-50',
       data: {
         label,
         inputValue: this.manualInput.value,
         callback,
-        errorMessage: this.errorMessage
-      }
+        errorMessage: this.errorMessage,
+      },
     });
     dialogRef.afterClosed().subscribe(() => {
       this.manualInput.value = '';
     });
   }
 
-  toggleReservationsTab(active: boolean): void {
-    this.isActiveReservations.set(active);
+  toggleSection(section: 'reservations' | 'vehicles' | 'subscription'): void {
+    if (section === 'reservations') {
+      this.isReservationsExpanded.set(!this.isReservationsExpanded());
+    } else if (section === 'vehicles') {
+      this.isVehiclesExpanded.set(!this.isVehiclesExpanded());
+    } else if (section === 'subscription') {
+      this.isSubscriptionExpanded.set(!this.isSubscriptionExpanded());
+    }
   }
 
   navigateTo(path: string): void {
     this.router.navigate([path]);
+  }
+
+  toggleSidebar(): void {
+    this.showSidebar.set(!this.showSidebar());
   }
 }

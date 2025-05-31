@@ -1,7 +1,8 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 
 interface AuthResponse {
@@ -15,13 +16,24 @@ interface AuthResponse {
   roles: string[];
 }
 
+interface User {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  role: string;
+  initials: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-
   private apiUrl = 'http://localhost:8082/parking/api/auth';
   private tokenKey = 'token';
   private authStatus = new BehaviorSubject<boolean>(false);
   public authStatus$ = this.authStatus.asObservable();
+  private sidebarOpen = new BehaviorSubject<boolean>(false);
+  public sidebarOpen$ = this.sidebarOpen.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -37,22 +49,24 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/signin`, credentials).pipe(
       tap({
         next: (response) => {
-          console.log('Réponse reçue:', response);
+          console.log('Login response:', response);
           if (isPlatformBrowser(this.platformId)) {
             localStorage.setItem(this.tokenKey, response.token);
-            localStorage.setItem('user', JSON.stringify({
+            const user: User = {
               id: response.id,
-              firstName: response.firstName,
-              lastName: response.lastName,
+              firstName: response.firstName || '',
+              lastName: response.lastName || '',
               email: response.email,
               phone: response.phone,
-              role: this.getUserRole(response.roles)
-            }));
+              role: this.getUserRole(response.roles),
+              initials: this.getInitials(response.firstName, response.lastName)
+            };
+            localStorage.setItem('user', JSON.stringify(user));
             this.authStatus.next(true);
             this.redirectBasedOnRole(response.roles);
           }
         },
-        error: (err) => console.error('Erreur de connexion:', err)
+        error: (err) => console.error('Login error:', err)
       })
     );
   }
@@ -61,22 +75,24 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, userData).pipe(
       tap({
         next: (response) => {
-          console.log('Inscription réussie:', response);
+          console.log('Register response:', response);
           if (isPlatformBrowser(this.platformId)) {
             localStorage.setItem(this.tokenKey, response.token);
-            localStorage.setItem('user', JSON.stringify({
+            const user: User = {
               id: response.id,
-              firstName: response.firstName,
-              lastName: response.lastName,
+              firstName: response.firstName || '',
+              lastName: response.lastName || '',
               email: response.email,
               phone: response.phone,
-              role: this.getUserRole(response.roles)
-            }));
+              role: this.getUserRole(response.roles),
+              initials: this.getInitials(response.firstName, response.lastName)
+            };
+            localStorage.setItem('user', JSON.stringify(user));
             this.authStatus.next(true);
             this.redirectBasedOnRole(response.roles);
           }
         },
-        error: (err) => console.error('Erreur d\'inscription:', err)
+        error: (err) => console.error('Register error:', err)
       })
     );
   }
@@ -85,22 +101,23 @@ export class AuthService {
     return roles.includes('ROLE_ADMIN') ? 'ADMIN' : 'USER';
   }
 
+  private getInitials(firstName: string, lastName: string): string {
+    if (!firstName || !lastName) return 'UN';
+    return firstName.charAt(0).toUpperCase() + lastName.charAt(0).toUpperCase();
+  }
+
   private redirectBasedOnRole(roles: string[]): void {
-    const redirectPath = roles.includes('ROLE_ADMIN') 
-      ? '/app/admin/dashboard' 
-      : '/dashboard'; // Updated to match your current route
-    
-    const urlParams = new URLSearchParams(window.location.search);
+    const redirectPath = roles.includes('ROLE_ADMIN') ? '/app/admin/dashboard' : '/dashboard';
+    const urlParams = new URLSearchParams(isPlatformBrowser(this.platformId) ? window.location.search : '');
     const returnUrl = urlParams.get('returnUrl') || redirectPath;
 
     if (isPlatformBrowser(this.platformId)) {
-      this.router.navigateByUrl(returnUrl, { replaceUrl: true })
-        .then(success => {
-          if (!success) {
-            console.error('Échec de la navigation vers:', returnUrl);
-            window.location.href = returnUrl;
-          }
-        });
+      this.router.navigateByUrl(returnUrl, { replaceUrl: true }).then(success => {
+        if (!success) {
+          console.error('Navigation failed to:', returnUrl);
+          window.location.href = returnUrl;
+        }
+      });
     }
   }
 
@@ -108,45 +125,59 @@ export class AuthService {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.clear();
       this.authStatus.next(false);
-      console.log('Logout successful, auth status:', false); // Debug log
+      this.sidebarOpen.next(false);
+      console.log('Logout successful, auth status:', false);
+      this.router.navigate(['/auth']);
     }
-    // Removed navigation to /auth to stay on current page
   }
 
-  // Dans auth.service.ts
-isAuthenticated(): boolean {
-  // Vérifiez si l'utilisateur est authentifié et retournez true ou false
-  const token = localStorage.getItem('token');
-  return !!token; // Convertit en booléen
-}
+  isAuthenticated(): boolean {
+    if (!isPlatformBrowser(this.platformId)) return false;
+    return !!localStorage.getItem(this.tokenKey);
+  }
 
+  isLoggedIn(): Observable<boolean> {
+    return this.authStatus$;
+  }
 
   isAdmin(): boolean {
-    const user = this.getUser();
-    return user.role === 'ADMIN';
+    const user = this.getCurrentUser();
+    return user?.role === 'ADMIN';
   }
 
-  getUser(): any {
-    if (!isPlatformBrowser(this.platformId)) return {};
-    const userData = localStorage.getItem('user') || '{}';
-    return JSON.parse(userData);
+  getUser(): Observable<User | null> {
+    if (!isPlatformBrowser(this.platformId)) return of(null);
+    const userData = localStorage.getItem('user');
+    if (!userData) return of(null);
+    try {
+      const user: User = JSON.parse(userData);
+      user.initials = this.getInitials(user.firstName || '', user.lastName || '');
+      return of(user);
+    } catch (e) {
+      console.error('Error parsing user data:', e);
+      return of(null);
+    }
   }
 
   getToken(): string | null {
     return isPlatformBrowser(this.platformId) ? localStorage.getItem(this.tokenKey) : null;
   }
-  // Dans auth.service.ts
-getCurrentUser(): any {
-  const userStr = localStorage.getItem('user');
-  if (userStr) {
+
+  getCurrentUser(): User | null {
+    if (!isPlatformBrowser(this.platformId)) return null;
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
     try {
-      return JSON.parse(userStr);
+      const user: User = JSON.parse(userStr);
+      user.initials = this.getInitials(user.firstName || '', user.lastName || '');
+      return user;
     } catch (e) {
-      console.error('Error parsing user data', e);
+      console.error('Error parsing user data:', e);
       return null;
     }
   }
-  return null;
-}
 
+  toggleSidebar(): void {
+    this.sidebarOpen.next(!this.sidebarOpen.value);
+  }
 }

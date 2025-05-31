@@ -1,116 +1,65 @@
 import { Component, OnInit } from '@angular/core';
-import { UserService } from '../../services/user.service';
-import { ReservationService } from '../../services/Reservations/reservation.service';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterOutlet, RouterLink, Router } from '@angular/router';
-import { Reservation } from '../../models/reservation.model';
+import { CommonModule } from '@angular/common';
+import { RouterModule, Router, NavigationEnd } from '@angular/router';
+import { Observable } from 'rxjs';
+import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
+import { map, shareReplay, filter } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/services/auth/auth.service';
-import { Subscription } from 'rxjs';
+import { SidebarComponent } from './components/sidebar/sidebar.component';
 
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
+  imports: [CommonModule, RouterModule, SidebarComponent],
   templateUrl: './user-dashboard.component.html',
-  styleUrls: ['./user-dashboard.component.css'],
-  imports: [ReactiveFormsModule, RouterOutlet, RouterLink]
+  styleUrl: './user-dashboard.component.css'
 })
 export class UserDashboardComponent implements OnInit {
-  profileForm!: FormGroup;
-  reservations: Reservation[] = [];
-  userId = 1;
-  isAuthenticated = false;
-  private authSubscription!: Subscription;
+  isLoggedIn$: Observable<boolean>;
+  isMobile$: Observable<boolean>;
+  isMobile = false;
+  userName: string | null = null;
+  userInitials: string | null = null;
+  pageTitle: string = 'Dashboard Overview';
 
   constructor(
-    private userService: UserService,
-    private reservationService: ReservationService,
-    private fb: FormBuilder,
     private authService: AuthService,
+    private breakpointObserver: BreakpointObserver,
     private router: Router
-  ) {}
+  ) {
+    this.isLoggedIn$ = this.authService.isLoggedIn();
+    this.isMobile$ = this.breakpointObserver
+      .observe(Breakpoints.Handset)
+      .pipe(
+        map(result => result.matches),
+        shareReplay()
+      );
+  }
 
   ngOnInit() {
-    console.log('UserDashboardComponent initialized'); // Debug log
-    this.initializeForm();
-    this.isAuthenticated = this.authService.isAuthenticated();
-    console.log('Initial auth state:', this.isAuthenticated); // Debug log
-
-    // Subscribe to auth status changes
-    this.authSubscription = this.authService.authStatus$.subscribe(status => {
-      this.isAuthenticated = status;
-      console.log('Auth status changed in UserDashboard:', status); // Debug log
-      if (this.isAuthenticated) {
-        this.loadUserProfile();
-        this.loadUserReservations();
-      } else {
-        this.reservations = []; // Clear data on logout
-      }
+    this.isMobile$.subscribe(isMobile => {
+      this.isMobile = isMobile;
     });
-  }
 
-  ngOnDestroy(): void {
-    if (this.authSubscription) {
-      this.authSubscription.unsubscribe();
-    }
-  }
-
-  initializeForm() {
-    this.profileForm = this.fb.group({
-      nom: [''],
-      prenom: [''],
-      email: ['', [Validators.email]],
-      numPhone: [''],
-      password: ['', [Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.minLength(6)]]
+    this.authService.getUser().subscribe(user => {
+      this.userName = user ? `${user.firstName} ${user.lastName}`.trim() || null : null;
+      this.userInitials = user ? user.initials : 'UN';
     });
-  }
 
-  loadUserProfile() {
-    this.userService.getUserProfile().subscribe({
-      next: (data) => {
-        this.profileForm.patchValue(data);
-      },
-      error: (error) => {
-        console.error('Error loading profile:', error);
-      }
-    });
-  }
-
-  loadUserReservations() {
-    this.reservationService.getUserReservations(this.userId).subscribe({
-      next: (reservations: Reservation[]) => {
-        this.reservations = reservations;
-      },
-      error: (error) => {
-        console.error('Error loading reservations:', error);
-      }
-    });
-  }
-
-  createNewReservation(reservationData: Reservation) {
-    this.reservationService.createReservation(reservationData).subscribe({
-      next: (response) => {
-        console.log('Reservation created:', response);
-        this.loadUserReservations();
-      },
-      error: (error) => {
-        console.error('Error creating reservation:', error);
-      }
-    });
-  }
-
-  updateProfile() {
-    if (this.profileForm.valid) {
-      this.userService.updateUserProfile(this.profileForm.value).subscribe({
-        next: () => {
-          alert('Profile updated successfully!');
-        },
-        error: (error) => {
-          console.error('Error updating profile:', error);
-        }
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe((event: NavigationEnd) => {
+        const routeTitles: { [key: string]: string } = {
+          '/dashboard': 'Dashboard Overview',
+          '/dashboard/parking-map': 'Parking Map',
+          '/dashboard/reservations': 'Your Reservations',
+          '/dashboard/profile': 'Profile'
+        };
+        this.pageTitle = routeTitles[event.url] || 'Dashboard Overview';
       });
-    } else {
-      console.error('Form is invalid');
-    }
+  }
+
+  toggleSidebar() {
+    this.authService.toggleSidebar();
   }
 }

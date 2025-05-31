@@ -1,451 +1,463 @@
-<div class="min-h-screen flex font-poppins bg-gray-50">
-  <!-- Main Container -->
-  <div class="flex flex-col lg:flex-row w-full">
-    <!-- Sidebar -->
-    <aside class="w-full lg:w-64 min-h-screen sidebar text-white p-6 sticky top-0 z-10 transform transition-transform duration-300 lg:translate-x-0" [class.-translate-x-full]="!showSidebar()">
-      <div class="flex items-center gap-3 mb-8">
-        <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-white">
-          <span class="avatar-initials">{{ user().firstName[0] || '' }}{{ user().lastName[0] || '' }}</span>
-        </div>
-        <h2 class="text-lg font-semibold">{{ user().firstName }} {{ user().lastName }}</h2>
+<!-- profile.component.html -->
+<div class="min-h-screen flex bg-background font-poppins">
+  <!-- Sidebar -->
+  <aside class="w-full lg:w-64 min-h-screen sidebar bg-primary text-white p-6 sticky top-0 z-10 transform transition-transform duration-300 lg:translate-x-0" [class.-translate-x-full]="!showSidebar()">
+    <button class="lg:hidden mb-4 text-white" (click)="toggleSidebar()">
+      <i class="ri-menu-line text-2xl"></i>
+    </button>
+    <div class="flex items-center gap-3 mb-8">
+      <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-white">
+        <span class="text-lg font-bold">{{ user().firstName[0] || '' }}{{ user().lastName[0] || '' }}</span>
       </div>
-      <nav class="space-y-1.5">
-        <button (click)="navigateTo('/home')" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2.5 text-white text-opacity-80 rounded-lg">
-          <i class="ri-home-line"></i>
-          <span>Accueil</span>
-        </button>
-        <button class="sidebar-nav-item active w-full flex items-center gap-3 px-3 py-2.5 text-white rounded-lg font-medium">
-          <i class="ri-user-line"></i>
-          <span>Profil</span>
-        </button>
-        <button (click)="navigateTo('/notification-settings')" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2.5 text-white text-opacity-80 rounded-lg">
-          <i class="ri-notification-line"></i>
-          <span>Notifications</span>
-        </button>
-        <button (click)="navigateTo('/privacy-settings')" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2.5 text-white text-opacity-80 rounded-lg">
-          <i class="ri-shield-line"></i>
-          <span>Confidentialité</span>
-        </button>
-        <button (click)="navigateTo('/language-preferences')" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2.5 text-white text-opacity-80 rounded-lg">
-          <i class="ri-global-line"></i>
-          <span>Langue</span>
-        </button>
-        <button (click)="navigateTo('/help-support')" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2.5 text-white text-opacity-80 rounded-lg">
-          <i class="ri-question-line"></i>
-          <span>Aide</span>
-        </button>
-        <button (click)="logout()" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2.5 text-white text-opacity-80 rounded-lg mt-6">
-          <i class="ri-logout-box-line"></i>
-          <span>Déconnexion</span>
-        </button>
-      </nav>
-      @if (subscriptionType() !== 'premium') {
-        <div class="mt-6">
-          <div class="p-4 bg-white bg-opacity-10 rounded-lg backdrop-blur-sm">
-            <h4 class="font-medium text-white">Passer à Premium</h4>
-            <p class="text-white text-opacity-70 text-sm mt-1">Débloquez des fonctionnalités exclusives</p>
-            <button (click)="navigateTo('/subscription')" class="gold-gradient mt-3 w-full text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-all hover:opacity-90">
-              Passer à Premium
+      <h2 class="text-lg font-semibold">{{ user().firstName }} {{ user().lastName }}</h2>
+    </div>
+    <nav class="space-y-2">
+      <button (click)="navigateTo('/home')" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-white hover:bg-opacity-10">
+        <i class="ri-home-line"></i> Accueil
+      </button>
+      <button class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2 text-white rounded-md bg-white bg-opacity-15">
+        <i class="ri-user-line"></i> Profil
+      </button>
+      <button (click)="navigateTo('/notification-settings')" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-white hover:bg-opacity-10">
+        <i class="ri-notification-line"></i> Notifications
+      </button>
+      <button (click)="navigateTo('/privacy-settings')" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-white hover:bg-opacity-10">
+        <i class="ri-shield-line"></i> Confidentialité
+      </button>
+      <button (click)="navigateTo('/language-preferences')" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-white hover:bg-opacity-10">
+        <i class="ri-global-line"></i> Langue
+      </button>
+      <button (click)="navigateTo('/help-support')" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-white hover:bg-opacity-10">
+        <i class="ri-question-line"></i> Aide
+      </button>
+      <button (click)="logout()" class="sidebar-nav-item w-full flex items-center gap-3 px-3 py-2 text-white rounded-md hover:bg-white hover:bg-opacity-10 mt-6">
+        <i class="ri-logout-box-line"></i> Déconnexion
+      </button>
+    </nav>
+    @if (user().subscription.type !== 'premium') {
+      <div class="mt-6">
+        <div class="p-4 bg-white bg-opacity-10 rounded-md">
+          <h4 class="font-medium text-white">Passer à Premium</h4>
+          <p class="text-white text-opacity-70 text-sm mt-1">Débloquez des fonctionnalités exclusives</p>
+          <button (click)="navigateTo('/subscription')" class="secondary w-full py-2 rounded-md mt-3">Passer à Premium</button>
+        </div>
+      </div>
+    }
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-6 lg:p-8">
+    @if (isLoading()) {
+      <div class="flex flex-col items-center justify-center h-full">
+        <div class="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-2 text-subtitle">Chargement...</p>
+      </div>
+    } @else {
+      <div class="space-y-6">
+        @if (errorMessage()) {
+          <div class="error-message">
+            <i class="ri-error-warning-line mr-2"></i> {{ errorMessage() }}
+          </div>
+        }
+
+        <!-- Profile Header -->
+        <div class="card">
+          <div class="flex flex-col items-center p-6">
+            <div class="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center text-primary text-2xl font-bold mb-4">
+              {{ user().firstName[0] || '' }}{{ user().lastName[0] || '' }}
+            </div>
+            <h2 class="text-xl font-bold">{{ user().firstName }} {{ user().lastName }}</h2>
+            <p class="text-subtitle text-sm mt-1">{{ user().email }}</p>
+            <p class="text-subtitle text-sm">Téléphone: {{ user().phone || 'Non défini' }}</p>
+            <button (click)="openEditProfileDialog()" class="primary mt-4 flex items-center gap-2">
+              <i class="ri-edit-line"></i> Modifier mes informations
             </button>
           </div>
         </div>
-      }
-    </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-8 z-0">
-      <!-- Header -->
-      <div class="flex justify-between items-center mb-8">
-        <div>
-          <h1 class="text-2xl font-bold text-gray-800">Mon Profil</h1>
-          <p class="text-gray-500">Gérez vos paramètres et préférences</p>
-        </div>
-        <div class="flex items-center gap-4">
-          <button class="relative" attr.aria-label="Notifications">
-            <i class="ri-notification-3-line text-xl text-gray-600 hover:text-primary-purple transition-colors"></i>
-            <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">3</span>
-          </button>
-          <button (click)="logout()" class="text-gray-600 hover:text-primary-purple transition-colors" attr.aria-label="Déconnexion">
-            <i class="ri-logout-box-line text-xl"></i>
-          </button>
-        </div>
-      </div>
-
-      <!-- Profile Content -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left Column -->
-        <div class="lg:col-span-1 space-y-6">
-          <!-- Profile Card -->
-          <div class="bg-white rounded-xl custom-shadow p-6">
-            <div class="flex flex-col items-center">
-              <div class="w-24 h-24 rounded-full purple-gradient flex items-center justify-center text-white avatar-initials mb-4">
-                {{ user().firstName[0] || '' }}{{ user().lastName[0] || '' }}
-              </div>
-              <h2 class="text-xl font-semibold text-gray-800">{{ user().firstName }} {{ user().lastName }}</h2>
-              <p class="text-gray-500 text-sm mt-1">{{ subscriptionType() === 'premium' ? 'Membre Premium' : 'Membre Gratuit' }}</p>
-              <div class="w-full mt-4 space-y-2">
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-500 text-sm">Email</span>
-                  <span class="text-gray-800 text-sm font-medium">{{ user().email }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-500 text-sm">Téléphone</span>
-                  <span class="text-gray-800 text-sm font-medium">{{ user().phone || 'Non défini' }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-gray-500 text-sm">Membre depuis</span>
-                  <span class="text-gray-800 text-sm font-medium">{{ user().createdAt | date: 'MMM yyyy' }}</span>
-                </div>
-              </div>
-              <button (click)="openEditProfileDialog()" class="mt-6 w-full purple-gradient text-white py-2.5 rounded-lg font-medium flex items-center justify-center gap-2 transition-all hover:opacity-90">
-                <i class="ri-edit-line"></i> Modifier le Profil
-              </button>
+        <!-- Password Change -->
+        <div class="card">
+          <div class="flex items-center gap-4 p-4 cursor-pointer" (click)="openPasswordChangeDialog()">
+            <div class="w-10 h-10 bg-primary-light rounded-md flex items-center justify-center text-primary">
+              <i class="ri-lock-line"></i>
             </div>
-          </div>
-
-          <!-- Password Change -->
-          <div class="bg-white rounded-xl custom-shadow p-6 info-card">
-            <div class="flex items-center gap-4 cursor-pointer" (click)="openPasswordChangeDialog()">
-              <div class="w-12 h-12 bg-light-purple rounded-lg flex items-center justify-center text-primary-purple">
-                <i class="ri-lock-line text-xl"></i>
-              </div>
-              <div>
-                <h3 class="font-medium text-gray-800">Changer le Mot de Passe</h3>
-                <p class="text-gray-500 text-sm">Mettez à jour la sécurité de votre compte</p>
-              </div>
-              <i class="ri-arrow-right-s-line text-gray-400 ml-auto text-xl"></i>
+            <div>
+              <h3 class="font-medium">Changer le Mot de Passe</h3>
+              <p class="text-subtitle text-sm">Mettre à jour la sécurité du compte</p>
             </div>
-          </div>
-
-          <!-- Subscription -->
-          <div class="bg-white rounded-xl custom-shadow p-6 info-card">
-            <div class="flex items-center justify-between cursor-pointer" (click)="isSubscriptionExpanded.set(!isSubscriptionExpanded())">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 gold-gradient rounded-lg flex items-center justify-center text-white">
-                  <i class="ri-vip-crown-line text-xl"></i>
-                </div>
-                <h3 class="font-medium text-gray-800">Mon Abonnement</h3>
-              </div>
-              <i class="ri-{{ isSubscriptionExpanded() ? 'arrow-up-s-line' : 'arrow-down-s-line' }} text-gray-400 text-xl"></i>
-            </div>
-            @if (isSubscriptionExpanded()) {
-              <div class="mt-4">
-                <div class="p-4 bg-light-purple rounded-lg">
-                  <div class="flex items-center justify-between">
-                    <div>
-                      <h4 class="font-medium text-gray-800">{{ subscriptionType() === 'premium' ? 'Plan Premium' : 'Plan Gratuit' }}</h4>
-                      <p class="text-gray-500 text-sm mt-1">{{ subscriptionType() === 'premium' ? 'Valide jusqu\'au ' + (user().subscription.subscriptionEndDate | date: 'd MMM yyyy') : 'Aucun abonnement actif' }}</p>
-                    </div>
-                    <span class="badge-purple px-3 py-1 rounded-full text-xs font-medium">{{ subscriptionType() === 'premium' ? 'Actif' : 'Inactif' }}</span>
-                  </div>
-                  <button (click)="navigateTo('/subscription')" class="mt-3 w-full border border-primary-purple text-primary-purple py-2 rounded-lg font-medium flex items-center justify-center gap-2 transition-all hover:bg-light-purple">
-                    Gérer l'Abonnement
-                  </button>
-                </div>
-                <button (click)="navigateTo('/subscription-history')" class="mt-4 flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm transition-colors">
-                  <i class="ri-history-line"></i> Voir l'historique des abonnements
-                </button>
-              </div>
-            }
+            <i class="ri-arrow-right-s-line text-subtitle ml-auto"></i>
           </div>
         </div>
 
-        <!-- Right Column -->
-        <div class="lg:col-span-2 space-y-6">
-          <!-- Reservations -->
-          <div class="bg-white rounded-xl custom-shadow p-6">
-            <div class="flex items-center justify-between mb-6">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-light-purple rounded-lg flex items-center justify-center text-primary-purple">
-                  <i class="ri-calendar-event-line text-xl"></i>
-                </div>
-                <h3 class="section-title">Mes Réservations</h3>
+        <!-- Reservations -->
+        <div class="card">
+          <div class="flex items-center justify-between p-4 cursor-pointer" (click)="toggleSection('reservations')">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-success bg-opacity-20 rounded-md flex items-center justify-center text-success">
+                <i class="ri-calendar-event-line"></i>
               </div>
-              <button class="text-primary-purple hover:text-dark-purple text-sm font-medium flex items-center gap-1 transition-colors">
-                <i class="ri-add-line"></i> Nouvelle Réservation
-              </button>
+              <h3 class="font-medium">Mes Réservations</h3>
             </div>
-            <div class="flex border-b border-gray-200 mb-6">
-              <button (click)="toggleReservationsTab(true)" class="px-4 py-2 font-medium" [ngClass]="{'text-primary-purple border-b-2 border-primary-purple': isActiveReservations(), 'text-gray-500 hover:text-gray-700': !isActiveReservations()}">
-                Actives
-              </button>
-              <button (click)="toggleReservationsTab(false)" class="px-4 py-2 font-medium" [ngClass]="{'text-primary-purple border-b-2 border-primary-purple': !isActiveReservations(), 'text-gray-500 hover:text-gray-700': isActiveReservations()}">
-                Expirées
-              </button>
-            </div>
-            <div class="space-y-3">
-              @if ((isActiveReservations() ? activeReservations() : expiredReservations()).length === 0) {
-                <div class="flex flex-col items-center py-6">
-                  <i class="ri-calendar-2-line text-4xl text-gray-400"></i>
-                  <p class="text-gray-500 mt-2">{{ isActiveReservations() ? 'Aucune réservation active' : 'Aucune réservation expirée' }}</p>
+            <i class="ri-{{ isReservationsExpanded() ? 'arrow-up-s-line' : 'arrow-down-s-line' }} text-subtitle"></i>
+          </div>
+          @if (isReservationsExpanded()) {
+            <div class="p-4">
+              @if (activeReservations().length === 0) {
+                <div class="flex flex-col items-center py-4">
+                  <i class="ri-calendar-2-line text-4xl text-subtitle"></i>
+                  <p class="text-subtitle mt-2">Aucune réservation active</p>
                 </div>
               } @else {
-                @for (reservation of (isActiveReservations() ? activeReservations() : expiredReservations()); track reservation.parkingSpotId) {
-                  <div class="reservation-card bg-white p-4 rounded-lg border border-gray-100 custom-shadow" attr.aria-label="Réservation {{ reservation.parkingSpotId }}">
-                    <div class="flex items-start justify-between">
-                      <div class="flex items-start gap-3">
-                        <div class="w-10 h-10 rounded-lg flex items-center justify-center mt-1" [ngClass]="{'bg-light-purple text-primary-purple': isActiveReservations(), 'bg-gray-100 text-gray-500': !isActiveReservations()}">
+                @for (reservation of activeReservations(); track reservation.parkingSpotId) {
+                  <div class="card mb-3 border-l-4 border-primary">
+                    <div class="flex items-start justify-between p-4">
+                      <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 bg-primary-light rounded-md flex items-center justify-center text-primary">
                           <i class="ri-parking-box-line"></i>
                         </div>
                         <div>
-                          <h4 class="font-medium text-gray-800">Emplacement #{{ reservation.parkingSpotId }}</h4>
-                          <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                            <p class="text-gray-500 text-sm"><span class="font-medium">Début:</span> {{ reservation.startTime | date: 'd MMM yyyy, HH:mm' }}</p>
-                            <p class="text-gray-500 text-sm"><span class="font-medium">Fin:</span> {{ reservation.endTime | date: 'd MMM yyyy, HH:mm' }}</p>
-                            <p class="text-gray-500 text-sm"><span class="font-medium">Coût:</span> {{ reservation.totalCost }} DT</p>
+                          <h4 class="font-medium">Emplacement #{{ reservation.parkingSpotId }}</h4>
+                          <div class="flex flex-wrap gap-4 text-sm text-subtitle">
+                            <p><span class="font-medium">Début:</span> {{ reservation.startTime | date: 'd MMM yyyy, HH:mm' }}</p>
+                            <p><span class="font-medium">Fin:</span> {{ reservation.endTime | date: 'd MMM yyyy, HH:mm' }}</p>
+                            <p><span class="font-medium">Coût:</span> {{ reservation.totalCost }} DT</p>
                           </div>
                         </div>
                       </div>
-                      <div class="flex items-center gap-2">
-                        <span class="px-2 py-1 text-xs rounded-full" [ngClass]="{
-                          'bg-green-100 text-green-600': reservation.status === 'CONFIRMED',
-                          'bg-yellow-100 text-yellow-600': reservation.status === 'PENDING',
-                          'bg-gray-100 text-gray-600': reservation.status === 'COMPLETED'
-                        }">{{ reservation.status === 'CONFIRMED' ? 'Confirmé' : reservation.status === 'PENDING' ? 'En attente' : 'Terminé' }}</span>
-                        <i class="ri-more-2-line text-gray-400 cursor-pointer"></i>
-                      </div>
+                      <span class="px-2 py-1 text-xs rounded-full bg-success bg-opacity-20 text-success">{{ reservation.status }}</span>
                     </div>
                   </div>
                 }
               }
-              <div class="mt-4 text-center">
-                <button class="text-primary-purple hover:text-dark-purple font-medium text-sm flex items-center justify-center gap-1 mx-auto">
-                  Voir toutes les réservations <i class="ri-arrow-right-line"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Vehicles -->
-          <div class="bg-white rounded-xl custom-shadow p-6">
-            <div class="flex items-center justify-between mb-6">
-              <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-light-purple rounded-lg flex items-center justify-center text-primary-purple">
-                  <i class="ri-car-line text-xl"></i>
-                </div>
-                <h3 class="section-title">Mes Véhicules</h3>
-              </div>
-              <button (click)="openAddVehicleDialog()" class="text-primary-purple hover:text-dark-purple text-sm font-medium flex items-center gap-1 transition-colors">
-                <i class="ri-add-line"></i> Ajouter un Véhicule
+              <button (click)="navigateTo('/reservations')" class="text-primary hover:text-primary-light text-sm flex items-center gap-1 mx-auto">
+                Voir toutes les réservations <i class="ri-arrow-right-line"></i>
               </button>
             </div>
-            <div class="space-y-3">
-              @if (user().vehicles.length > 0) {
+          }
+        </div>
+
+        <!-- Vehicles -->
+        <div class="card">
+          <div class="flex items-center justify-between p-4 cursor-pointer" (click)="toggleSection('vehicles')">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-primary-light rounded-md flex items-center justify-center text-primary">
+                <i class="ri-car-line"></i>
+              </div>
+              <h3 class="font-medium">Mes Véhicules</h3>
+            </div>
+            <i class="ri-{{ isVehiclesExpanded() ? 'arrow-up-s-line' : 'arrow-down-s-line' }} text-subtitle"></i>
+          </div>
+          @if (isVehiclesExpanded()) {
+            <div class="p-4">
+              @if (user().vehicles.length === 0) {
+                <div class="flex flex-col items-center py-4">
+                  <i class="ri-car-line text-4xl text-subtitle"></i>
+                  <p class="text-subtitle mt-2">Aucun véhicule</p>
+                </div>
+              } @else {
                 @for (vehicle of user().vehicles; track vehicle.matricule) {
-                  <div class="vehicle-card bg-white p-4 rounded-lg border border-gray-100 custom-shadow cursor-pointer" (click)="navigateTo('/vehicle-details/' + vehicle.matricule)">
-                    <div class="flex items-start justify-between">
+                  <div class="card mb-3 border-l-4 border-primary cursor-pointer" (click)="navigateTo('/vehicle-details/' + vehicle.matricule)">
+                    <div class="flex items-start justify-between p-4">
                       <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 bg-light-purple rounded-lg flex items-center justify-center mt-1">
+                        <div class="w-10 h-10 bg-primary-light rounded-md flex items-center justify-center text-primary">
                           <i class="ri-car-line"></i>
                         </div>
                         <div>
-                          <h4 class="font-medium text-gray-800">{{ vehicle.brand }} {{ vehicle.model }}</h4>
-                          <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                            <p class="text-gray-500 text-sm"><span class="font-medium">Matricule:</span> {{ vehicle.matricule }}</p>
-                            <p class="text-gray-500 text-sm"><span class="font-medium">Couleur:</span> {{ vehicle.color }}</p>
+                          <h4 class="font-medium">{{ vehicle.brand }} {{ vehicle.model }}</h4>
+                          <div class="flex flex-wrap gap-4 text-sm text-subtitle">
+                            <p><span class="font-medium">Matricule:</span> {{ vehicle.matricule }}</p>
+                            <p><span class="font-medium">Couleur:</span> {{ vehicle.color }}</p>
                           </div>
                         </div>
                       </div>
-                      <div class="flex items-center gap-2">
-                        <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-600">Actif</span>
-                        <i class="ri-arrow-right-s-line text-gray-400"></i>
-                      </div>
+                      <span class="px-2 py-1 text-xs rounded-full bg-success bg-opacity-20 text-success">Actif</span>
                     </div>
                   </div>
                 }
-              } @else {
-                <div class="flex flex-col items-center py-6">
-                  <i class="ri-car-line text-4xl text-gray-400"></i>
-                  <p class="text-gray-500 mt-2">Aucun véhicule</p>
-                </div>
               }
-              <div class="mt-4 text-center">
-                <button class="text-primary-purple hover:text-dark-purple font-medium text-sm flex items-center justify-center gap-1 mx-auto">
-                  Voir tous les véhicules <i class="ri-arrow-right-line"></i>
-                </button>
+              <button (click)="openAddVehicleDialog()" class="text-primary hover:text-primary-light text-sm flex items-center gap-1 mx-auto">
+                Ajouter un Véhicule <i class="ri-add-line"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Subscription -->
+        <div class="card">
+          <div class="flex items-center justify-between p-4 cursor-pointer" (click)="toggleSection('subscription')">
+            <div class="flex items-center gap-4">
+              <div class="w-10 h-10 bg-secondary bg-opacity-20 rounded-md flex items-center justify-center text-secondary">
+                <i class="ri-vip-crown-line"></i>
               </div>
+              <h3 class="font-medium">Mon Abonnement</h3>
+            </div>
+            <i class="ri-{{ isSubscriptionExpanded() ? 'arrow-up-s-line' : 'arrow-down-s-line' }} text-subtitle"></i>
+          </div>
+          @if (isSubscriptionExpanded()) {
+            <div class="p-4">
+              <div class="card bg-gray-100">
+                <div class="flex items-center justify-between p-4">
+                  <div>
+                    <h4 class="font-medium">{{ user().subscription.type === 'premium' ? 'Plan Premium' : 'Plan Gratuit' }}</h4>
+                    <p class="text-subtitle text-sm">{{ user().subscription.type === 'premium' ? 'Valide jusqu\'au ' + (user().subscription.subscriptionEndDate | date: 'd MMM yyyy') : 'Aucun abonnement actif' }}</p>
+                  </div>
+                  <button (click)="navigateTo('/subscription')" class="text-primary hover:text-primary-light text-sm">Gérer</button>
+                </div>
+              </div>
+              <button (click)="navigateTo('/subscription-history')" class="text-primary hover:text-primary-light text-sm flex items-center gap-1 mx-auto mt-4">
+                Voir l'historique des abonnements <i class="ri-history-line"></i>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Settings -->
+        <div class="card">
+          <div class="flex items-center gap-4 p-4">
+            <div class="w-10 h-10 bg-gray-200 rounded-md flex items-center justify-center text-subtitle">
+              <i class="ri-settings-line"></i>
+            </div>
+            <h3 class="font-medium">Paramètres</h3>
+          </div>
+          <div class="p-4 space-y-2">
+            <div class="flex items-center gap-4 cursor-pointer" (click)="navigateTo('/notification-settings')">
+              <div class="w-10 h-10 bg-primary-light rounded-md flex items-center justify-center text-primary">
+                <i class="ri-notification-line"></i>
+              </div>
+              <div>
+                <h4 class="font-medium">Paramètres de Notification</h4>
+                <p class="text-subtitle text-sm">Gérer vos préférences de notification</p>
+              </div>
+              <i class="ri-arrow-right-s-line text-subtitle ml-auto"></i>
+            </div>
+            <hr class="border-gray-200">
+            <div class="flex items-center gap-4 cursor-pointer" (click)="navigateTo('/privacy-settings')">
+              <div class="w-10 h-10 bg-primary-light rounded-md flex items-center justify-center text-primary">
+                <i class="ri-shield-line"></i>
+              </div>
+              <div>
+                <h4 class="font-medium">Paramètres de Confidentialité</h4>
+                <p class="text-subtitle text-sm">Contrôler vos paramètres de confidentialité</p>
+              </div>
+              <i class="ri-arrow-right-s-line text-subtitle ml-auto"></i>
+            </div>
+            <hr class="border-gray-200">
+            <div class="flex items-center gap-4 cursor-pointer" (click)="navigateTo('/language-preferences')">
+              <div class="w-10 h-10 bg-success bg-opacity-20 rounded-md flex items-center justify-center text-success">
+                <i class="ri-global-line"></i>
+              </div>
+              <div>
+                <h4 class="font-medium">Préférences de Langue</h4>
+                <p class="text-subtitle text-sm">Choisir votre langue préférée</p>
+              </div>
+              <i class="ri-arrow-right-s-line text-subtitle ml-auto"></i>
+            </div>
+            <hr class="border-gray-200">
+            <div class="flex items-center gap-4 cursor-pointer" (click)="navigateTo('/help-support')">
+              <div class="w-10 h-10 bg-error bg-opacity-20 rounded-md flex items-center justify-center text-error">
+                <i class="ri-question-line"></i>
+              </div>
+              <div>
+                <h4 class="font-medium">Aide et Support</h4>
+                <p class="text-subtitle text-sm">Obtenir de l'aide et du support</p>
+              </div>
+              <i class="ri-arrow-right-s-line text-subtitle ml-auto"></i>
             </div>
           </div>
         </div>
+
+        <!-- Logout -->
+        <button (click)="logout()" class="secondary w-full py-3 flex items-center justify-center gap-2">
+          <i class="ri-logout-box-line"></i> Déconnexion
+        </button>
       </div>
-    </main>
-  </div>
+    }
+  </main>
 
   <!-- Dialog Templates -->
   <ng-template #editProfileDialog let-dialogRef="dialogRef" let-data="data">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-auto custom-shadow">
+    <div class="bg-white rounded-md p-6 w-full max-w-md shadow-dialog">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-gray-800">Modifier le Profil</h2>
-        <button (click)="dialogRef.close()" class="text-gray-400 hover:text-gray-600">
+        <h2 class="text-xl">Modifier le Profil</h2>
+        <button (click)="dialogRef.close()" class="text-subtitle hover:text-text-color">
           <i class="ri-close-line text-2xl"></i>
         </button>
       </div>
       <div class="space-y-4">
         <div>
-          <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
-          <input id="firstName" type="text" [(ngModel)]="data.editForm.firstName" placeholder="Prénom" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" />
+          <label class="block text-sm font-medium text-text-color mb-1">Prénom</label>
+          <input [(ngModel)]="data.editForm.firstName" placeholder="Prénom" class="w-full" />
         </div>
         <div>
-          <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
-          <input id="lastName" type="text" [(ngModel)]="data.editForm.lastName" placeholder="Nom" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" />
+          <label class="block text-sm font-medium text-text-color mb-1">Nom</label>
+          <input [(ngModel)]="data.editForm.lastName" placeholder="Nom" class="w-full" />
         </div>
         <div>
-          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-          <input id="email" type="email" [(ngModel)]="data.editForm.email" placeholder="Email" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" />
+          <label class="block text-sm font-medium text-text-color mb-1">Email</label>
+          <input [(ngModel)]="data.editForm.email" placeholder="Email" class="w-full" type="email" />
         </div>
         <div>
-          <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-          <input id="phone" type="tel" [(ngModel)]="data.editForm.phone" placeholder="Téléphone" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" />
+          <label class="block text-sm font-medium text-text-color mb-1">Téléphone</label>
+          <input [(ngModel)]="data.editForm.phone" placeholder="Téléphone" class="w-full" type="tel" />
         </div>
         @if (data.errorMessage()) {
-          <p class="text-error text-sm">{{ data.errorMessage() }}</p>
+          <p class="error-message">{{ data.errorMessage() }}</p>
         }
         @if (data.isLoading()) {
           <div class="flex justify-center">
-            <div class="w-6 h-6 border-4 border-primary-purple border-t-transparent rounded-full animate-spin"></div>
+            <div class="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         }
       </div>
-      <div class="flex justify-end gap-3 pt-4">
-        <button (click)="dialogRef.close()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Annuler</button>
-        <button (click)="data.saveProfileChanges()" class="px-4 py-2 gold-gradient text-white rounded-lg hover:opacity-80" [disabled]="data.isLoading()">Enregistrer</button>
+      <div class="flex justify-end gap-3 mt-4">
+        <button (click)="dialogRef.close()" class="px-4 py-2 border border-gray-200 rounded-md text-text-color hover:bg-gray-100">Annuler</button>
+        <button (click)="data.saveProfileChanges()" class="secondary px-4 py-2" [disabled]="data.isLoading()">Enregistrer</button>
       </div>
     </div>
   </ng-template>
 
   <ng-template #passwordChangeDialog let-dialogRef="dialogRef" let-data="data">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-auto custom-shadow">
+    <div class="bg-white rounded-md p-6 w-full max-w-md shadow-dialog">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-gray-800">Changer le mot de passe</h2>
-        <button (click)="dialogRef.close()" class="text-gray-400 hover:text-gray-600">
+        <h2 class="text-xl">Changer le mot de passe</h2>
+        <button (click)="dialogRef.close()" class="text-subtitle hover:text-text-color">
           <i class="ri-close-line text-2xl"></i>
         </button>
       </div>
       <div class="space-y-4">
-        <p class="font-poppins text-base font-medium">Étape 1 : Demander un code de vérification</p>
-        <p class="text-gray-500 text-sm mt-1">Un code sera envoyé à votre email : {{ data.user.email }}</p>
-        <button (click)="data.requestPasswordReset()" class="w-full px-4 py-2 gold-gradient text-white rounded-lg hover:opacity-80" [disabled]="data.isLoading()">Demander le code</button>
+        <p class="font-medium">Étape 1 : Demander un code de vérification</p>
+        <p class="text-subtitle text-sm">Un code sera envoyé à votre email : {{ data.user.email }}</p>
+        <button (click)="data.requestPasswordReset()" class="secondary w-full" [disabled]="data.isLoading()">Demander le code</button>
         @if (data.isVerificationCodeSent()) {
           <div class="space-y-4">
-            <p class="font-poppins text-base font-medium">Étape 2 : Entrez vos détails</p>
+            <p class="font-medium">Étape 2 : Entrez vos détails</p>
             <div>
-              <label for="verificationCode" class="block text-sm font-medium text-gray-700 mb-1">Code de vérification</label>
-              <input id="verificationCode" type="text" [(ngModel)]="data.passwordForm.verificationCode" placeholder="Code de vérification (6 chiffres)" maxlength="6" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" />
+              <label class="block text-sm font-medium text-text-color mb-1">Code de vérification</label>
+              <input [(ngModel)]="data.passwordForm.verificationCode" placeholder="Code de vérification (6 chiffres)" maxlength="6" class="w-full" />
             </div>
             <div>
-              <label for="currentPassword" class="block text-sm font-medium text-gray-700 mb-1">Mot de passe actuel</label>
-              <input id="currentPassword" type="password" [(ngModel)]="data.passwordForm.currentPassword" placeholder="Mot de passe actuel" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" />
+              <label class="block text-sm font-medium text-text-color mb-1">Mot de passe actuel</label>
+              <input [(ngModel)]="data.passwordForm.currentPassword" placeholder="Mot de passe actuel" type="password" class="w-full" />
             </div>
             <div>
-              <label for="newPassword" class="block text-sm font-medium text-gray-700 mb-1">Nouveau mot de passe</label>
-              <input id="newPassword" type="password" [(ngModel)]="data.passwordForm.newPassword" placeholder="Nouveau mot de passe" class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50" />
+              <label class="block text-sm font-medium text-text-color mb-1">Nouveau mot de passe</label>
+              <input [(ngModel)]="data.passwordForm.newPassword" placeholder="Nouveau mot de passe" type="password" class="w-full" />
             </div>
-            <button (click)="data.changePassword()" class="w-full px-4 py-2 gold-gradient text-white rounded-lg hover:opacity-80" [disabled]="data.isLoading()">Confirmer le changement</button>
+            <button (click)="data.changePassword()" class="secondary w-full" [disabled]="data.isLoading()">Confirmer le changement</button>
           </div>
         }
         @if (data.errorMessage()) {
-          <p class="text-error text-sm">{{ data.errorMessage() }}</p>
+          <p class="error-message">{{ data.errorMessage() }}</p>
         }
         @if (data.isLoading()) {
           <div class="flex justify-center">
-            <div class="w-6 h-6 border-4 border rounded-full animate-spin"></div>
+            <div class="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         }
       </div>
-      <div class="flex justify-end gap-3 pt-4">
-        <button (click)="dialogRef.close()" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">Annuler</button>
+      <div class="flex justify-end mt-4">
+        <button (click)="dialogRef.close()" class="px-4 py-2 border border-gray-200 rounded-md text-text-color hover:bg-gray-100">Annuler</button>
       </div>
     </div>
+  </ng-template>
+
   <ng-template #addVehicleDialog let-dialogRef="dialogRef" let-data="data">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-auto custom-shadow">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-semibold text-gray-800">Ajouter un Véhicule</h2>
-        <button (click)="dialogRef.close()" class="text-gray-400 hover:text-gray-600">
+    <div class="bg-white rounded-md p-6 w-full max-w-md shadow-dialog">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl">Ajouter un Véhicule</h2>
+        <button (click)="dialogRef.close()" class="text-subtitle hover:text-text-color">
           <i class="ri-close-line text-2xl"></i>
         </button>
       </div>
       <div class="space-y-4">
         @if (!data.vehicleForm.isMatriculeProcessed) {
-          <div class="h-36 bg-gray-100 rounded-lg border border-gray-200 flex items-center justify-center cursor-pointer relative" (click)="data.triggerFileInput()">
+          <div class="h-36 bg-gray-100 rounded-md border border-gray-200 flex items-center justify-center cursor-pointer" (click)="data.triggerFileInput()">
             @if (!data.vehicleForm.matriculeImage) {
               <div class="text-center">
-                <i class="ri-camera-line text-2xl text-gray-500"></i>
-                <p class="font-poppins text-gray-500 text-sm">Uploader l’image de la matricule</p>
+                <i class="ri-camera-line text-2xl text-subtitle"></i>
+                <p class="text-subtitle text-sm">Uploader l’image de la matricule</p>
               </div>
             } @else {
-              <img [src]="data.vehicleForm.imagePreview" alt="Image Preview" class="h-full w-full object-cover rounded-lg" />
-              <button class="absolute bottom-2 px-4 py-2 gold-gradient text-white rounded-lg hover:bg-yellow-400" (click)="data.processMatriculeImage(); $event.stopPropagation()">Envoyer</button>
+              <img [src]="data.vehicleForm.imagePreview" alt="Image Preview" class="h-full w-full object-cover rounded-md" />
+              <button class="absolute bottom-2 secondary px-4 py-2" (click)="data.processMatriculeImage(); $event.stopPropagation()">Envoyer</button>
             }
           </div>
-          <input type="file" id="fileInput" (change)]="data.onFileSelected($event)" accept="image/*" class="hidden" />
+          <input type="file" id="fileInput" (change)="data.onFileSelected($event)" accept="image/*" class="hidden" />
           <div>
-            <label for="matricule" class="block text-sm font-medium text-gray-700 mb-1">Matricule</label>
-            <input id="matricule" type="text" [(ngModel)]="data.vehicleForm.matricule" placeholder="Matricule (sera rempli après validation)" class="w-full p-3 border rounded-lg bg-gray-50" disabled />
+            <label class="block text-sm font-medium text-text-color mb-1">Matricule</label>
+            <input [(ngModel)]="data.vehicleForm.matricule" placeholder="Matricule (sera rempli après validation)" class="w-full" disabled />
           </div>
-          <button class="w-full px-4 py-2 gold-gradient text-white rounded-lg hover:bg-yellow-400" [disabled]="(!data.vehicleForm.matricule || data.isLoading())" (click)="data.vehicleForm.isMatriculeProcessed = true">Passer à l’étape suivante</button>
+          <button class="secondary w-full" [disabled]="!data.vehicleForm.matricule || data.isLoading()" (click)="data.vehicleForm.isMatriculeProcessed = true">Passer à l’étape suivante</button>
         } @else {
           <div>
-            <label for="matricule" class="block text-sm font-medium text-gray-700 mb-1">Matricule</label>
-            <input id="matricule" type="text" [(ngModel)]="data.vehicleForm.matricule" placeholder="Matricule" class="w-full p-3 border rounded-lg bg-gray-50" disabled />
+            <label class="block text-sm font-medium text-text-color mb-1">Matricule</label>
+            <input [(ngModel)]="data.vehicleForm.matricule" placeholder="Matricule" class="w-full" disabled />
           </div>
           <div>
-            <label for="brand" class="block text-sm font-medium text-gray-700 mb-1">Marque</label>
-            <select class="select w-full p-3 border rounded-lg bg-gray-50" [(ngModel)]="data.vehicleForm.brand" (change)="data.onBrandChange($event)">
+            <label class="block text-sm font-medium text-text-color mb-1">Marque</label>
+            <select [(ngModel)]="data.vehicleForm.brand" (change)="data.onBrandChange($event)" class="w-full">
               <option value="" disabled selected>Marque</option>
-              <option *ngFor="let brand of data.brands" [value]="brand">{{ brand }}</option>
+              @for (brand of data.brands; track brand) {
+                <option [value]="brand">{{ brand }}</option>
+              }
             </select>
           </div>
           <div>
-            <label for="model" class="block text-sm font-medium text-gray-700 mb-1">Modèle</label>
-            <select class="select w-full p-3 border rounded-lg bg-gray-50" [(ngModel)]="data.vehicleForm.model" (change)="data.onModelChange($event)">
+            <label class="block text-sm font-medium text-text-color mb-1">Modèle</label>
+            <select [(ngModel)]="data.vehicleForm.model" (change)="data.onModelChange($event)" class="w-full">
               <option value="" disabled selected>Modèle</option>
-              <option *ngFor="let model of data.models" [value]="model">{{ model }}</option>
+              @for (model of data.models; track model) {
+                <option [value]="model">{{ model }}</option>
+              }
             </select>
           </div>
           <div>
-            <label for="color" class="block text-sm font-medium text-gray-700 mb-1">Couleur</label>
-            <select class="select w-full p-3 border rounded-lg bg-gray-50" [(ngModel)]="data.vehicleForm.color" (change)="data.onColorChange($event)">
+            <label class="block text-sm font-medium text-text-color mb-1">Couleur</label>
+            <select [(ngModel)]="data.vehicleForm.color" (change)="data.onColorChange($event)" class="w-full">
               <option value="" disabled selected>Couleur</option>
-              <option *ngFor="let color of data.colors" [value]="color">{{ color }}</option>
+              @for (color of data.colors; track color) {
+                <option [value]="color">{{ color }}</option>
+              }
             </select>
           </div>
-          <button class="w-full px-4 py-2 gold-gradient text-white rounded-lg mt-4" (click)="data.submitVehicle()" [disabled]="data.isLoading()">Ajouter</button>
+          <button (click)="data.submitVehicle()" class="secondary w-full mt-4" [disabled]="data.isLoading()">Ajouter</button>
         }
         @if (data.errorMessage()) {
-          <p class="text-red-500 text-sm mt-3">{{ data.errorMessage() }}</p>
+          <p class="error-message">{{ data.errorMessage() }}</p>
         }
         @if (data.isLoading()) {
-          <div class="flex justify-center mt-3">
-            <div class="w-6 h-6 border-4 border rounded-full animate-spin"></div>
+          <div class="flex justify-center">
+            <div class="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         }
       </div>
-      <div class="flex justify-end gap-3 pt-4">
-        <button class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-200" (click)="dialogRef.close()">Cancel</button>
+      <div class="flex justify-end mt-4">
+        <button (click)="dialogRef.close()" class="px-4 py-2 border border-gray-200 rounded-md text-text-color hover:bg-gray-100">Annuler</button>
       </div>
     </div>
   </ng-template>
 
   <ng-template #manualInputDialog let-dialogRef="dialogRef" let-data="data">
-    <div class="bg-white rounded-lg p-6 w-full max-w-md mx-auto custom-shadow">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-semibold text-gray-800">Entrée {{ data.label }}</h2>
-        <button (click)="dialogRef.close()" class="text-gray-400 hover:text-gray-600">
-          <div class="ri-close-line text-2xl"></div>
+    <div class="bg-white rounded-md p-6 w-full max-w-md shadow-dialog">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl">Entrée {{ data.label }}</h2>
+        <button (click)="dialogRef.close()" class="text-subtitle hover:text-text-color">
+          <i class="ri-close-line text-2xl"></i>
         </button>
       </div>
-      <div class="space-y-5">
+      <div class="space-y-4">
         <div>
-          <label for="inputValue" class="block text-sm font-medium text-gray-700 mb-1">{{ data.label }}</label>
-          <input type="text" id="inputValue" [(ngModel)]="data.inputValue" [placeholder]="data.label" class="w-full p-2 border rounded-full" />
+          <label class="block text-sm font-medium text-text-color mb-1">{{ data.label }}</label>
+          <input [(ngModel)]="data.inputValue" [placeholder]="data.label" class="w-full" />
         </div>
         @if (data.errorMessage()) {
-          <p class="text-red-500 text-sm">{{ data.errorMessage() }}</p>
+          <p class="error-message">{{ data.errorMessage() }}</p>
         }
       </div>
-      <div class="flex justify-end gap-4 pt-4">
-        <button class="px-4 py-1 border rounded-2xl text-gray-700 hover:bg-gray-300" (click)="dialogRef.close()">Annuler</button>
-        <button class="px-4 py-1 gold-gradient text-white rounded-full hover:bg-yellow-400" (click)="data.callback(data.inputValue); dialogRef.close()">Confirmer</button>
+      <div class="flex justify-end gap-3 mt-4">
+        <button (click)="dialogRef.close()" class="px-4 py-2 border border-gray-200 rounded-md text-text-color hover:bg-gray-100">Annuler</button>
+        <button (click)="data.callback(data.inputValue); dialogRef.close()" class="secondary px-4 py-2">Confirmer</button>
       </div>
     </div>
   </ng-template>
+</div>

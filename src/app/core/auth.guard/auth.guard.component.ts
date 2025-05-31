@@ -1,40 +1,50 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/services/auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthGuard implements CanActivate {
   constructor(private authService: AuthService, private router: Router) {}
 
-  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
+  canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> {
     const isPublic = route.data['public'] || false;
-    console.log('AuthGuard: Checking route:', state.url, 'Public:', isPublic); // Debug log
+    console.log('AuthGuard: Checking route:', state.url, 'Public:', isPublic);
 
     if (isPublic) {
-      console.log('AuthGuard: Allowing public route'); // Debug log
-      return true;
+      console.log('AuthGuard: Allowing public route');
+      return of(true);
     }
 
-    const isAuth = this.authService.isAuthenticated();
-    const user = this.authService.getUser();
+    return this.authService.getUser().pipe(
+      map(user => {
+        console.log('AuthGuard: User:', user);
 
-    console.log('AuthGuard: Is authenticated:', isAuth, 'User:', user); // Debug log
+        if (!user) {
+          console.log('AuthGuard: User not authenticated, redirecting to /auth');
+          this.router.navigate(['/auth'], { queryParams: { returnUrl: state.url } });
+          return false;
+        }
 
-    if (!isAuth || !user) {
-      console.log('AuthGuard: User not authenticated, redirecting to /auth'); // Debug log
-      this.router.navigate(['/auth'], { queryParams: { returnUrl: state.url } });
-      return false;
-    }
+        const requiredRole = route.data['role'] as string | undefined;
+        const userRole = user.role === 'ADMIN' ? 'ROLE_ADMIN' : 'ROLE_USER';
+        console.log('AuthGuard: Required role:', requiredRole, 'User role:', userRole);
 
-    const requiredRole = route.data['role'];
-    const userRole = user.role === 'ADMIN' ? 'ROLE_ADMIN' : 'ROLE_USER'; // Map to expected role format
-    if (requiredRole && userRole !== requiredRole) {
-      console.log('AuthGuard: Role mismatch, required:', requiredRole, 'user role:', userRole, 'redirecting to /access-denied'); // Debug log
-      this.router.navigate(['/access-denied']);
-      return false;
-    }
+        if (requiredRole && userRole !== requiredRole) {
+          console.log('AuthGuard: Role mismatch, redirecting to /access-denied');
+          this.router.navigate(['/access-denied']);
+          return false;
+        }
 
-    console.log('AuthGuard: Allowing access'); // Debug log
-    return true;
+        console.log('AuthGuard: Allowing access');
+        return true;
+      }),
+      catchError(err => {
+        console.error('AuthGuard: Error fetching user', err);
+        this.router.navigate(['/auth'], { queryParams: { returnUrl: state.url } });
+        return of(false);
+      })
+    );
   }
 }

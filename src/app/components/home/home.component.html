@@ -1,0 +1,564 @@
+<section class="relative overflow-hidden h-screen flex items-center">
+  <div class="absolute inset-0 w-full h-full">
+    <div class="image-reel flex w-[200%] h-full">
+      <div class="w-full h-full flex">
+        <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"></div>
+        <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1607860108855-64acf2078ed9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"></div>
+        <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"></div>
+        <div class="w-full h-full bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1607860108855-64acf2078ed9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')"></div>
+      </div>
+    </div>
+  </div>
+  <div class="absolute inset-0 hero-overlay"></div>
+  <div class="container mx-auto px-6 relative z-10">
+    <div class="max-w-2xl mx-auto text-center">
+      <h1 class="text-4xl md:text-6xl font-bold text-white mb-6 font-display typing-effect">
+        Parking Privé Intelligent
+      </h1>
+      <p class="text-xl text-gold-200 mb-8">
+        Système de parking avec reconnaissance de plaque d'immatriculation. Sécurisé.
+        <span class="block mt-2 text-gold-300">Exclusif pour les utilisateurs enregistrés.</span>
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center gap-6">
+        <a routerLink="/register" class="bg-gold-500 text-dark px-8 py-3 rounded-button font-bold hover:bg-gold-600 transition-colors gold-glow hover:scale-105 transform transition flex items-center justify-center">
+          <i class="ri-user-add-line mr-2"></i> S'inscrire
+        </a>
+        <a routerLink="/auth" class="bg-primary text-white px-8 py-3 rounded-button font-bold hover:bg-purple-800 transition-colors gold-glow hover:scale-105 transform transition flex items-center justify-center">
+          <i class="ri-login-box-line mr-2"></i> Connexion
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="absolute bottom-10 left-0 right-0 flex justify-center">
+    <a href="#about" class="text-gold-300 animate-bounce">
+      <i class="ri-arrow-down-s-line ri-2x"></i>
+    </a>
+  </div>
+</section>
+
+<section id="about" class="py-20 bg-white">
+  <div class="container mx-auto px-6">
+    <div class="flex flex-col lg:flex-row items-center gap-12">
+      <div class="w-full lg:w-1/2">
+        <div class="relative rounded-xl overflow-hidden shadow-xl gold-border">
+          <img
+            src="assets/images/smart-parking.jpeg"
+            alt="Smart Parking System"
+            class="w-full h-auto"
+          />
+          <div class="absolute -bottom-4 -right-4 bg-white p-4 rounded-lg shadow-lg border border-gold-300">
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span class="text-sm font-medium text-dark">Système Actif</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="w-full lg:w-1/2">
+        <h2 class="text-3xl font-bold text-dark mb-6 font-display">
+          <span class="text-gold-500">Parking Intelligent</span> en Tunisie
+        </h2>
+        <p class="text-lg text-gray-700 mb-8">
+          Parkiny révolutionne votre expérience de parking avec une technologie intelligente conçue pour les résidents et employés dans des emplacements premium en Tunisie.
+        </p>
+        <div class="space-y-6">
+          <div class="flex items-start">
+            <div class="w-10 h-10 flex items-center justify-center bg-gold-100 rounded-full mr-4 mt-1 text-gold-600">
+              <i class="ri-ai-generate-fill ri-lg"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-dark mb-1">Détection Intelligente</h3>
+              <p class="text-gray-600">
+                Reconnaissance automatique des plaques d'immatriculation pour un accès sans contact.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="w-10 h-10 flex items-center justify-center bg-gold-100 rounded-full mr-4 mt-1 text-gold-600">
+              <i class="ri-time-line ri-lg"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-dark mb-1">Disponibilité en Temps Réel</h3>
+              <p class="text-gray-600">
+                Vérifiez les places disponibles avant votre arrivée via notre application mobile.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="w-10 h-10 flex items-center justify-center bg-gold-100 rounded-full mr-4 mt-1 text-gold-600">
+              <i class="ri-lock-2-line ri-lg"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-dark mb-1">Sécurité Renforcée</h3>
+              <p class="text-gray-600">
+                Accès exclusif pour les utilisateurs autorisés avec surveillance 24/7.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="w-10 h-10 flex items-center justify-center bg-gold-100 rounded-full mr-4 mt-1 text-gold-600">
+              <i class="ri-smartphone-line ri-lg"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-dark mb-1">Réservations par App</h3>
+              <p class="text-gray-600">
+                Réservez votre place à l'avance ou générez des QR codes pour vos invités.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-20 bg-gray-50">
+  <div class="container mx-auto px-6">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold text-dark mb-4 font-display">
+        Nos <span class="text-gold-500">Abonnements</span>
+      </h2>
+      <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+        Choisissez l'abonnement qui correspond à vos besoins de parking à Tunis.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      <div class="subscription-card bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <div class="text-center mb-6">
+          <h3 class="text-xl font-semibold text-dark mb-2">Basique</h3>
+          <p class="text-gray-600 mb-4">Parfait pour un usage occasionnel</p>
+          <div class="text-4xl font-bold text-primary mb-2">99 DT<span class="text-lg font-normal text-gray-500">/mois</span></div>
+          <p class="text-sm text-gray-500">Facturé mensuellement</p>
+        </div>
+        <div class="border-t border-gray-200 pt-6">
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>Accès 5 jours/semaine</span>
+            </li>
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>8h-18h seulement</span>
+            </li>
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>1 véhicule enregistré</span>
+            </li>
+            <li class="flex items-center text-gray-400">
+              <i class="ri-close-line mr-2"></i>
+              <span>Pas d'accès week-end</span>
+            </li>
+            <li class="flex items-center text-gray-400">
+              <i class="ri-close-line mr-2"></i>
+              <span>Pas de réservation</span>
+            </li>
+          </ul>
+          <a routerLink="/subscribe" class="block w-full bg-gray-100 text-dark text-center py-3 rounded-button font-medium hover:bg-gray-200 transition-colors">
+            Choisir ce plan
+          </a>
+        </div>
+      </div>
+      <div class="subscription-card bg-white p-8 rounded-xl shadow-lg border-2 border-gold-500 popular-plan">
+        <div class="text-center mb-6">
+          <h3 class="text-xl font-semibold text-dark mb-2">Premium</h3>
+          <p class="text-gray-600 mb-4">Le choix le plus populaire</p>
+          <div class="text-4xl font-bold text-primary mb-2">199 DT<span class="text-lg font-normal text-gray-500">/mois</span></div>
+          <p class="text-sm text-gray-500">Facturé mensuellement</p>
+        </div>
+        <div class="border-t border-gray-200 pt-6">
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>Accès 24/7</span>
+            </li>
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>2 véhicules enregistrés</span>
+            </li>
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>Réservation prioritaire</span>
+            </li>
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>5 QR codes invités/mois</span>
+            </li>
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>Support premium</span>
+            </li>
+          </ul>
+          <a routerLink="/subscribe" class="block w-full bg-gold-500 text-dark text-center py-3 rounded-button font-medium hover:bg-gold-600 transition-colors">
+            Choisir ce plan
+          </a>
+        </div>
+      </div>
+      <div class="subscription-card bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <div class="text-center mb-6">
+          <h3 class="text-xl font-semibold text-dark mb-2">Entreprise</h3>
+          <p class="text-gray-600 mb-4">Pour les besoins professionnels</p>
+          <div class="text-4xl font-bold text-primary mb-2">499 DT<span class="text-lg font-normal text-gray-500">/mois</span></div>
+          <p class="text-sm text-gray-500">Facturé mensuellement</p>
+        </div>
+        <div class="border-t border-gray-200 pt-6">
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>Accès illimité 24/7</span>
+            </li>
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>Jusqu'à 5 véhicules</span>
+            </li>
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>20 QR codes invités/mois</span>
+            </li>
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>Statistiques d'utilisation</span>
+            </li>
+            <li class="flex items-center">
+              <i class="ri-check-line text-green-500 mr-2"></i>
+              <span>Support dédié</span>
+            </li>
+          </ul>
+          <a routerLink="/subscribe" class="block w-full bg-gray-100 text-dark text-center py-3 rounded-button font-medium hover:bg-gray-200 transition-colors">
+            Choisir ce plan
+          </a>
+        </div>
+      </div>
+    </div>
+    <div class="mt-12 text-center">
+      <p class="text-gray-600 mb-4">Vous avez des besoins spécifiques ?</p>
+      <a routerLink="/contact" class="inline-block border-b border-gold-500 text-gold-600 hover:text-gold-800 transition-colors">
+        Contactez-nous pour une solution personnalisée
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="py-20 bg-white">
+  <div class="container mx-auto px-6">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold text-dark mb-4 font-display">
+        Fonctionnalités <span class="text-gold-500">Exclusives</span>
+      </h2>
+      <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+        Découvrez comment Parkiny transforme votre expérience de parking avec une technologie de pointe.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div class="feature-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition-all duration-300">
+        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+          <i class="ri-ai-generate-fill ri-xl text-primary"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-dark mb-3">Analyse alimentée par l'IA</h3>
+        <p class="text-gray-600">
+          Détectez automatiquement les habitudes de stationnement et proposez des suggestions instantanées de disponibilité des places.
+        </p>
+      </div>
+      <div class="feature-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition-all duration-300">
+        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+          <i class="ri-car-line ri-xl text-primary"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-dark mb-3">Reconnaissance des véhicules</h3>
+        <p class="text-gray-600">
+          Détectez et identifiez avec précision les véhicules grâce à notre technologie avancée de vision par ordinateur.
+        </p>
+      </div>
+      <div class="feature-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition-all duration-300">
+        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+          <i class="ri-dashboard-3-line ri-xl text-primary"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-dark mb-3">Tableau de bord d'analyse</h3>
+        <p class="text-gray-600">
+          Obtenez des informations précieuses sur les habitudes d’utilisation du stationnement grâce à une visualisation complète des données.
+        </p>
+      </div>
+      <div class="feature-card bg-white p-6 rounded-lg shadow-sm border border-gray-100 transition-all duration-300">
+        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+          <i class="ri-cloud-line ri-xl text-primary"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-dark mb-3">Intégration Cloud</h3>
+        <p class="text-gray-600">
+          Synchronisez-vous en toute transparence avec votre système de gestion de stationnement existant et accédez à vos données où que vous soyez et à tout moment.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-20 bg-gray-50">
+  <div class="container mx-auto px-6">
+    <div class="flex flex-col lg:flex-row items-center gap-12">
+      <div class="w-full lg:w-1/2">
+        <div class="relative">
+          <img src="https://readdy.ai/api/search-image?query=A%20sleek%20modern%20smart%20parking%20system%20with%20blue%20LED%20indicators%20installed%20in%20a%20parking%20lot%2C%20the%20system%20has%20a%20minimalist%20design%20with%20sensors%20and%20digital%20displays%2C%20professional%20product%20photography%20with%20soft%20lighting%20and%20subtle%20shadows%2C%20high-tech%20parking%20management%20tool&width=600&height=500&seq=5&orientation=landscape" alt="Smart Parking System" class="w-full rounded-xl shadow-lg">
+          <div class="absolute -bottom-4 -right-4 bg-white p-3 rounded-lg shadow-md">
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span class="text-sm font-medium text-dark">Appareil connecté</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="w-full lg:w-1/2">
+        <h2 class="text-3xl font-bold text-dark mb-6 font-display">Parkiny</h2>
+        <p class="text-lg text-gray-600 mb-8">
+          Notre système de stationnement intelligent de pointe intègre des capteurs avancés et des indicateurs LED pour optimiser la gestion des parkings.
+        </p>
+        <div class="space-y-6">
+          <div class="flex items-start">
+            <div class="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full mr-4 mt-1">
+              <i class="ri-speed-line ri-lg text-primary"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-dark mb-1">Détection rapide</h3>
+              <p class="text-gray-600">
+                Identifie les places occupées ou libres avec une précision de 99,8 % en temps réel.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full mr-4 mt-1">
+              <i class="ri-battery-charge-line ri-lg text-primary"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-dark mb-1">Autonomie prolongée</h3>
+              <p class="text-gray-600">
+                Fonctionnement continu jusqu'à 12 heures avec une recharge rapide.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full mr-4 mt-1">
+              <i class="ri-share-line ri-lg text-primary"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-dark mb-1">Intégration réseau</h3>
+              <p class="text-gray-600">
+                Se connecte seamlessly au système de gestion de parking pour une coordination efficace.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-start">
+            <div class="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full mr-4 mt-1">
+              <i class="ri-lightbulb-line ri-lg text-primary"></i>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-dark mb-1">Efficacité énergétique</h3>
+              <p class="text-gray-600">
+                Consommation optimisée pour une utilisation durable dans les parkings.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-10">
+          <a routerLink="/specifications" class="bg-primary text-white px-8 py-3 rounded-button font-medium hover:bg-primary/90 transition-colors inline-block whitespace-nowrap">
+            Voir les spécifications
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-20 bg-gray-50">
+  <div class="container mx-auto px-6">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold text-dark mb-4 font-display">
+        Découvrez le service <span class="text-gold-500">Parkiny</span>
+      </h2>
+      <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+        Une solution innovante pour simplifier vos stationnements avec un service de parking intelligent.
+      </p>
+    </div>
+    <div class="relative max-w-5xl mx-auto">
+      <div class="relative z-10 bg-gradient-to-r from-primary to-purple-800 rounded-3xl p-1 shadow-2xl gold-border">
+        <div class="bg-white rounded-2xl overflow-hidden">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-1">
+            <div class="p-4">
+              <div class="bg-gray-100 rounded-xl p-2 h-full">
+                <img src="https://images.unsplash.com/photo-1607860108855-64acf2078ed9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="App Screen 1" class="rounded-lg border border-gold-300/30 uniform-image-height">
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="bg-gray-100 rounded-xl p-2 h-full">
+                <img src="https://plus.unsplash.com/premium_photo-1661925156485-42bbe60d85c6?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8QSUyMHBhcmtpbmclMjBsb3QlMjB3aXRoJTIwY2FycyUyQyUyMHN1aXRhYmxlJTIwZm9yJTIwYSUyMHNtYXJ0J20JTIwYXBwJTIwY29udGV4dHxlbnwwfHwwfHx8MA==" alt="App Screen 2" class="rounded-lg border border-gold-300/30 uniform-image-height">
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="bg-gray-100 rounded-xl p-2 h-full">
+                <img src="https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" alt="App Screen 3" class="rounded-lg border border-gold-300/30 uniform-image-height">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-gold-500 rounded-full opacity-20"></div>
+      <div class="absolute -top-6 -right-6 w-40 h-40 bg-primary rounded-full opacity-20"></div>
+    </div>
+  </div>
+  <style>
+    .uniform-image-height {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+    }
+    .bg-gray-100.h-full {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</section>
+
+<section class="py-20 bg-white">
+  <div class="container mx-auto px-6">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold text-dark mb-4 font-display">
+        Occupation et efficacité
+      </h2>
+      <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+        Notre tableau de bord d'analyse complet fournit des informations précieuses sur l'occupation du stationnement et l'efficacité de votre installation.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <h3 class="text-xl font-semibold text-dark mb-3">Taux d'occupation</h3>
+        <p class="text-gray-600">
+          Suivez en temps réel l'utilisation des places de parking pour optimiser l'allocation des espaces.
+        </p>
+      </div>
+      <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <h3 class="text-xl font-semibold text-dark mb-3">Durée moyenne</h3>
+        <p class="text-gray-600">
+          Analysez la durée moyenne de stationnement pour mieux gérer les rotations.
+        </p>
+      </div>
+      <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <h3 class="text-xl font-semibold text-dark mb-3">Heures de pointe</h3>
+        <p class="text-gray-600">
+          Identifiez les périodes de forte affluence pour planifier vos ressources.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="map-section py-20 bg-white">
+  <div class="container mx-auto px-6">
+    <h2 class="text-3xl font-bold text-dark mb-6 font-display">📍 Où nous trouver ?</h2>
+    <div class="map-container">
+      <iframe src="https://www.google.com/maps?q=36.8075969687945,10.073328443701746&z=17&output=embed" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+
+<section class="py-20 bg-gray-50">
+  <div class="container mx-auto px-6">
+    <div class="text-center mb-16">
+      <h2 class="text-3xl font-bold text-dark mb-4 font-display">
+        Ce Que Disent Nos <span class="text-gold-500">Clients</span>
+      </h2>
+      <p class="text-lg text-gray-600 max-w-3xl mx-auto">
+        Rejoignez des milliers d'utilisateurs satisfaits qui ont transformé leur expérience de parking.
+      </p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex items-center mb-6">
+          <img
+            src="https://readdy.ai/api/search-image?query=professional%20headshot%20of%20a%20middle-aged%20woman%20with%20short%20brown%20hair%20and%20glasses%2C%20friendly%20smile%2C%20business%20professional%2C%20facility%20manager%2C%20white%20background%2C%20high%20quality%20portrait&width=64&height=64&seq=6&orientation=squarish"
+            alt="Ranya Nakaa"
+            class="w-14 h-14 rounded-full object-cover object-top mr-4 border-2 border-gold-300"
+          />
+          <div>
+            <h4 class="text-lg font-semibold text-dark">Ranya Nakaa</h4>
+            <p class="text-sm text-gray-600">Responsable des installations, centre commercial</p>
+          </div>
+        </div>
+        <p class="text-gray-700 mb-4">
+          Le système Parkiny a complètement transformé la gestion de nos installations de parking. Ce qui causait autrefois des embouteillages constants fonctionne désormais sans accroc, et les données ont optimisé notre allocation d'espace.
+        </p>
+        <div class="flex items-center">
+          <div class="flex text-gold-500">
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex items-center mb-6">
+          <img
+            src="https://readdy.ai/api/search-image?query=professional%20headshot%20of%20a%20middle-aged%20man%20with%20salt%20and%20pepper%20hair%2C%20friendly%20smile%2C%20business%20professional%2C%20parking%20operations%20manager%2C%20white%20background%2C%20high%20quality%20portrait&width=64&height=64&seq=7&orientation=squarish"
+            alt="Mohamed Ayari"
+            class="w-14 h-14 rounded-full object-cover object-top mr-4 border-2 border-gold-300"
+          />
+          <div>
+            <h4 class="text-lg font-semibold text-dark">Mohamed Ayari</h4>
+            <p class="text-sm text-gray-600">Directeur des opérations, stationnement de l'aéroport</p>
+          </div>
+        </div>
+        <p class="text-gray-700 mb-4">
+          Avec plus de 5 000 places de parking à gérer, l'efficacité était notre plus grand défi. Parkiny nous fait gagner du temps et nous aide à identifier les habitudes d'utilisation pour optimiser nos ressources.
+        </p>
+        <div class="flex items-center">
+          <div class="flex text-gold-500">
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-half-fill ri-sm"></i>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-100">
+        <div class="flex items-center mb-6">
+          <img
+            src="https://readdy.ai/api/search-image?query=professional%20headshot%20of%20a%20young%20asian%20woman%20with%20long%20black%20hair%2C%20friendly%20smile%2C%20business%20professional%2C%20smart%20city%20planner%2C%20white%20background%2C%20high%20quality%20portrait&width=64&height=64&seq=8&orientation=squarish"
+            alt="Jannah Ben Ahmed"
+            class="w-14 h-14 rounded-full object-cover object-top mr-4 border-2 border-gold-300"
+          />
+          <div>
+            <h4 class="text-lg font-semibold text-dark">Jannah Ben Ahmed</h4>
+            <p class="text-sm text-gray-600">Planificateur de villes intelligentes</p>
+          </div>
+        </div>
+        <p class="text-gray-700 mb-4">
+          J'étais sceptique quant à l'ajout d'une nouvelle technologie de parking, mais Parkiny est intuitif et s'intègre parfaitement à notre infrastructure, offrant des insights uniques sur la mobilité urbaine.
+        </p>
+        <div class="flex items-center">
+          <div class="flex text-gold-500">
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+            <i class="ri-star-fill ri-sm"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-20 bg-gradient-to-r from-primary to-purple-800">
+  <div class="container mx-auto px-6">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-6 font-display">
+        Rejoignez Notre Communauté de Parking Exclusive
+      </h2>
+      <p class="text-xl text-gold-200 mb-8">
+        Inscrivez-vous maintenant pour accéder au futur du parking privé.
+      </p>
+      <a routerLink="/register" class="bg-gold-500 text-dark px-10 py-4 rounded-button font-bold text-lg hover:bg-gold-600 transition-colors gold-glow pulse-animation inline-block">
+        <i class="ri-user-add-line mr-2"></i> S'inscrire Maintenant
+      </a>
+    </div>
+  </div>
+</section>
+
