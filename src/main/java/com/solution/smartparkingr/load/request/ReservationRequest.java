@@ -43,4 +43,6 @@ public class ReservationRequest {
     @NotBlank(message = "Email is required")
     @Pattern(regexp = "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$", message = "Invalid email format")
     private String email;
+
+    private Long subscriptionId; // Optional, null for non-subscribed users
 }

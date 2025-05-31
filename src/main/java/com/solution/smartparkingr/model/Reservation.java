@@ -31,6 +31,11 @@ public class Reservation {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private ParkingSpot parkingSpot;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subscription_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    private Subscription subscription; // Added subscription field
+
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
@@ -54,12 +59,13 @@ public class Reservation {
     public Reservation() {}
 
     // Constructor for creating a reservation
-    public Reservation(User user, Vehicle vehicle, ParkingSpot parkingSpot,
+    public Reservation(User user, Vehicle vehicle, ParkingSpot parkingSpot, Subscription subscription,
                        LocalDateTime startTime, LocalDateTime endTime, ReservationStatus status,
                        Double totalCost, LocalDateTime createdAt, String email) {
         this.user = user;
         this.vehicle = vehicle;
         this.parkingSpot = parkingSpot;
+        this.subscription = subscription;
         this.startTime = startTime;
         this.endTime = endTime;
         this.status = status;

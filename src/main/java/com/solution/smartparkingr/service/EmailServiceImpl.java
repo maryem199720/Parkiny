@@ -83,8 +83,20 @@ public class EmailServiceImpl implements EmailService {
                 .append("<li><strong>Fin :</strong> ").append(details.getOrDefault("endTime", "N/A")).append("</li>")
                 .append("<li><strong>Place :</strong> ").append(details.getOrDefault("placeName", "N/A")).append("</li>")
                 .append("<li><strong>Montant total :</strong> ").append(details.getOrDefault("totalAmount", "0.00")).append(" TND</li>")
-                .append("</ul>")
-                .append("<p><strong>QR Code :</strong></p>")
+                .append("</ul>");
+
+        // Include verification code based on reservation type
+        if (details.containsKey("paymentVerificationCode")) {
+            emailContent.append("<p><strong>Code de vérification de paiement :</strong> ")
+                    .append(details.get("paymentVerificationCode")).append("</p>")
+                    .append("<p>Veuillez entrer ce code dans l'application pour confirmer votre paiement.</p>");
+        } else if (details.containsKey("reservationConfirmationCode")) {
+            emailContent.append("<p><strong>Code de confirmation de réservation :</strong> ")
+                    .append(details.get("reservationConfirmationCode")).append("</p>")
+                    .append("<p>Veuillez entrer ce code dans l'application pour confirmer votre réservation.</p>");
+        }
+
+        emailContent.append("<p><strong>QR Code :</strong></p>")
                 .append("<img src='data:image/png;base64,").append(qrCodeBase64).append("' alt='QR Code' />")
                 .append("<p>Présentez ce QR code à l'arrivée au parking.</p>");
 

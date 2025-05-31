@@ -19,4 +19,14 @@ public class PaymentRequest {
 
     @NotBlank(message = "Payment reference is required")
     private String paymentReference;
+
+    private CardDetails cardDetails;
+
+    @Data
+    public static class CardDetails {
+        private String cardName;
+        private String cardNumber;
+        private String cardExpiry;
+        private String cardCvv;
+    }
 }

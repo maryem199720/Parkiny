@@ -1,29 +1,25 @@
 package com.solution.smartparkingr.controller;
 
+import com.solution.smartparkingr.load.request.PaymentRequest;
 import com.solution.smartparkingr.load.request.ReservationRequest;
 import com.solution.smartparkingr.model.*;
 import com.solution.smartparkingr.repository.*;
 import com.solution.smartparkingr.service.*;
-import io.jsonwebtoken.io.IOException;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import com.sendgrid.*;
-import com.sendgrid.helpers.mail.Mail;
-import com.sendgrid.helpers.mail.objects.Content;
-import com.sendgrid.helpers.mail.objects.Email;
 
 @RestController
 @RequestMapping("/api")
@@ -76,6 +72,16 @@ public class ReservationController {
 
     @PostMapping("/createReservation")
     public ResponseEntity<?> reserveWithMatricule(@Valid @RequestBody ReservationRequest reservationRequest) {
+        // Validate time constraints
+        LocalDateTime now = LocalDateTime.now();
+        if (reservationRequest.getStartTime().isAfter(reservationRequest.getEndTime()) ||
+                reservationRequest.getStartTime().isBefore(now)) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "L'heure de début doit être avant l'heure de fin et dans le futur"
+            ));
+        }
+
         // Validate user
         Optional<User> userOptional = userRepository.findById(reservationRequest.getUserId());
         if (!userOptional.isPresent()) {
@@ -101,12 +107,18 @@ public class ReservationController {
         if (!parkingSpotOptional.isPresent()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", "Bad Request",
-                    "message", "Place de parking introuvable"
+                    "message", "Place de parking"
             ));
         }
         ParkingSpot parkingSpot = parkingSpotOptional.get();
+        if (!parkingSpot.isAvailable()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "La place de parking n'est pas disponible"
+            ));
+        }
 
-        // Check if the parking spot is already reserved for the requested time
+        // Check if the parking spot is already reserved
         boolean isSpotReserved = reservationService.isSpotReserved(
                 parkingSpot.getId(),
                 reservationRequest.getStartTime(),
@@ -119,14 +131,32 @@ public class ReservationController {
             ));
         }
 
-        // Check for active subscription
-        Optional<Subscription> activeSubscription = subscriptionRepository.findByUserIdAndStatus(
-                user.getId(), SubscriptionStatus.ACTIVE
-        );
+        // Check subscription
+        Optional<Subscription> activeSubscription = Optional.empty();
+        boolean isFreeReservation = false;
+        if (reservationRequest.getSubscriptionId() != null) {
+            activeSubscription = subscriptionRepository.findById(reservationRequest.getSubscriptionId());
+            if (!activeSubscription.isPresent() ||
+                    activeSubscription.get().getUser().getId() != user.getId() ||
+                    !activeSubscription.get().getStatus().equals(SubscriptionStatus.ACTIVE)) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Bad Request",
+                        "message", "Abonnement invalide ou non actif"
+                ));
+            }
+            // Check remaining places for free reservation
+            if (activeSubscription.get().getRemainingPlaces() != null && activeSubscription.get().getRemainingPlaces() > 0) {
+                isFreeReservation = true;
+            }
+        } else {
+            activeSubscription = subscriptionRepository.findByUserIdAndStatus(user.getId(), SubscriptionStatus.ACTIVE);
+            if (activeSubscription.isPresent() && activeSubscription.get().getRemainingPlaces() != null && activeSubscription.get().getRemainingPlaces() > 0) {
+                isFreeReservation = true;
+            }
+        }
 
-        // Calculate the total cost
+        // Calculate total cost
         double amount = calculateReservationCost(
-                user,
                 parkingSpot,
                 activeSubscription,
                 reservationRequest.getStartTime(),
@@ -144,78 +174,162 @@ public class ReservationController {
         reservation.setTotalCost(amount);
         reservation.setCreatedAt(LocalDateTime.now());
         reservation.setEmail(reservationRequest.getEmail());
-        reservation = reservationService.save(reservation);
+        // Save reservation
+        reservation = reservationRepository.save(reservation);
 
-        // Create payment
+        // Prepare response
         String sessionId = "SMT" + System.currentTimeMillis();
-        Payment payment = new Payment(
-                reservation,
-                amount,
-                reservationRequest.getPaymentMethod(),
-                "PENDING",
-                sessionId,
-                LocalDateTime.now()
-        );
-        paymentRepository.save(payment);
-
-        // Prepare reservation ID
+        Map<String, Object> response = new HashMap<>();
         String reservationId = "RES-" + reservation.getId();
 
-        // Generate and send payment verification code (only if payment is required)
-        Map<String, Object> response = new HashMap<>();
-        if (amount > 0) {
+        if (amount > 0 && !isFreeReservation) {
+            // Create payment for non-free reservations
+            Payment payment = new Payment(
+                    reservation,
+                    amount,
+                    reservationRequest.getPaymentMethod(),
+                    "PENDING",
+                    sessionId,
+                    LocalDateTime.now()
+            );
+            paymentRepository.save(payment);
+
+            // Generate and store payment verification code
             String paymentVerificationCode = String.format("%06d", new Random().nextInt(999999));
+            reservationService.storePaymentVerificationCode(reservationId, paymentVerificationCode);
+
             try {
-                emailService.sendPaymentVerificationEmail(reservationRequest.getEmail(), paymentVerificationCode);
-                reservationService.storePaymentVerificationCode(reservationId, paymentVerificationCode);
-                response.put("message", "Réservation créée. Veuillez vérifier votre paiement avec le code envoyé par email.");
+                Map<String, Object> emailDetails = new HashMap<>();
+                emailDetails.put("reservationId", reservationId);
+                emailDetails.put("startTime", reservation.getStartTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                emailDetails.put("endTime", reservation.getEndTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                emailDetails.put("placeName", reservation.getParkingSpot().getName());
+                emailDetails.put("totalAmount", reservation.getTotalCost());
+                emailDetails.put("vehicleMatricule", reservation.getVehicle().getMatricule());
+                emailDetails.put("qrCodeData", reservationId);
+                emailDetails.put("paymentVerificationCode", paymentVerificationCode);
+                emailService.sendReservationConfirmationEmail(reservation.getEmail(), reservationId, emailDetails);
+                response.put("message", "Réservation créée. Vérifiez votre email pour le code de vérification de paiement.");
                 response.put("reservationId", reservationId);
-                response.put("paymentVerificationCode", paymentVerificationCode);
-            } catch (IOException | java.io.IOException e) {
-                System.err.println("Failed to send payment verification email: " + e.getMessage());
+                response.put("sessionId", sessionId);
+                response.put("paymentVerificationCode", paymentVerificationCode); // Include in response for frontend
+            } catch (IOException e) {
                 return ResponseEntity.status(500).body(Map.of(
                         "error", "Internal Server Error",
-                        "message", "Échec de l'envoi de l'email de vérification de paiement: " + e.getMessage()
+                        "message", "Échec de l'envoi de l'email de confirmation : " + e.getMessage()
                 ));
             }
         } else {
-            // If no payment is required (e.g., subscription covers it), proceed directly to reservation confirmation
-            reservation.setStatus(ReservationStatus.CONFIRMED);
-            reservationRepository.save(reservation);
-
-            // Send final confirmation email with QR code
-            Map<String, Object> emailDetails = new HashMap<>();
-            emailDetails.put("reservationId", reservationId);
-            emailDetails.put("startTime", reservation.getStartTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-            emailDetails.put("endTime", reservation.getEndTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
-            emailDetails.put("placeName", reservation.getParkingSpot().getName());
-            emailDetails.put("totalAmount", reservation.getTotalCost());
-            emailDetails.put("qrCodeData", reservationId);
-
+            // For free reservations (subscribed users)
+            String reservationConfirmationCode = String.format("%06d", new Random().nextInt(999999));
+            reservationService.storeReservationConfirmationCode(reservationId, reservationConfirmationCode);
             try {
+                Map<String, Object> emailDetails = new HashMap<>();
+                emailDetails.put("reservationId", reservationId);
+                emailDetails.put("startTime", reservation.getStartTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                emailDetails.put("endTime", reservation.getEndTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                emailDetails.put("placeName", reservation.getParkingSpot().getName());
+                emailDetails.put("totalAmount", reservation.getTotalCost());
+                emailDetails.put("vehicleMatricule", reservation.getVehicle().getMatricule());
+                emailDetails.put("qrCodeData", reservationId);
+                emailDetails.put("reservationConfirmationCode", reservationConfirmationCode);
                 emailService.sendReservationConfirmationEmail(reservation.getEmail(), reservationId, emailDetails);
-            } catch (IOException | java.io.IOException e) {
-                System.err.println("Failed to send reservation confirmation email: " + e.getMessage());
+                response.put("message", "Réservation créée. Vérifiez votre email pour le code de confirmation.");
+                response.put("reservationId", reservationId);
+                response.put("reservationConfirmationCode", reservationConfirmationCode);
+            } catch (IOException e) {
                 return ResponseEntity.status(500).body(Map.of(
                         "error", "Internal Server Error",
-                        "message", "Échec de l'envoi de l'email de confirmation finale: " + e.getMessage()
+                        "message", "Échec de l'envoi de l'email de confirmation : " + e.getMessage()
                 ));
             }
-
-            response.put("message", "Réservation confirmée avec succès (aucun paiement requis).");
-            response.put("reservationId", reservationId);
         }
 
         return ResponseEntity.ok(response);
     }
+    @PostMapping("/payment/processPayment")
+    public ResponseEntity<?> processPayment(@Valid @RequestBody PaymentRequest paymentRequest) {
+        Optional<Reservation> reservationOptional = reservationRepository.findById(paymentRequest.getReservationId());
+        if (!reservationOptional.isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "Réservation introuvable"
+            ));
+        }
+        Reservation reservation = reservationOptional.get();
+        Payment payment = paymentRepository.findFirstByReservationId(reservation.getId())
+                .orElse(null);
+
+        if (payment == null) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "Aucun paiement trouvé pour cette réservation"
+            ));
+        }
+
+        // Validate amount
+        if (!paymentRequest.getAmount().equals(payment.getAmount())) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "Le montant du paiement ne correspond pas"
+            ));
+        }
+
+        // Update payment details
+        payment.setPaymentMethod(paymentRequest.getPaymentMethod());
+        payment.setPaymentReference(paymentRequest.getPaymentReference());
+        paymentRepository.save(payment);
+
+        // Generate and send payment verification code
+        String reservationId = "RES-" + reservation.getId();
+        String paymentVerificationCode = String.format("%06d", new Random().nextInt(999999));
+        reservationService.storePaymentVerificationCode(reservationId, paymentVerificationCode);
+
+        try {
+            Map<String, Object> emailDetails = new HashMap<>();
+            emailDetails.put("reservationId", reservationId);
+            emailDetails.put("paymentVerificationCode", paymentVerificationCode);
+            emailService.sendPaymentVerificationEmail(reservation.getEmail(), paymentVerificationCode);
+            return ResponseEntity.ok(Map.of(
+                    "message", "Paiement soumis. Vérifiez votre email pour le code de vérification.",
+                    "reservationId", reservationId,
+                    "paymentVerificationCode", paymentVerificationCode
+            ));
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "error", "Internal Server Error",
+                    "message", "Échec de l'envoi de l'email de vérification : " + e.getMessage()
+            ));
+        }
+    }
 
     @PostMapping("/confirmPayment")
     public ResponseEntity<?> confirmPayment(
-            @RequestParam Long reservationId,
+            @RequestParam String reservationId,
             @RequestParam String paymentVerificationCode) {
-        Optional<Reservation> reservationOptional = reservationRepository.findById(reservationId);
+        Long numericId;
+        String formattedReservationId;
+        try {
+            if (reservationId.startsWith("RES-")) {
+                numericId = Long.parseLong(reservationId.replace("RES-", ""));
+                formattedReservationId = reservationId;
+            } else {
+                numericId = Long.parseLong(reservationId);
+                formattedReservationId = "RES-" + reservationId;
+            }
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "ID de réservation invalide"
+            ));
+        }
+
+        Optional<Reservation> reservationOptional = reservationRepository.findById(numericId);
         if (!reservationOptional.isPresent()) {
-            return ResponseEntity.badRequest().body("Réservation introuvable");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "Réservation introuvable"
+            ));
         }
 
         Reservation reservation = reservationOptional.get();
@@ -223,172 +337,261 @@ public class ReservationController {
                 .orElse(null);
 
         if (payment == null) {
-            return ResponseEntity.badRequest().body("Aucun paiement trouvé pour cette réservation");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "Aucun paiement trouvé pour cette réservation"
+            ));
         }
 
-        // Convert Long reservationId to String with "RES-" prefix to match stored format
-        String formattedReservationId = "RES-" + reservationId;
         String storedVerificationCode = reservationService.getPaymentVerificationCode(formattedReservationId);
         if (storedVerificationCode == null || !storedVerificationCode.equals(paymentVerificationCode)) {
-            return ResponseEntity.badRequest().body("Code de vérification de paiement invalide");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "Code de vérification de paiement invalide"
+            ));
         }
 
         // Confirm payment
         payment.setPaymentStatus("CONFIRMED");
         paymentRepository.save(payment);
 
-        // Generate and store reservation confirmation code
-        String reservationConfirmationCode = String.format("%06d", new Random().nextInt(999999));
-        reservationService.storeReservationConfirmationCode(formattedReservationId, reservationConfirmationCode);
+        // Confirm reservation
+        reservation.setStatus(ReservationStatus.CONFIRMED);
+        reservationRepository.save(reservation);
 
-        // Send email with reservation confirmation code
+        // Send final confirmation email
         Map<String, Object> emailDetails = new HashMap<>();
         emailDetails.put("reservationId", formattedReservationId);
         emailDetails.put("startTime", reservation.getStartTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         emailDetails.put("endTime", reservation.getEndTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         emailDetails.put("placeName", reservation.getParkingSpot().getName());
         emailDetails.put("totalAmount", reservation.getTotalCost());
-        emailDetails.put("reservationConfirmationCode", reservationConfirmationCode);
+        emailDetails.put("vehicleMatricule", reservation.getVehicle().getMatricule());
+        emailDetails.put("qrCodeData", formattedReservationId);
 
-        String emailContent = "<h2>Confirmation de paiement</h2>" +
-                "<p>Votre paiement pour la réservation (ID: " + formattedReservationId + ") a été confirmé.</p>" +
-                "<h3>Détails de la réservation :</h3>" +
-                "<ul>" +
-                "<li><strong>ID de réservation :</strong> " + formattedReservationId + "</li>" +
-                "<li><strong>Début :</strong> " + emailDetails.get("startTime") + "</li>" +
-                "<li><strong>Fin :</strong> " + emailDetails.get("endTime") + "</li>" +
-                "<li><strong>Place :</strong> " + emailDetails.get("placeName") + "</li>" +
-                "<li><strong>Montant total :</strong> " + emailDetails.get("totalAmount") + " TND</li>" +
-                "</ul>" +
-                "<p>Votre code de confirmation de réservation est : <strong>" + reservationConfirmationCode + "</strong></p>" +
-                "<p>Veuillez entrer ce code dans l'application pour finaliser votre réservation.</p>";
-
-        Email from = new Email(fromEmail);
-        String subject = "Code de confirmation de réservation";
-        Email to = new Email(reservation.getEmail());
-        Content content = new Content("text/html", emailContent);
-        Mail mail = new Mail(from, subject, to, content);
-
-        SendGrid sg = new SendGrid(sendGridApiKey);
-        Request request = new Request();
         try {
-            request.setMethod(Method.POST);
-            request.setEndpoint("mail/send");
-            request.setBody(mail.build());
-            Response response = sg.api(request);
-            if (response.getStatusCode() != 202) {
-                throw new IOException("Failed to send reservation confirmation code email: HTTP " + response.getStatusCode() + " - " + response.getBody());
-            }
+            emailService.sendReservationConfirmationEmail(reservation.getEmail(), formattedReservationId, emailDetails);
         } catch (IOException e) {
-            System.err.println("Failed to send reservation confirmation code email: " + e.getMessage());
             return ResponseEntity.status(500).body(Map.of(
                     "error", "Internal Server Error",
-                    "message", "Échec de l'envoi de l'email avec le code de confirmation: " + e.getMessage()
+                    "message", "Échec de l'envoi de l'email de confirmation : " + e.getMessage()
             ));
-        } catch (java.io.IOException e) {
-            throw new RuntimeException(e);
         }
 
         return ResponseEntity.ok(Map.of(
-                "message", "Paiement confirmé. Veuillez utiliser le code de confirmation envoyé par email pour finaliser la réservation.",
-                "reservationId", formattedReservationId
+                "message", "Réservation confirmée avec succès.",
+                "reservationId", formattedReservationId,
+                "details", Map.of(
+                        "startTime", emailDetails.get("startTime"),
+                        "endTime", emailDetails.get("endTime"),
+                        "placeName", emailDetails.get("placeName"),
+                        "totalAmount", emailDetails.get("totalAmount"),
+                        "vehicleMatricule", emailDetails.get("vehicleMatricule")
+                )
         ));
     }
 
     @PostMapping("/confirmReservation")
     public ResponseEntity<?> confirmReservation(
-            @RequestParam Long reservationId,
+            @RequestParam String reservationId,
             @RequestParam String reservationConfirmationCode) {
-        Optional<Reservation> reservationOptional = reservationRepository.findById(reservationId);
+        Long numericId;
+        try {
+            if (!reservationId.startsWith("RES-")) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Bad Request",
+                        "message", "Format d'ID de réservation invalide"
+                ));
+            }
+            numericId = Long.parseLong(reservationId.replace("RES-", ""));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "ID de réservation invalide"
+            ));
+        }
+
+        Optional<Reservation> reservationOptional = reservationRepository.findById(numericId);
         if (!reservationOptional.isPresent()) {
-            return ResponseEntity.badRequest().body("Réservation introuvable");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "Réservation introuvable"
+            ));
         }
 
         Reservation reservation = reservationOptional.get();
-        // Verify the reservation confirmation code
-        String formattedReservationId = "RES-" + reservationId;
-        String storedCode = reservationService.getReservationConfirmationCode(formattedReservationId);
+        String storedCode = reservationService.getReservationConfirmationCode(reservationId);
         if (storedCode == null || !storedCode.equals(reservationConfirmationCode)) {
-            return ResponseEntity.badRequest().body("Code de confirmation de réservation invalide");
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "Code de confirmation de réservation invalide"
+            ));
         }
 
         // Confirm the reservation
         reservation.setStatus(ReservationStatus.CONFIRMED);
         reservationRepository.save(reservation);
 
-        // Send final confirmation email with QR code
+        // Update subscription remaining places
+        if (reservation.getTotalCost() == 0) {
+            Optional<Subscription> subscription = subscriptionRepository.findByUserIdAndStatus(
+                    reservation.getUser().getId(), SubscriptionStatus.ACTIVE);
+            if (subscription.isPresent()) {
+                Integer remainingPlaces = subscription.get().getRemainingPlaces();
+                if (remainingPlaces != null && remainingPlaces > 0) {
+                    subscription.get().setRemainingPlaces(remainingPlaces - 1);
+                    subscriptionRepository.save(subscription.get());
+                }
+            }
+        }
+
+        // Send final confirmation email
         Map<String, Object> emailDetails = new HashMap<>();
-        emailDetails.put("reservationId", formattedReservationId);
+        emailDetails.put("reservationId", reservationId);
         emailDetails.put("startTime", reservation.getStartTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         emailDetails.put("endTime", reservation.getEndTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
         emailDetails.put("placeName", reservation.getParkingSpot().getName());
         emailDetails.put("totalAmount", reservation.getTotalCost());
-        emailDetails.put("qrCodeData", formattedReservationId);
+        emailDetails.put("vehicleMatricule", reservation.getVehicle().getMatricule());
+        emailDetails.put("qrCodeData", reservationId);
 
         try {
-            emailService.sendReservationConfirmationEmail(reservation.getEmail(), formattedReservationId, emailDetails);
-        } catch (IOException | java.io.IOException e) {
-            System.err.println("Failed to send reservation confirmation email: " + e.getMessage());
+            emailService.sendReservationConfirmationEmail(reservation.getEmail(), reservationId, emailDetails);
+        } catch (IOException e) {
             return ResponseEntity.status(500).body(Map.of(
                     "error", "Internal Server Error",
-                    "message", "Échec de l'envoi de l'email de confirmation finale: " + e.getMessage()
+                    "message", "Échec de l'envoi de l'email de confirmation finale : " + e.getMessage()
             ));
         }
 
-        return ResponseEntity.ok(Map.of("message", "Réservation confirmée avec succès"));
+        return ResponseEntity.ok(Map.of(
+                "message", "Réservation confirmée avec succès",
+                "reservationId", reservationId
+        ));
     }
 
-    @PostMapping("/sendConfirmationEmail")
-    public ResponseEntity<?> sendConfirmationEmail(@RequestBody Map<String, Object> request) {
-        String email = (String) request.get("email");
-        String reservationId = (String) request.get("reservationId");
-        @SuppressWarnings("unchecked")
-        Map<String, Object> details = (Map<String, Object>) request.get("details");
+    @PostMapping("/resendConfirmation")
+    public ResponseEntity<?> resendConfirmation(@RequestParam String reservationId) {
+        Long numericId;
         try {
-            emailService.sendReservationConfirmationEmail(email, reservationId, details);
-            return ResponseEntity.ok(Map.of("message", "Confirmation email sent successfully"));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of(
-                    "error", "Internal Server Error",
-                    "message", "Failed to send confirmation email: " + e.getMessage()
+            if (!reservationId.startsWith("RES-")) {
+                return ResponseEntity.badRequest().body(Map.of(
+                        "error", "Bad Request",
+                        "message", "Format d'ID de réservation invalide"
+                ));
+            }
+            numericId = Long.parseLong(reservationId.replace("RES-", ""));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "ID de réservation invalide"
+            ));
+        }
+
+        Optional<Reservation> reservationOptional = reservationRepository.findById(numericId);
+        if (!reservationOptional.isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "Réservation introuvable"
+            ));
+        }
+
+        Reservation reservation = reservationOptional.get();
+        Payment payment = paymentRepository.findFirstByReservationId(reservation.getId())
+                .orElse(null);
+
+        if (payment != null && "PENDING".equals(payment.getPaymentStatus())) {
+            // Resend payment verification code
+            String paymentVerificationCode = String.format("%06d", new Random().nextInt(999999));
+            reservationService.storePaymentVerificationCode(reservationId, paymentVerificationCode);
+            try {
+                Map<String, Object> emailDetails = new HashMap<>();
+                emailDetails.put("reservationId", reservationId);
+                emailDetails.put("paymentVerificationCode", paymentVerificationCode);
+                emailService.sendPaymentVerificationEmail(reservation.getEmail(), paymentVerificationCode);
+                return ResponseEntity.ok(Map.of(
+                        "message", "Email de vérification de paiement renvoyé avec succès"
+                ));
+            } catch (IOException e) {
+                return ResponseEntity.status(500).body(Map.of(
+                        "error", "Internal Server Error",
+                        "message", "Échec de l'envoi de l'email de vérification : " + e.getMessage()
+                ));
+            }
+        } else if (reservation.getTotalCost() == 0) {
+            // Resend reservation confirmation code
+            String reservationConfirmationCode = String.format("%06d", new Random().nextInt(999999));
+            reservationService.storeReservationConfirmationCode(reservationId, reservationConfirmationCode);
+            try {
+                Map<String, Object> emailDetails = new HashMap<>();
+                emailDetails.put("reservationId", reservationId);
+                emailDetails.put("startTime", reservation.getStartTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                emailDetails.put("endTime", reservation.getEndTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")));
+                emailDetails.put("placeName", reservation.getParkingSpot().getName());
+                emailDetails.put("totalAmount", reservation.getTotalCost());
+                emailDetails.put("vehicleMatricule", reservation.getVehicle().getMatricule());
+                emailDetails.put("qrCodeData", reservationId);
+                emailDetails.put("reservationConfirmationCode", reservationConfirmationCode);
+                emailService.sendReservationConfirmationEmail(reservation.getEmail(), reservationId, emailDetails);
+                return ResponseEntity.ok(Map.of(
+                        "message", "Email de confirmation renvoyé avec succès"
+                ));
+            } catch (IOException e) {
+                return ResponseEntity.status(500).body(Map.of(
+                        "error", "Internal Server Error",
+                        "message", "Échec de l'envoi de l'email de confirmation : " + e.getMessage()
+                ));
+            }
+        } else {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", "Bad Request",
+                    "message", "Aucune confirmation en attente pour cette réservation"
             ));
         }
     }
 
-    private double calculateReservationCost(User user, ParkingSpot parkingSpot, Optional<Subscription> activeSubscription,
-                                            LocalDateTime startTime, LocalDateTime endTime) {
-        double hourlyRate = parkingSpot.getType().equals("standard") ? 5.0 : 8.0;
+    private double calculateReservationCost(
+            ParkingSpot parkingSpot,
+            Optional<Subscription> activeSubscription,
+            LocalDateTime startTime,
+            LocalDateTime endTime) {
+        double hourlyRate = parkingSpot.getType().equalsIgnoreCase("standard") ? 5.0 : 8.0;
         long hours = Duration.between(startTime, endTime).toHours();
-        if (hours <= 0) hours = 1; // Minimum 1 hour
+        if (hours <= 0) {
+            hours = 1; // Minimum 1 hour
+        }
 
-        double baseCost = hourlyRate * hours;
+        double baseCost = hours * hourlyRate;
 
         // Check subscription
         if (activeSubscription.isPresent()) {
             Subscription subscription = activeSubscription.get();
-            if (Boolean.TRUE.equals(subscription.getHasPremiumSpots()) && parkingSpot.getType().equals("premium")) {
-                if (subscription.getRemainingPlaces() != null && subscription.getRemainingPlaces() > 0) {
-                    // Free reservation for premium spot if subscription allows and places remain
+            if (subscription.getHasPremiumSpots() != null &&
+                    subscription.getHasPremiumSpots() &&
+                    parkingSpot.getType().equalsIgnoreCase("premium")) {
+                Integer remainingPlaces = subscription.getRemainingPlaces();
+                if (remainingPlaces != null && remainingPlaces > 0) {
+                    // Free reservation for premium spot if places remain
                     return 0.0;
                 }
             }
         }
 
-        double finalCost = baseCost;
+        double cost = baseCost;
 
         // Apply long-duration discount
         if (hours > 5) {
-            finalCost *= 0.9; // 10% discount for > 5 hours
+            cost *= 0.9; // 10% discount for >5 hours
         }
 
-        return Math.round(finalCost * 100.0) / 100.0;
+        return Math.round(cost * 100.0) / 100.0;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> {
-            errors.put(error.getField(), error.getDefaultMessage());
+            errors.put(error.getField(), error.getDefaultMessage() != null ? error.getDefaultMessage() : "Invalid value");
         });
         return ResponseEntity.badRequest().body(Map.of(
                 "error", "Bad Request",

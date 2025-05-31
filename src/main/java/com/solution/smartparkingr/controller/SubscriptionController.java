@@ -29,8 +29,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.Random;
 
 @RestController
@@ -47,7 +47,7 @@ public class SubscriptionController {
     private EmailService emailService;
 
     @Autowired
-    private SubscriptionRepository subscriptionRepository; // Added injection
+    private SubscriptionRepository subscriptionRepository;
 
     @Value("${server.servlet.context-path:/}")
     private String contextPath;
@@ -180,59 +180,11 @@ public class SubscriptionController {
         payment.setPaymentReference(request.getPaymentReference());
         paymentRepository.save(payment);
 
-        // Generate payment verification code
-        String paymentVerificationCode = String.format("%06d", new Random().nextInt(999999));
-        subscriptionService.storePaymentVerificationCode(sessionId, paymentVerificationCode);
-
-        // Send payment verification email
-        try {
-            emailService.sendPaymentVerificationEmail(user.getEmail(), paymentVerificationCode);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of(
-                    "error", "Internal Server Error",
-                    "message", "Échec de l'envoi de l'email de vérification de paiement: " + e.getMessage()
-            ));
-        }
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("message", "Abonnement initié. Veuillez vérifier votre paiement avec le code envoyé par email.");
-        response.put("session_id", sessionId);
-        response.put("paymentVerificationCode", paymentVerificationCode); // For testing only, remove in production
-
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/confirmSubscriptionPayment")
-    public ResponseEntity<?> confirmSubscriptionPayment(
-            @RequestParam String sessionId,
-            @RequestParam String paymentVerificationCode) {
-        Optional<Subscription> subscriptionOpt = subscriptionService.getActiveSubscriptionBySessionId(sessionId);
-        if (subscriptionOpt.isEmpty()) {
-            return ResponseEntity.badRequest().body("Abonnement introuvable");
-        }
-
-        Subscription subscription = subscriptionOpt.get();
-        Payment payment = paymentRepository.findByTransactionId(sessionId)
-                .orElse(null);
-
-        if (payment == null) {
-            return ResponseEntity.badRequest().body("Aucun paiement trouvé pour cette session");
-        }
-
-        String storedVerificationCode = subscriptionService.getPaymentVerificationCode(sessionId);
-        if (storedVerificationCode == null || !storedVerificationCode.equals(paymentVerificationCode)) {
-            return ResponseEntity.badRequest().body("Code de vérification de paiement invalide");
-        }
-
-        // Confirm payment
-        payment.setPaymentStatus("CONFIRMED");
-        paymentRepository.save(payment);
-
-        // Generate subscription confirmation code
+        // Generate subscription confirmation code directly
         String subscriptionConfirmationCode = String.format("%06d", new Random().nextInt(999999));
         subscriptionService.storeSubscriptionConfirmationCode(sessionId, subscriptionConfirmationCode);
 
-        // Send confirmation email with code
+        // Send confirmation email with the code
         Map<String, Object> emailDetails = new HashMap<>();
         emailDetails.put("subscriptionId", sessionId);
         emailDetails.put("subscriptionType", subscription.getSubscriptionType());
@@ -241,7 +193,7 @@ public class SubscriptionController {
         emailDetails.put("subscriptionConfirmationCode", subscriptionConfirmationCode);
 
         try {
-            emailService.sendPaymentConfirmationEmail(subscription.getUser().getEmail(), sessionId, emailDetails);
+            emailService.sendPaymentConfirmationEmail(user.getEmail(), sessionId, emailDetails);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of(
                     "error", "Internal Server Error",
@@ -249,10 +201,12 @@ public class SubscriptionController {
             ));
         }
 
-        return ResponseEntity.ok(Map.of(
-                "message", "Paiement confirmé. Veuillez utiliser le code de confirmation pour finaliser l'abonnement.",
-                "sessionId", sessionId
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Abonnement initié. Veuillez vérifier votre email pour le code de confirmation.");
+        response.put("session_id", sessionId);
+        response.put("paymentVerificationCode", subscriptionConfirmationCode); // Use subscriptionConfirmationCode
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/confirmSubscription")
@@ -269,6 +223,14 @@ public class SubscriptionController {
         if (storedCode == null || !storedCode.equals(subscriptionConfirmationCode)) {
             return ResponseEntity.badRequest().body("Code de confirmation d'abonnement invalide");
         }
+
+        // Confirm payment
+        Payment payment = paymentRepository.findByTransactionId(sessionId).orElse(null);
+        if (payment == null) {
+            return ResponseEntity.badRequest().body("Aucun paiement trouvé pour cette session");
+        }
+        payment.setPaymentStatus("CONFIRMED");
+        paymentRepository.save(payment);
 
         // Confirm subscription and apply benefits
         subscription.setStatus(SubscriptionStatus.ACTIVE);
@@ -294,8 +256,6 @@ public class SubscriptionController {
         } catch (Exception e) {
             System.err.println("Failed to send confirmation email: " + e.getMessage());
             e.printStackTrace();
-            // Optionally, you can still return a success response since the subscription is confirmed
-            // Or handle the email failure gracefully without failing the entire request
             return ResponseEntity.ok(Map.of(
                     "message", "Abonnement confirmé avec succès, mais l'email de confirmation n'a pas pu être envoyé: " + e.getMessage()
             ));
