@@ -1,24 +1,24 @@
-main {
-  @apply flex items-center justify-center;
+:host {
+  display: block;
+  height: 100vh;
 }
 
-.max-w-5xl {
-  @apply w-full mx-auto;
+header {
+  height: 4rem; /* Adjust based on actual header height */
 }
 
-.min-h-\[calc\(100vh-12rem\)\] {
-  @apply flex flex-col items-center;
-}
-
-.shadow-reservation {
-  @apply shadow-lg;
-}
-
-@media (max-width: 768px) {
-  main {
-    @apply p-4;
+@media (min-width: 768px) {
+  header {
+    height: 5rem; /* Adjust for desktop */
   }
-  .max-w-5xl {
-    @apply w-full;
+}
+
+main {
+  height: calc(100vh - 4rem); /* Adjust for header height */
+}
+
+@media (min-width: 768px) {
+  main {
+    height: calc(100vh - 5rem); /* Adjust for desktop header height */
   }
 }

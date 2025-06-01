@@ -1,0 +1,74 @@
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="bg-white rounded-xl shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Mes Véhicules</h1>
+    @if (isLoading()) {
+      <div class="flex justify-center py-4">
+        <p class="text-gray-500">Chargement...</p>
+      </div>
+    } @else {
+      <div class="space-y-4">
+        @if (vehicles().length === 0) {
+          <div class="flex flex-col items-center py-6 text-gray-500">
+            <i class="ri-car-line text-4xl mb-2"></i>
+            <p>Aucun véhicule</p>
+          </div>
+        } @else {
+          @for (vehicle of vehicles(); track vehicle.matricule) {
+            <div class="border-l-4 border-primary-purple p-4 rounded-r-lg bg-gray-50 hover:bg-gray-100 transition-colors flex items-start justify-between">
+              <div>
+                <h4 class="font-medium text-gray-800">{{ vehicle.brand }} {{ vehicle.model }}</h4>
+                <div class="text-sm text-gray-600 space-y-1">
+                  <p>Matricule: {{ vehicle.matricule }}</p>
+                  <p>Couleur: {{ vehicle.color }}</p>
+                </div>
+              </div>
+              <button (click)="deleteVehicle(vehicle.matricule)" class="text-red-500 hover:text-red-700">
+                <i class="ri-delete-bin-line text-xl"></i>
+              </button>
+            </div>
+          }
+        }
+        <h3 class="text-lg font-semibold text-gray-800 mt-6">Ajouter un Véhicule</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Matricule</label>
+            <input [(ngModel)]="vehicleForm.matricule" placeholder="Matricule" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Marque</label>
+            <select [(ngModel)]="vehicleForm.brand" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple">
+              <option value="" disabled>Sélectionner une marque</option>
+              @for (brand of brands; track brand) {
+                <option [value]="brand">{{ brand }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Modèle</label>
+            <select [(ngModel)]="vehicleForm.model" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple">
+              <option value="" disabled>Sélectionner un modèle</option>
+              @for (model of models; track model) {
+                <option [value]="model">{{ model }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Couleur</label>
+            <select [(ngModel)]="vehicleForm.color" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple">
+              <option value="" disabled>Sélectionner une couleur</option>
+              @for (color of colors; track color) {
+                <option [value]="color">{{ color }}</option>
+              }
+            </select>
+          </div>
+          @if (errorMessage()) {
+            <p class="text-red-500 text-sm">{{ errorMessage() }}</p>
+          }
+          <button (click)="submitVehicle()" class="mt-4 px-4 py-2 bg-primary-purple text-white rounded-lg hover:bg-dark-purple transition-all w-full flex items-center justify-center">
+            Ajouter un Véhicule <i class="ri-add-line ml-2"></i>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

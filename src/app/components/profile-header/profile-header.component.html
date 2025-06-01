@@ -1,0 +1,23 @@
+<div class="bg-white rounded-xl shadow-lg p-6 mb-6 flex items-center space-x-6">
+  <div class="w-24 h-24 rounded-full bg-primary-light flex items-center justify-center text-primary text-3xl font-bold gold-glow overflow-hidden">
+    <img src="https://via.placeholder.com/96" alt="User Avatar" class="w-full h-full object-cover" />
+  </div>
+  <div class="flex-1">
+    <h2 class="text-2xl font-bold text-gray-800">{{ user().firstName }} {{ user().lastName }}</h2>
+    <p class="text-gray-600 mt-1">{{ user().email }}</p>
+    <p class="text-gray-500 text-sm">Téléphone: {{ user().phone || 'Non défini' }}</p>
+    <div class="mt-2 text-sm text-gray-600">
+      <span class="inline-block px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+        {{ user().subscription.type || 'Aucun abonnement' }} jusqu'à {{ user().subscription.subscriptionEndDate || 'N/A' }}
+      </span>
+    </div>
+    <div class="mt-4 flex space-x-3">
+      <a routerLink="/dashboard/profile/info" class="px-4 py-2 bg-primary-purple text-white rounded-lg hover:bg-dark-purple transition-all flex items-center">
+        <i class="ri-edit-line mr-2"></i> Modifier mes informations
+      </a>
+      <a routerLink="/dashboard/profile/password" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-all flex items-center">
+        <i class="ri-lock-line mr-2"></i> Changer le mot de passe
+      </a>
+    </div>
+  </div>
+</div>

@@ -1,8 +1,6 @@
-// src/app/app.routes.ts
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/auth.guard/auth.guard.component';
 import { LayoutComponent } from './layout/layout.component';
-
 
 export const routes: Routes = [
   {
@@ -63,7 +61,15 @@ export const routes: Routes = [
       },
       {
         path: 'profile',
-        loadComponent: () => import('./components/profile/profile.component').then(m => m.ProfileComponent)
+        loadComponent: () => import('./components/profile/profile.component').then(m => m.ProfileComponent),
+        children: [
+          { path: 'info', loadComponent: () => import('./components/profile-info/profile-info.component').then(m => m.ProfileInfoComponent) },
+          { path: 'password', loadComponent: () => import('./components/profile-password/profile-password.component').then(m => m.ProfilePasswordComponent) },
+          { path: 'vehicles', loadComponent: () => import('./components/profile-vehicles/profile-vehicles.component').then(m => m.ProfileVehiclesComponent) },
+          { path: 'subscription', loadComponent: () => import('./components/profile-subscription/profile-subscription.component').then(m => m.ProfileSubscriptionComponent) },
+          { path: 'history', loadComponent: () => import('./components/reservation-history/reservation-history.component').then(m => m.ReservationHistoryComponent) },
+          { path: '', redirectTo: 'info', pathMatch: 'full' } // Default to info
+        ]
       },
       {
         path: 'subscriptions',

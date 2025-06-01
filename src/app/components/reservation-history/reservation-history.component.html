@@ -1,0 +1,67 @@
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="bg-white rounded-xl shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Historique des Réservations</h1>
+    @if (isLoading()) {
+      <div class="flex justify-center py-4">
+        <p class="text-gray-500">Chargement...</p>
+      </div>
+    } @else {
+      <div class="space-y-6">
+        <div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">Réservations Actives</h3>
+          @if (activeReservations().length === 0) {
+            <div class="flex flex-col items-center py-6 text-gray-500">
+              <i class="ri-calendar-2-line text-4xl mb-2"></i>
+              <p>Aucune réservation active</p>
+            </div>
+          } @else {
+            <div class="space-y-4">
+              @for (reservation of activeReservations(); track reservation.parkingSpotId) {
+                <div class="border-l-4 border-primary-purple p-4 rounded-r-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <h4 class="font-medium text-gray-800">Emplacement #{{ reservation.parkingSpotId }}</h4>
+                      <div class="text-sm text-gray-600 space-y-1">
+                        <p>Début: {{ reservation.startTime | date: 'd MMM yyyy, HH:mm' }}</p>
+                        <p>Fin: {{ reservation.endTime | date: 'd MMM yyyy, HH:mm' }}</p>
+                        <p>Coût: {{ reservation.totalCost }} DT</p>
+                      </div>
+                    </div>
+                    <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">{{ reservation.status }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+        <div>
+          <h3 class="text-xl font-semibold text-gray-800 mb-2">Réservations Expirées</h3>
+          @if (expiredReservations().length === 0) {
+            <div class="flex flex-col items-center py-6 text-gray-500">
+              <i class="ri-calendar-2-line text-4xl mb-2"></i>
+              <p>Aucune réservation expirée</p>
+            </div>
+          } @else {
+            <div class="space-y-4">
+              @for (reservation of expiredReservations(); track reservation.parkingSpotId) {
+                <div class="border-l-4 border-primary-purple p-4 rounded-r-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div class="flex items-start justify-between">
+                    <div>
+                      <h4 class="font-medium text-gray-800">Emplacement #{{ reservation.parkingSpotId }}</h4>
+                      <div class="text-sm text-gray-600 space-y-1">
+                        <p>Début: {{ reservation.startTime | date: 'd MMM yyyy, HH:mm' }}</p>
+                        <p>Fin: {{ reservation.endTime | date: 'd MMM yyyy, HH:mm' }}</p>
+                        <p>Coût: {{ reservation.totalCost }} DT</p>
+                      </div>
+                    </div>
+                    <span class="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">{{ reservation.status }}</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

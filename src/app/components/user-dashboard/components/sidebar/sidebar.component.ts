@@ -22,6 +22,7 @@ export class SidebarComponent implements OnInit {
   userName: string | null = null;
   userInitials: string | null = null;
   subscriptionType: string | null = null;
+  isProfileMenuOpen = false;
 
   constructor(
     private authService: AuthService,
@@ -57,5 +58,9 @@ export class SidebarComponent implements OnInit {
 
   logout() {
     this.authService.logout();
+  }
+
+  toggleProfileMenu() {
+    this.isProfileMenuOpen = !this.isProfileMenuOpen;
   }
 }

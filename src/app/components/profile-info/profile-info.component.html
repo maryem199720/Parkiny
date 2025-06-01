@@ -1,0 +1,36 @@
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="bg-white rounded-xl shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4">Informations du Profil</h1>
+    @if (isLoading()) {
+      <div class="flex justify-center py-4">
+        <p class="text-gray-500">Chargement...</p>
+      </div>
+    } @else {
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Prénom</label>
+          <input [(ngModel)]="editForm.firstName" placeholder="Prénom" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Nom</label>
+          <input [(ngModel)]="editForm.lastName" placeholder="Nom" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Email</label>
+          <input [(ngModel)]="editForm.email" placeholder="Email" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple" disabled />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Téléphone</label>
+          <input [(ngModel)]="editForm.phone" placeholder="Téléphone" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple" />
+        </div>
+        @if (errorMessage()) {
+          <p class="text-red-500 text-sm">{{ errorMessage() }}</p>
+        }
+        <div class="flex justify-end space-x-2 mt-6">
+          <button (click)="loadUserProfile()" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100">Annuler</button>
+          <button (click)="saveProfileChanges()" class="px-4 py-2 bg-primary-purple text-white rounded-md hover:bg-dark-purple">Enregistrer</button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

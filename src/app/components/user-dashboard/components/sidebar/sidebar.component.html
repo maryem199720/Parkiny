@@ -1,74 +1,94 @@
-<div class="sidebar flex flex-col w-64 bg-primary-purple text-white fixed h-full z-20 md:static transition-transform duration-300 ease-in-out" 
+<div class="sidebar flex flex-col w-64 bg-primary-purple text-white fixed h-[100vh] z-20 md:static transition-transform duration-300 ease-in-out" 
      [ngClass]="{'-translate-x-full': !(isSidebarOpen$ | async) && isMobile, 'translate-x-0': (isSidebarOpen$ | async) || !isMobile}" 
      *ngIf="isLoggedIn$ | async">
-  <div class="flex items-center justify-between h-16 px-4 border-b border-dark-purple">
-    <div class="flex items-center space-x-2">
-      <i class="ri-parking-box-fill text-gold-500 text-2xl"></i>
-      <span class="text-xl font-bold font-display">Parkiny</span>
+  <div class="flex items-center justify-between h-14 px-3 border-b border-dark-purple">
+    <div class="flex items-center space-x-1">
+      <i class="ri-parking-box-fill text-gold-500 text-xl"></i>
+      <span class="text-lg font-bold font-display">Parkiny</span>
     </div>
     <button class="md:hidden text-white" (click)="toggleSidebar()">
-      <i class="ri-close-line text-xl"></i>
+      <i class="ri-close-line text-lg"></i>
     </button>
   </div>
-  <div class="flex flex-col flex-grow p-4 overflow-auto">
-    <nav class="space-y-1">
-      <div class="mt-6">
-        <p class="px-3 text-xs font-semibold text-gray-300 uppercase tracking-wider">Navigation</p>
+  <div class="flex flex-col flex-grow p-1">
+    <nav class="space-y-0">
+      <div class="mt-2">
+        <p class="px-2 text-[10px] font-semibold text-gray-300 uppercase tracking-wider">Navigation</p>
         <a routerLink="/dashboard" routerLinkActive="bg-dark-purple text-white" [routerLinkActiveOptions]="{ exact: true }" 
-           class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-2 transition-colors">
-          <i class="ri-dashboard-fill mr-3 text-gold-500"></i>
+           class="flex items-center px-2 py-0.5 text-xs font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-0.5 transition-colors">
+          <i class="ri-dashboard-fill mr-1 text-gold-500 text-sm"></i>
           Tableau de bord
         </a>
         <a routerLink="/dashboard/reservations" routerLinkActive="bg-dark-purple text-white" 
-           class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-1 transition-colors">
-          <i class="ri-calendar-check-fill mr-3 text-gold-500"></i>
+           class="flex items-center px-2 py-0.5 text-xs font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-0.5 transition-colors">
+          <i class="ri-calendar-check-fill mr-1 text-gold-500 text-sm"></i>
           Réservations
         </a>
         <a routerLink="/dashboard/subscriptions" routerLinkActive="bg-dark-purple text-white" 
-           class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-1 transition-colors">
-          <i class="ri-bill-fill mr-3 text-gold-500"></i>
+           class="flex items-center px-2 py-0.5 text-xs font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-0.5 transition-colors">
+          <i class="ri-bill-fill mr-1 text-gold-500 text-sm"></i>
           Abonnements
         </a>
-        <a routerLink="/dashboard/profile" routerLinkActive="bg-dark-purple text-white" 
-           class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-1 transition-colors">
-          <i class="ri-user-fill mr-3 text-gold-500"></i>
-          Profil
+        <div class="mt-0.5">
+          <button (click)="toggleProfileMenu()" class="flex items-center w-full px-2 py-0.5 text-xs font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white transition-colors"
+                  [ngClass]="{'bg-dark-purple text-white': isProfileMenuOpen}">
+            <i class="ri-user-fill mr-1 text-gold-500 text-sm"></i>
+            Profil
+            <i class="ri-arrow-down-s-line ml-auto text-sm" [ngClass]="{'rotate-180': isProfileMenuOpen}"></i>
+          </button>
+          <div *ngIf="isProfileMenuOpen" class="space-y-0 pl-4">
+            <a routerLink="/dashboard/profile/info" routerLinkActive="bg-dark-purple text-white" 
+               class="block px-2 py-0.5 text-[10px] font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white transition-colors">
+              Informations
+            </a>
+            <a routerLink="/dashboard/profile/password" routerLinkActive="bg-dark-purple text-white" 
+               class="block px-2 py-0.5 text-[10px] font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white transition-colors">
+              Mot de Passe
+            </a>
+            <a routerLink="/dashboard/profile/vehicles" routerLinkActive="bg-dark-purple text-white" 
+               class="block px-2 py-0.5 text-[10px] font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white transition-colors">
+              Véhicules
+            </a>
+            <a routerLink="/dashboard/profile/subscription" routerLinkActive="bg-dark-purple text-white" 
+               class="block px-2 py-0.5 text-[10px] font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white transition-colors">
+              Abonnement
+            </a>
+            <a routerLink="/dashboard/profile/history" routerLinkActive="bg-dark-purple text-white" 
+               class="block px-2 py-0.5 text-[10px] font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white transition-colors">
+              Historique des Réservations
+            </a>
+          </div>
+        </div>
+        <a routerLink="/dashboard/settings" routerLinkActive="bg-dark-purple text-white" 
+           class="flex items-center px-2 py-0.5 text-xs font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-0.5 transition-colors">
+          <i class="ri-settings-3-fill mr-1 text-gold-500 text-sm"></i>
+          Paramètres
         </a>
         <a routerLink="/dashboard/spot-status" routerLinkActive="bg-dark-purple text-white" 
-           class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-1 transition-colors">
-          <i class="ri-road-map-fill mr-3 text-gold-500"></i>
+           class="flex items-center px-2 py-0.5 text-xs font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-0.5 transition-colors">
+          <i class="ri-road-map-fill mr-1 text-gold-500 text-sm"></i>
           Statut des places
         </a>
         <a routerLink="/dashboard/notifications" routerLinkActive="bg-dark-purple text-white" 
-           class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-1 transition-colors">
-          <i class="ri-notification-3-fill mr-3 text-gold-500"></i>
+           class="flex items-center px-2 py-0.5 text-xs font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-0.5 transition-colors">
+          <i class="ri-notification-3-fill mr-1 text-gold-500 text-sm"></i>
           Notifications
         </a>
-        <a routerLink="/dashboard/language" routerLinkActive="bg-dark-purple text-white" 
-           class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-1 transition-colors">
-          <i class="ri-global-fill mr-3 text-gold-500"></i>
-          Langue
-        </a>
-        <a routerLink="/dashboard/support" routerLinkActive="bg-dark-purple text-white" 
-           class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-1 transition-colors">
-          <i class="ri-question-fill mr-3 text-gold-500"></i>
-          Support
-        </a>
-        <a (click)="logout()" class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-4 cursor-pointer transition-colors">
-          <i class="ri-logout-box-r-line mr-3 text-gold-500"></i>
+        <a (click)="logout()" class="flex items-center px-2 py-0.5 text-xs font-medium rounded-md text-gray-300 hover:bg-dark-purple hover:text-white mt-0.5 transition-colors cursor-pointer">
+          <i class="ri-logout-box-r-line mr-1 text-gold-500 text-sm"></i>
           Déconnexion
         </a>
       </div>
     </nav>
   </div>
-  <div class="p-4 border-t border-dark-purple">
+  <div class="p-1 border-t border-dark-purple">
     <div class="flex items-center">
-      <div class="w-10 h-10 rounded-full bg-dark-purple text-gold-500 flex items-center justify-center text-sm font-medium gold-glow">
+      <div class="w-8 h-8 rounded-full bg-dark-purple text-gold-500 flex items-center justify-center text-xs font-medium gold-glow">
         {{ userInitials || 'UN' }}
       </div>
-      <div class="ml-3">
-        <p class="text-sm font-medium text-white">{{ userName || 'Utilisateur' }}</p>
-        <p class="text-xs font-medium text-gray-300">{{ subscriptionType || 'Membre' }}</p>
+      <div class="ml-1">
+        <p class="text-xs font-medium text-white">{{ userName || 'Utilisateur' }}</p>
+        <p class="text-[10px] font-medium text-gray-300">{{ subscriptionType || 'Membre' }}</p>
       </div>
     </div>
   </div>

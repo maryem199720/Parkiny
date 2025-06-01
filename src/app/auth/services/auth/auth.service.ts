@@ -1,4 +1,3 @@
-// src/app/auth/services/auth/auth.service.ts
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -7,7 +6,7 @@ import { tap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 
 interface AuthResponse {
-  message: string; // Changed from any to string
+  message: string;
   token: string;
   id: number;
   firstName: string;
@@ -43,6 +42,8 @@ export class AuthService {
   public authStatus$ = this.authStatus.asObservable();
   private sidebarOpen = new BehaviorSubject<boolean>(false);
   public sidebarOpen$ = this.sidebarOpen.asObservable();
+  private userSubject = new BehaviorSubject<User | null>(null);
+  public user$ = this.userSubject.asObservable(); // Added user$ observable
 
   constructor(
     private http: HttpClient,
@@ -54,6 +55,9 @@ export class AuthService {
       const token = localStorage.getItem(this.tokenKey);
       console.log('Initial auth check: token exists:', !!token);
       this.authStatus.next(!!token);
+      // Load user data on initialization
+      const user = this.getCurrentUser();
+      this.userSubject.next(user);
     }
   }
 
@@ -75,6 +79,7 @@ export class AuthService {
             };
             localStorage.setItem('user', JSON.stringify(user));
             this.authStatus.next(true);
+            this.userSubject.next(user); // Emit updated user
             this.redirectBasedOnRole(response.roles);
           }
         },
@@ -101,6 +106,7 @@ export class AuthService {
             };
             localStorage.setItem('user', JSON.stringify(user));
             this.authStatus.next(true);
+            this.userSubject.next(user); // Emit updated user
             this.redirectBasedOnRole(response.roles);
           }
         },
@@ -138,6 +144,7 @@ export class AuthService {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.clear();
       this.authStatus.next(false);
+      this.userSubject.next(null); // Clear user on logout
       this.sidebarOpen.next(false);
       console.log('Logout successful, auth status:', false);
       this.router.navigate(['/auth']);
