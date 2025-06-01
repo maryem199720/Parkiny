@@ -1,42 +1,28 @@
+<!-- src/app/components/faq/faq.component.html -->
 <div class="container mx-auto px-4 py-8">
-  <div *ngIf="isLoading; else contentLoaded" class="flex justify-center items-center h-64">
+  <div *ngIf="isLoading" class="flex justify-center items-center h-64">
     <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
   </div>
 
-  <ng-template #contentLoaded>
-    <div *ngIf="faqContent" class="max-w-3xl mx-auto">
-      <h1 class="text-3xl font-bold text-gold-500 mb-8 text-center">{{ faqContent.title }}</h1>
-      
-      <div class="space-y-4">
-        <div *ngFor="let item of faqContent.items; let i = index" class="border border-gray-700 rounded-lg overflow-hidden bg-gray-800 shadow-md">
-          <button 
-            (click)="toggleItem(item)" 
-            class="w-full flex justify-between items-center p-4 text-start text-white hover:bg-gray-700 focus:outline-none transition-colors duration-200"
-            [attr.aria-expanded]="item.open"
-            [attr.aria-controls]="'faq-answer-' + i">
-            <span class="font-medium">{{ item.question }}</span>
-            <!-- Use margin-start (ms) for RTL compatibility -->
-            <i class="ri-arrow-down-s-line transition-transform duration-300 ms-2" [class.rotate-180]="item.open"></i>
-          </button>
-          <div 
-            [id]="'faq-answer-' + i"
-            class="overflow-hidden transition-all duration-500 ease-in-out" 
-            [style.maxHeight]="item.open ? '500px' : '0'" 
-            [style.paddingTop]="item.open ? '1rem' : '0'" 
-            [style.paddingBottom]="item.open ? '1rem' : '0'" 
-            [style.opacity]="item.open ? 1 : 0">
-            <!-- Use text-start for RTL compatibility -->
-            <div class="px-4 pb-4 text-gray-300 text-start">
-              <p>{{ item.answer }}</p>
-            </div>
+  <div *ngIf="faqContent" class="max-w-3xl mx-auto">
+    <h1 class="text-3xl font-bold text-gold-500 mb-8 text-center">{{ faqContent.title }}</h1>
+    <div class="space-y-4">
+      <div *ngFor="let item of faqContent.items; let i = index" class="border border-gray-700 rounded-lg overflow-hidden bg-gray-800 shadow-md">
+        <button (click)="toggleItem(item)" class="w-full flex justify-between items-center p-4 text-start text-white hover:bg-gray-700 focus:outline-none transition-colors duration-200"
+                [attr.aria-expanded]="item.open" [attr.aria-controls]="'faq-answer-' + i">
+          <span class="font-medium">{{ item.question }}</span>
+          <i class="ri-arrow-down-s-line transition-transform duration-300 ms-2" [class.rotate-180]="item.open"></i>
+        </button>
+        <div [id]="'faq-answer-' + i" class="overflow-hidden transition-all duration-500 ease-in-out"
+             [style.maxHeight]="item.open ? '500px' : '0'" [style.paddingTop]="item.open ? '1rem' : '0'" [style.paddingBottom]="item.open ? '1rem' : '0'" [style.opacity]="item.open ? 1 : 0">
+          <div class="px-4 pb-4 text-gray-300 text-start">
+            <p>{{ item.answer }}</p>
           </div>
         </div>
       </div>
     </div>
-    <div *ngIf="!faqContent && !isLoading" class="text-center text-red-500">
-      <!-- Assuming ERROR.CONTENT_LOAD_FAILED key exists in JSON files -->
-      <p>{{ 'ERROR.CONTENT_LOAD_FAILED' | translate }}</p> 
-    </div>
-  </ng-template>
+  </div>
+  <div *ngIf="!faqContent && !isLoading" class="text-center text-red-500">
+    <p>Failed to load FAQ content.</p>
+  </div>
 </div>
-

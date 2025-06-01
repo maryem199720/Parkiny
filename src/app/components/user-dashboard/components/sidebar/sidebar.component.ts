@@ -5,29 +5,32 @@ import { Observable } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { map, shareReplay } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/services/auth/auth.service';
+import { UserService } from 'src/app/services/user.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './sidebar.component.html',
-  styleUrl: './sidebar.component.css'
+  styleUrls: ['./sidebar.component.css']
 })
 export class SidebarComponent implements OnInit {
   isLoggedIn$: Observable<boolean>;
   isSidebarOpen$: Observable<boolean>;
   isMobile$: Observable<boolean>;
+  isMobile = false;
   userName: string | null = null;
   userInitials: string | null = null;
+  subscriptionType: string | null = null;
 
   constructor(
     private authService: AuthService,
+    private userService: UserService,
     private breakpointObserver: BreakpointObserver
   ) {
     this.isLoggedIn$ = this.authService.authStatus$;
     this.isSidebarOpen$ = this.authService.sidebarOpen$;
-    this.isMobile$ = this.breakpointObserver
-      .observe(Breakpoints.Handset)
+    this.isMobile$ = this.breakpointObserver.observe(Breakpoints.Handset)
       .pipe(
         map(result => result.matches),
         shareReplay()
@@ -35,9 +38,16 @@ export class SidebarComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.authService.getUser().subscribe(user => {
-      this.userName = user ? `${user.firstName} ${user.lastName}`.trim() || null : null;
-      this.userInitials = user ? user.initials : 'UN';
+    this.isMobile$.subscribe(isMobile => {
+      this.isMobile = isMobile;
+    });
+
+    const user = this.authService.getCurrentUser();
+    this.userName = user ? `${user.firstName} ${user.lastName}`.trim() || null : null;
+    this.userInitials = user ? user.initials : 'UN';
+
+    this.userService.getUserSubscription().subscribe(subscription => {
+      this.subscriptionType = subscription;
     });
   }
 

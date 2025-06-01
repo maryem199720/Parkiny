@@ -1,166 +1,36 @@
 {
-  "NAVBAR": {
-    "HOME": "Accueil",
-    "RESERVATIONS": "Mes Réservations",
-    "SUBSCRIPTIONS": "Mon Abonnement",
-    "ABOUT": "À Propos",
-    "CONTACT": "Contact",
-    "LOGIN": "Connexion",
-    "SIGNUP": "S'inscrire",
-    "MY_PROFILE": "Mon Profil",
-    "MY_RESERVATIONS": "Mes Réservations",
-    "MY_VEHICLES": "Mon Véhicule",
-    "LOGOUT": "Déconnexion",
-    "LANGUAGE": "Langue",
-    "MY_ACCOUNT": "Mon compte"
-  },
-  "ABOUT_PAGE": {
-    "TITLE": "À Propos de Parkiny"
-  },
-  "CONTACT_PAGE": {
-    "TITLE": "Contactez Parkiny"
-  },
-  "CONTACT": {
-    "TITLE": "Nous Contacter",
-    "FORM": {
-      "NAME": "Nom",
-      "EMAIL": "Email",
-      "SUBJECT": "Sujet",
-      "MESSAGE": "Message",
-      "SUBMIT": "Envoyer",
-      "SUCCESS": "Votre message a été envoyé avec succès !",
-      "ERROR": "Veuillez remplir tous les champs requis correctement.",
-      "NAME_REQUIRED": "Le nom est requis.",
-      "EMAIL_REQUIRED": "L'email est requis.",
-      "EMAIL_INVALID": "Veuillez entrer une adresse email valide.",
-      "SUBJECT_REQUIRED": "Le sujet est requis.",
-      "MESSAGE_REQUIRED": "Le message est requis.",
-      "MESSAGE_MINLENGTH": "Le message doit contenir au moins 10 caractères."
-    }
-  },
-  "COMMON": {
-    "LOADING": "Chargement..."
-  },
-  "FAQ_PAGE": {
-    "TITLE": "Questions Fréquemment Posées",
-    "BOOKING_QUESTION": "Comment réserver ma place dans le parking ?",
-    "BOOKING_ANSWER": "L'accès est géré via abonnement ou enregistrement préalable. Contactez-nous pour les modalités d'accès à notre parking privé.",
-    "SECURITY_QUESTION": "Le parking est-il sécurisé ?",
-    "SECURITY_ANSWER": "Oui, notre parking privé est équipé de caméras de surveillance 24/7, d'un accès contrôlé par reconnaissance de plaque et d'une présence pour assurer la sécurité.",
-    "HOURS_QUESTION": "Quels sont les horaires d'accès ?",
-    "HOURS_ANSWER": "Le parking est accessible 24 heures sur 24, 7 jours sur 7 pour les utilisateurs autorisés et enregistrés.",
-    "PAYMENT_QUESTION": "Comment fonctionne l'abonnement/paiement ?",
-    "PAYMENT_ANSWER": "Nous proposons des formules d'abonnement adaptées à vos besoins pour l'accès à notre parking privé. Contactez-nous pour connaître les tarifs.",
-    "PLATE_ISSUE_QUESTION": "Que faire si ma plaque n'est pas reconnue ?",
-    "PLATE_ISSUE_ANSWER": "En cas de problème avec la reconnaissance de plaque à l'entrée ou à la sortie, un bouton d'appel vous mettra en contact avec notre support pour une assistance immédiate."
-  },
-  "LOCATION_MAP": {
-    "TITLE": "Notre Emplacement Unique",
-    "ADDRESS_TITLE": "Adresse du Parking Privé",
-    "DIRECTIONS_HINT": "Utilisez la carte ci-dessus pour obtenir l'itinéraire.",
-    "ERROR_TOKEN": "La clé d'accès Mapbox n'est pas configurée. La carte ne peut pas être affichée."
-  },
-  "PRICING_PAGE": {
-    "TITLE": "Nos Formules d'Abonnement",
-    "SUBTITLE": "Choisissez la formule d'accès à notre parking privé qui vous convient.",
-    "HOURLY": {
-      "NAME": "Accès Ponctuel (sur demande)",
-      "PRICE": "Variable",
-      "PERIOD": "",
-      "FEATURE_1": "Idéal pour visites occasionnelles",
-      "FEATURE_2": "Contactez-nous pour disponibilité"
-    },
-    "DAILY": {
-      "NAME": "Forfait Journalier",
-      "PRICE": "XX TND",
-      "PERIOD": "/ jour",
-      "FEATURE_1": "Accès illimité pendant 24h",
-      "FEATURE_2": "Entrées/sorties multiples",
-      "FEATURE_3": "Option populaire"
-    },
-    "MONTHLY": {
-      "NAME": "Abonnement Mensuel",
-      "PRICE": "XXX TND",
-      "PERIOD": "/ mois",
-      "FEATURE_1": "Accès illimité 24/7",
-      "FEATURE_2": "Place garantie (selon formule)",
-      "FEATURE_3": "Facturation mensuelle",
-      "FEATURE_4": "Meilleur rapport qualité/prix"
-    },
-    "SELECT_PLAN": "Choisir ce plan"
-  },
-  "LEGAL_NOTICE": {
-    "TITLE": "Mentions Légales",
-    "SECTION_1": {
-      "TITLE": "Éditeur de l'Application (Projet PFE)",
-      "CONTENT": "Application Parkiny développée dans le cadre d'un Projet de Fin d'Études. Contact : [Nom Étudiant(s)], [Email Étudiant(s)], [Université/École]"
-    },
-    "SECTION_2": {
-      "TITLE": "Hébergement (Simulé)",
-      "CONTENT": "L'application est hébergée localement pour les besoins du développement et de la démonstration PFE."
-    },
-    "SECTION_3": {
-      "TITLE": "Propriété Intellectuelle",
-      "CONTENT": "Le code source et les éléments graphiques de cette application sont la propriété intellectuelle des auteurs du PFE, sauf mention contraire (bibliothèques tierces). Toute reproduction est interdite sans autorisation."
-    },
-    "SECTION_4": {
-      "TITLE": "Limitation de Responsabilité",
-      "CONTENT": "Cette application est un prototype PFE. Les informations et fonctionnalités sont fournies à titre indicatif et de démonstration. Les auteurs ne sauraient être tenus responsables d'éventuelles erreurs ou indisponibilités."
-    },
-    "SECTION_5": {
-      "TITLE": "Droit Applicable",
-      "CONTENT": "Le présent projet est soumis au cadre réglementaire de l'établissement d'enseignement [Université/École]."
-    }
-  },
-  "PRIVACY_POLICY": {
-    "TITLE": "Politique de Confidentialité (PFE)",
-    "LAST_UPDATED": "Dernière mise à jour : Mai 2025",
-    "SECTION_1": {
-      "TITLE": "Introduction",
-      "CONTENT": "Cette politique décrit comment les données sont gérées dans le cadre du prototype Parkiny (PFE). Aucune donnée personnelle réelle n'est collectée ou stockée à long terme dans cette version de démonstration."
-    },
-    "SECTION_2": {
-      "TITLE": "Données Collectées (Simulation)",
-      "CONTENT": "Pour la démonstration, l'application simule la collecte de : nom d'utilisateur, email, informations de véhicule (plaque), et données de réservation/abonnement. Les images de plaques sont traitées localement et ne sont pas stockées."
-    },
-    "SECTION_3": {
-      "TITLE": "Utilisation des Données (Simulation)",
-      "CONTENT": "Les données simulées sont utilisées uniquement pour démontrer les fonctionnalités : authentification, gestion des accès, affichage des réservations/abonnements."
-    },
-    "SECTION_4": {
-      "TITLE": "Partage des Données",
-      "CONTENT": "Aucune donnée, même simulée, n'est partagée avec des tiers dans le cadre de ce PFE."
-    },
-    "SECTION_5": {
-      "TITLE": "Sécurité des Données",
-      "CONTENT": "Des mesures de sécurité standard sont implémentées (ex: hashage de mot de passe simulé), mais l'application reste un prototype non destiné à un environnement de production."
-    },
-    "SECTION_6": {
-      "TITLE": "Droits des Utilisateurs (Simulation)",
-      "CONTENT": "Dans une application réelle, les utilisateurs auraient des droits d'accès, de rectification et de suppression de leurs données. Ces fonctionnalités ne sont pas implémentées dans ce PFE."
-    },
-    "SECTION_7": {
-      "TITLE": "Cookies",
-      "CONTENT": "L'application utilise des cookies techniques (ex: token d'authentification) nécessaires à son fonctionnement. Aucun cookie de suivi ou publicitaire n'est utilisé."
-    },
-    "SECTION_8": {
-      "TITLE": "Contact",
-      "CONTENT": "Pour toute question relative à ce prototype PFE, contactez les auteurs : [Email Étudiant(s)]"
-    }
-  },
-  "FOOTER": {
-    "ABOUT_TITLE": "À Propos de Parkiny (PFE)",
-    "ABOUT_TEXT": "Solution de gestion pour parking privé unique. Projet de Fin d'Études.",
-    "QUICK_LINKS_TITLE": "Liens Rapides",
-    "FAQ_LINK": "FAQ",
-    "PRICING_LINK": "Abonnements",
-    "LOCATION_LINK": "Notre Emplacement",
-    "LEGAL_TITLE": "Légal",
-    "LEGAL_NOTICE_LINK": "Mentions Légales",
-    "PRIVACY_POLICY_LINK": "Politique de Confidentialité",
-    "COPYRIGHT": "Tous droits réservés (dans le cadre du PFE)."
-  },
-  "ERROR": {
-    "CONTENT_LOAD_FAILED": "Le contenu n'a pas pu être chargé."
-  }
+  "NAVBAR.HOME": "Accueil",
+  "NAVBAR.RESERVATIONS": "Réservations",
+  "NAVBAR.SUBSCRIPTIONS": "Abonnements",
+  "NAVBAR.ABOUT": "À propos",
+  "NAVBAR.CONTACT": "Contact",
+  "NAVBAR.HOW_IT_WORKS": "Comment ça marche",
+  "NAVBAR.FAQ": "FAQ",
+  "NAVBAR.LOGIN": "Connexion",
+  "NAVBAR.SIGNUP": "S'inscrire",
+  "NAVBAR.LOGOUT": "Déconnexion",
+  "nav.home": "Accueil",
+  "nav.reservations": "Réservations",
+  "nav.subscriptions": "Abonnements",
+  "nav.about": "À Propos",
+  "nav.contact": "Contact",
+  "nav.login": "Connexion",
+  "nav.signup": "Inscription",
+  "nav.logout": "Déconnexion",
+  "nav.profile": "Mon Profil",
+  "nav.myReservations": "Mes Réservations",
+  "nav.myVehicles": "Mes Véhicules",
+  "nav.language": "Langue",
+  "nav.myAccount": "Mon compte",
+  "home.hero.title": "Parkiny - Stationnement Intelligent",
+  "home.hero.subtitle": "Projet de fin d'études développé pour TuniPark",
+  "home.hero.subtitle2": "Système de reconnaissance de plaques d'immatriculation tunisiennes",
+  "home.hero.register": "S'inscrire",
+  "home.hero.login": "Connexion",
+  "HOME.TITLE": "Bienvenue à Parkiny",
+  "CONTACT.TITLE": "Contactez-nous",
+  "FAQ.TITLE": "Questions fréquentes",
+  "AUTH.TITLE": "Connexion/Inscription",
+  "SUBSCRIPTIONS.TITLE": "Vos abonnements",
+  "PROFILE.TITLE": "Votre profil"
 }

@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+// src/app/components/user-dashboard/user-dashboard.component.ts
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router, NavigationEnd } from '@angular/router';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
 import { map, shareReplay, filter } from 'rxjs/operators';
 import { AuthService } from 'src/app/auth/services/auth/auth.service';
@@ -12,22 +13,23 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
   standalone: true,
   imports: [CommonModule, RouterModule, SidebarComponent],
   templateUrl: './user-dashboard.component.html',
-  styleUrl: './user-dashboard.component.css'
+  styleUrls: ['./user-dashboard.component.css']
 })
-export class UserDashboardComponent implements OnInit {
+export class UserDashboardComponent implements OnInit, OnDestroy {
   isLoggedIn$: Observable<boolean>;
   isMobile$: Observable<boolean>;
   isMobile = false;
   userName: string | null = null;
   userInitials: string | null = null;
-  pageTitle: string = 'Dashboard Overview';
+  pageTitle: string = 'Vue d’ensemble du tableau de bord';
+  private routerSubscription!: Subscription;
 
   constructor(
     private authService: AuthService,
     private breakpointObserver: BreakpointObserver,
     private router: Router
   ) {
-    this.isLoggedIn$ = this.authService.isLoggedIn();
+    this.isLoggedIn$ = this.authService.authStatus$;
     this.isMobile$ = this.breakpointObserver
       .observe(Breakpoints.Handset)
       .pipe(
@@ -36,30 +38,35 @@ export class UserDashboardComponent implements OnInit {
       );
   }
 
-  ngOnInit() {
+  ngOnInit(): void {
     this.isMobile$.subscribe(isMobile => {
       this.isMobile = isMobile;
     });
 
-    this.authService.getUser().subscribe(user => {
-      this.userName = user ? `${user.firstName} ${user.lastName}`.trim() || null : null;
-      this.userInitials = user ? user.initials : 'UN';
-    });
+    const user = this.authService.getCurrentUser();
+    this.userName = user ? `${user.firstName} ${user.lastName}`.trim() || null : null;
+    this.userInitials = user ? user.initials : 'UN';
 
-    this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
+    this.routerSubscription = this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+      )
       .subscribe((event: NavigationEnd) => {
         const routeTitles: { [key: string]: string } = {
-          '/dashboard': 'Dashboard Overview',
-          '/dashboard/parking-map': 'Parking Map',
-          '/dashboard/reservations': 'Your Reservations',
-          '/dashboard/profile': 'Profile'
+          '/app/user/dashboard': 'Vue d’ensemble du tableau de bord',
+          '/app/user/reservations': 'Vos réservations',
+          '/app/user/subscriptions': 'Vos abonnements',
+          '/app/user/profile': 'Profil'
         };
-        this.pageTitle = routeTitles[event.url] || 'Dashboard Overview';
+        this.pageTitle = routeTitles[event.urlAfterRedirects || event.url] || 'Vue d’ensemble du tableau de bord';
       });
   }
 
-  toggleSidebar() {
+  ngOnDestroy(): void {
+    this.routerSubscription?.unsubscribe();
+  }
+
+  toggleSidebar(): void {
     this.authService.toggleSidebar();
   }
 }

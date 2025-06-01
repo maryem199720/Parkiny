@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { MatTabsModule } from '@angular/material/tabs';
 import { CommonModule } from '@angular/common';
-import { NgChartsModule } from 'ng2-charts';
+import { BaseChartDirective } from 'ng2-charts'; // Changed from NgChartsModule
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
@@ -19,7 +19,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     CommonModule,
     RouterModule, // Essentiel pour routerLink et router-outlet
     MatTabsModule,
-    NgChartsModule,
+    BaseChartDirective,
     MatCardModule,
     MatTableModule,
     MatButtonModule,

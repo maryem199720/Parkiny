@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -18,6 +19,13 @@ export class UserService {
     });
 
     return this.http.get(`${this.apiUrl}/profile`, { headers });
+  }
+
+  // 🔹 Récupérer le type d'abonnement de l'utilisateur
+  getUserSubscription(): Observable<string> {
+    return this.getUserProfile().pipe(
+      map(profile => profile.subscription_type || 'Membre')
+    );
   }
 
   // 🔹 Mettre à jour les infos de l'utilisateur

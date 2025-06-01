@@ -1,64 +1,31 @@
-<nav class="bg-dark text-white shadow-lg sticky top-0 z-50">
-  <div class="container mx-auto px-6 py-4">
-    <div class="flex items-center justify-between">
-      <a routerLink="/app/user/home" class="text-2xl font-['Pacifico'] text-gold-500 flex items-center">
-        <i class="ri-parking-box-fill text-gold-500 mr-2"></i>
-        Parkiny
+<nav class="navbar">
+  <div class="container mx-auto px-6 py-4 flex items-center justify-between">
+    <!-- Logo -->
+    <a routerLink="/home" (click)="onHomeClick()" class="text-2xl font-pacifico logo-text flex items-center">
+      <i class="ri-parking-box-fill text-gold-500 mr-2"></i>
+      Parkiny
+    </a>
+
+    <!-- Navigation Links -->
+    <div class="hidden md:flex items-center justify-center flex-1">
+      <div class="flex items-center space-x-6">
+        <a routerLink="/home" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" 
+           (click)="onHomeClick()" class="nav-link">Accueil</a>
+        <a routerLink="/about" routerLinkActive="active" class="nav-link">À propos</a>
+        <a routerLink="/contact" routerLinkActive="active" class="nav-link">Contact</a>
+        <a routerLink="/how-it-works" routerLinkActive="active" class="nav-link">Comment ça marche</a>
+        <a routerLink="/faq" routerLinkActive="active" class="nav-link">FAQ</a>
+      </div>
+    </div>
+
+    <!-- Auth Buttons -->
+    <div class="flex items-center space-x-4">
+      <a routerLink="/auth" class="bg-primary-purple text-white px-6 py-2 rounded-md font-medium hover:bg-dark-purple transition-colors gold-glow auth-button">
+        Connexion
       </a>
-      <div class="flex items-center space-x-8">
-        <nav class="hidden md:flex space-x-8">
-          <a routerLink="/app/user/home" routerLinkActive="active" class="text-white hover:text-gold-300 transition-colors font-medium">
-            {{ 'NAVBAR.HOME' | translate }}
-          </a>
-          <a routerLink="/app/user/reservations" routerLinkActive="active" 
-             [class.disabled-link]="!authService.isAuthenticated()" 
-             [class.text-white]="authService.isAuthenticated()"
-             [class.text-gray-500]="!authService.isAuthenticated()"
-             class="hover:text-gold-300 transition-colors font-medium">
-            {{ 'NAVBAR.RESERVATIONS' | translate }}
-          </a>
-          <a routerLink="/app/user/subscriptions" routerLinkActive="active" 
-             [class.disabled-link]="!authService.isAuthenticated()" 
-             [class.text-white]="authService.isAuthenticated()"
-             [class.text-gray-500]="!authService.isAuthenticated()"
-             class="hover:text-gold-300 transition-colors font-medium">
-            {{ 'NAVBAR.SUBSCRIPTIONS' | translate }}
-          </a>
-          <a routerLink="/app/user/about" routerLinkActive="active" 
-             class="text-white hover:text-gold-300 transition-colors font-medium">
-            {{ 'NAVBAR.ABOUT' | translate }}
-          </a>
-          <a routerLink="/app/user/contact" routerLinkActive="active" 
-             class="text-white hover:text-gold-300 transition-colors font-medium">
-            {{ 'NAVBAR.CONTACT' | translate }}
-          </a>
-        </nav>
-        <div class="flex items-center space-x-2">
-          <button (click)="switchLanguage('fr')" class="text-white hover:text-gold-300">
-            FR
-          </button>
-          <span class="text-gray-400">|</span>
-          <button (click)="switchLanguage('en')" class="text-white hover:text-gold-300">
-            EN
-          </button>
-        </div>
-      </div>
-      <div class="flex items-center space-x-4" *ngIf="!authService.isAuthenticated()">
-        <a routerLink="/auth" class="bg-primary text-white px-6 py-2 rounded-md font-medium hover:bg-purple-900 transition-colors gold-glow">
-          {{ 'NAVBAR.LOGIN' | translate }}
-        </a>
-        <a routerLink="/auth" [queryParams]="{signup: true}" class="bg-gold-500 text-dark px-6 py-2 rounded-md font-medium hover:bg-gold-600 transition-colors gold-glow">
-          {{ 'NAVBAR.SIGNUP' | translate }}
-        </a>
-      </div>
-      <div class="flex items-center space-x-4" *ngIf="authService.isAuthenticated()">
-        <a routerLink="/app/user/profile" routerLinkActive="active" class="text-white hover:text-gold-300 transition-colors">
-          <i class="ri-user-3-fill text-xl"></i>
-        </a>
-        <button (click)="logout()" class="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-purple-900 transition-colors gold-glow flex items-center">
-          <i class="ri-logout-box-r-line mr-1"></i> {{ 'NAVBAR.LOGOUT' | translate }}
-        </button>
-      </div>
+      <a routerLink="/auth" [queryParams]="{signup: true}" class="bg-gold-500 text-gray-900 px-6 py-2 rounded-md font-medium hover:bg-gold-600 transition-colors gold-glow auth-button">
+        S'inscrire
+      </a>
     </div>
   </div>
 </nav>

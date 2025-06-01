@@ -1,4 +1,6 @@
-<app-navbar *ngIf="!isAuthPage"></app-navbar>
-<div class="page-content" [ngClass]="{ 'with-navbar': !isAuthPage }">
+<!-- src/app/app.component.html -->
+<app-navbar *ngIf="showNavbar"></app-navbar>
+<div class="page-content flex-grow" [ngClass]="{ 'with-navbar': showNavbar }">
   <router-outlet></router-outlet>
 </div>
+<app-footer *ngIf="showNavbar"></app-footer>

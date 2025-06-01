@@ -1,27 +1,36 @@
 {
-  "NAVBAR": {
-    "HOME": "",
-    "RESERVATIONS": "",
-    "SUBSCRIPTIONS": "",
-    "ABOUT": "",
-    "CONTACT": "",
-    "LOGIN": "",
-    "SIGNUP": "",
-    "MY_PROFILE": "",
-    "MY_RESERVATIONS": "",
-    "MY_VEHICLES": "",
-    "LOGOUT": "",
-    "LANGUAGE": "",
-    "MY_ACCOUNT": ""
-  },
-  "ABOUT_PAGE": {
-    "TITLE": ""
-   
-  },
-  "CONTACT_PAGE": {
-    "TITLE": ""
-   
-  }
- 
+  "NAVBAR.HOME": "الرئيسية",
+  "NAVBAR.RESERVATIONS": "الحجوزات",
+  "NAVBAR.SUBSCRIPTIONS": "الاشتراكات",
+  "NAVBAR.ABOUT": "حول",
+  "NAVBAR.CONTACT": "اتصل بنا",
+  "NAVBAR.HOW_IT_WORKS": "كيف يعمل",
+  "NAVBAR.FAQ": "الأسئلة الشائعة",
+  "NAVBAR.LOGIN": "تسجيل الدخول",
+  "NAVBAR.SIGNUP": "التسجيل",
+  "NAVBAR.LOGOUT": "تسجيل الخروج",
+  "nav.home": "الرئيسية",
+  "nav.reservations": "الحجوزات",
+  "nav.subscriptions": "الاشتراكات",
+  "nav.about": "حول",
+  "nav.contact": "اتصل بنا",
+  "nav.login": "تسجيل الدخول",
+  "nav.signup": "التسجيل",
+  "nav.logout": "تسجيل الخروج",
+  "nav.profile": "ملفي الشخصي",
+  "nav.myReservations": "حجوزاتي",
+  "nav.myVehicles": "مركباتي",
+  "nav.language": "اللغة",
+  "nav.myAccount": "حسابي",
+  "home.hero.title": "باركيني - الوقوف الذكي",
+  "home.hero.subtitle": "مشروع نهاية العام تم تطويره لـ TuniPark",
+  "home.hero.subtitle2": "نظام التعرف على لوحات الترخيص التونسية",
+  "home.hero.register": "التسجيل",
+  "home.hero.login": "تسجيل الدخول",
+  "HOME.TITLE": "مرحبًا بكم في باركيني",
+  "CONTACT.TITLE": "اتصل بنا",
+  "FAQ.TITLE": "الأسئلة المتكررة",
+  "AUTH.TITLE": "تسجيل الدخول/التسجيل",
+  "SUBSCRIPTIONS.TITLE": "اشتراكاتك",
+  "PROFILE.TITLE": "ملفك الشخصي"
 }
-

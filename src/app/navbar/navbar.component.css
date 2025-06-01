@@ -1,109 +1,89 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+.navbar {
+  @apply bg-dark text-white shadow-lg sticky top-0 z-50 flex items-center;
+  min-height: 64px;
+}
+
 .nav-link {
-  position: relative;
+  @apply relative text-white hover:text-gold-500 transition-colors font-medium whitespace-nowrap px-2 py-1;
 }
 
 .nav-link::after {
+  @apply absolute w-0 h-0.5 bg-gold-500 bottom-0 left-0 transition-all duration-300 ease-in-out;
   content: '';
-  position: absolute;
-  width: 0;
-  height: 2px;
-  bottom: 0;
-  left: 0;
-  background-color: var(--gold-300);
-  transition: width 0.3s ease;
 }
 
 .nav-link:hover::after,
-.active-link::after {
-  width: 100%;
+.active {
+  @apply w-full;
 }
 
-.active-link {
-  color: var(--gold-300) !important;
-  font-weight: 600;
+.active {
+  @apply text-gold-500 font-semibold;
 }
 
 .gold-glow {
-  box-shadow: 0 0 8px rgba(234, 179, 8, 0.3);
-  transition: all 0.3s ease;
+  @apply shadow-[0_0_8px_rgba(212,175,55,0.3)] transition-all duration-300 ease-in-out;
 }
 
 .gold-glow:hover {
-  box-shadow: 0 0 15px rgba(234, 179, 8, 0.5);
+  @apply shadow-[0_0_15px_rgba(212,175,55,0.5)];
 }
 
 .auth-button {
-  transform: translateY(0);
-  transition: transform 0.2s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  @apply transform transition-transform duration-200 ease-in-out opacity-100;
 }
 
 .auth-button:hover {
-  transform: translateY(-2px);
+  @apply -translate-y-0.5;
 }
 
 .logo-text {
-  background: linear-gradient(90deg, #f59e0b, #eab308);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  display: inline-block;
+  @apply bg-gradient-to-r from-gold-400 to-gold-500 bg-clip-text text-transparent inline-block;
 }
 
-/* Mobile menu animation */
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-in-out;
 }
 
 @keyframes fadeIn {
   from {
-    opacity: 0;
-    transform: translateY(-10px);
+    @apply opacity-0 -translate-y-2;
   }
   to {
-    opacity: 1;
-    transform: translateY(0);
+    @apply opacity-100 translate-y-0;
   }
 }
 
-/* Scrolled navbar effect */
 nav.scrolled {
-  background-color: rgba(17, 24, 39, 0.95);
-  backdrop-filter: blur(8px);
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  @apply bg-dark/95 backdrop-blur-md py-2 shadow-[0_4px_20px_rgba(0,0,0,0.3)];
 }
 
-/* Language selector styles */
 .language-selector button {
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  transition: background-color 0.2s ease;
+  @apply px-2 py-1 rounded transition-colors duration-200 ease-in-out;
 }
 
 .language-selector button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  @apply bg-white/10;
 }
 
-/* Disabled link styles */
 .disabled-link {
-  pointer-events: none;
-  opacity: 0.6;
-}
-
-/* User dropdown animation */
-@keyframes dropdownFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  @apply pointer-events-none opacity-60;
 }
 
 .user-menu > div,
 .language-selector > div {
   animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    @apply opacity-0 -translate-y-2;
+  }
+  to {
+    @apply opacity-100 translate-y-0;
+  }
 }

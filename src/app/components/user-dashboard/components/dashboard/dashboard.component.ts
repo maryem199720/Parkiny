@@ -9,6 +9,4 @@ import { StatsCardsComponent } from "../stats-card/stats-card.component";
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent {
-
-}
+export class DashboardComponent {}

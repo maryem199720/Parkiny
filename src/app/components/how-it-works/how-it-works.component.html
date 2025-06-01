@@ -1,7 +1,7 @@
 <div class="how-it-works-hero mb-16">
   <div class="container mx-auto px-6">
-    <h1 class="text-4xl md:text-5xl font-bold mb-4">{{ translate('how.hero.title') || (currentLanguage === 'FR' ? 'Comment Fonctionne Parkiny' : 'How Parkiny Works') }}</h1>
-    <p class="text-xl text-gold-200">{{ translate('how.hero.subtitle') || (currentLanguage === 'FR' ? 'Découvrez notre technologie de stationnement intelligent' : 'Discover our smart parking technology') }}</p>
+    <h1 class="text-4xl md:text-5xl font-bold mb-4">Comment Fonctionne Parkiny</h1>
+    <p class="text-xl text-gold-200">Découvrez notre technologie de stationnement intelligent</p>
   </div>
 </div>
 
@@ -13,31 +13,25 @@
 <div class="container mx-auto px-6 py-16" *ngIf="!isLoading">
   <!-- How It Works Steps -->
   <section class="mb-20">
-    <h2 class="text-3xl font-bold text-center mb-12 section-title">
-      {{ currentLanguage === 'FR' ? 'Le Processus Simplifié' : 'The Simplified Process' }}
-    </h2>
+    <h2 class="text-3xl font-bold text-center mb-12 section-title">Le Processus Simplifié</h2>
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
       <!-- Step 1 -->
       <div class="step-card bg-white p-6 shadow-lg animate-fade-in">
         <div class="flex items-center mb-4">
           <div class="step-number bg-primary text-white mr-4">1</div>
-          <h3 class="text-xl font-bold">{{ currentLanguage === 'FR' ? 'Inscription' : 'Registration' }}</h3>
+          <h3 class="text-xl font-bold">Inscription</h3>
         </div>
         <p class="text-gray-700 mb-4">
-          {{ currentLanguage === 'FR' 
-            ? 'Créez un compte et ajoutez les informations de votre véhicule, y compris votre plaque d\'immatriculation tunisienne.'
-            : 'Create an account and add your vehicle information, including your Tunisian license plate.' }}
+          Créez un compte et ajoutez les informations de votre véhicule, y compris votre plaque d'immatriculation tunisienne.
         </p>
         <div class="bg-gray-100 p-4 rounded-lg">
           <div class="flex items-center text-primary">
             <i class="ri-user-add-line mr-2"></i>
-            <span class="font-medium">{{ currentLanguage === 'FR' ? 'Conseil' : 'Tip' }}</span>
+            <span class="font-medium">Conseil</span>
           </div>
           <p class="text-sm text-gray-600 mt-1">
-            {{ currentLanguage === 'FR' 
-              ? 'Assurez-vous que les informations de votre plaque d\'immatriculation sont exactes pour une reconnaissance optimale.'
-              : 'Make sure your license plate information is accurate for optimal recognition.' }}
+            Assurez-vous que les informations de votre plaque d'immatriculation sont exactes pour une reconnaissance optimale.
           </p>
         </div>
       </div>
@@ -46,22 +40,18 @@
       <div class="step-card bg-white p-6 shadow-lg animate-fade-in animate-delay-1">
         <div class="flex items-center mb-4">
           <div class="step-number bg-primary text-white mr-4">2</div>
-          <h3 class="text-xl font-bold">{{ currentLanguage === 'FR' ? 'Abonnement' : 'Subscription' }}</h3>
+          <h3 class="text-xl font-bold">Abonnement</h3>
         </div>
         <p class="text-gray-700 mb-4">
-          {{ currentLanguage === 'FR' 
-            ? 'Choisissez l\'abonnement qui correspond à vos besoins de stationnement et effectuez le paiement.'
-            : 'Choose the subscription that matches your parking needs and make the payment.' }}
+          Choisissez l'abonnement qui correspond à vos besoins de stationnement et effectuez le paiement.
         </p>
         <div class="bg-gray-100 p-4 rounded-lg">
           <div class="flex items-center text-primary">
             <i class="ri-bank-card-line mr-2"></i>
-            <span class="font-medium">{{ currentLanguage === 'FR' ? 'Conseil' : 'Tip' }}</span>
+            <span class="font-medium">Conseil</span>
           </div>
           <p class="text-sm text-gray-600 mt-1">
-            {{ currentLanguage === 'FR' 
-              ? 'Les abonnements Premium et Entreprise permettent de réserver des places à l\'avance.'
-              : 'Premium and Enterprise subscriptions allow you to reserve spots in advance.' }}
+            Les abonnements Premium et Entreprise permettent de réserver des places à l'avance.
           </p>
         </div>
       </div>
@@ -70,22 +60,18 @@
       <div class="step-card bg-white p-6 shadow-lg animate-fade-in animate-delay-2">
         <div class="flex items-center mb-4">
           <div class="step-number bg-primary text-white mr-4">3</div>
-          <h3 class="text-xl font-bold">{{ currentLanguage === 'FR' ? 'Arrivée' : 'Arrival' }}</h3>
+          <h3 class="text-xl font-bold">Arrivée</h3>
         </div>
         <p class="text-gray-700 mb-4">
-          {{ currentLanguage === 'FR' 
-            ? 'Approchez-vous de l\'entrée du parking. Notre système détecte automatiquement votre plaque d\'immatriculation.'
-            : 'Approach the parking entrance. Our system automatically detects your license plate.' }}
+          Approchez-vous de l'entrée du parking. Notre système détecte automatiquement votre plaque d'immatriculation.
         </p>
         <div class="bg-gray-100 p-4 rounded-lg">
           <div class="flex items-center text-primary">
             <i class="ri-car-line mr-2"></i>
-            <span class="font-medium">{{ currentLanguage === 'FR' ? 'Conseil' : 'Tip' }}</span>
+            <span class="font-medium">Conseil</span>
           </div>
           <p class="text-sm text-gray-600 mt-1">
-            {{ currentLanguage === 'FR' 
-              ? 'Assurez-vous que votre plaque est visible et propre pour une détection optimale.'
-              : 'Make sure your plate is visible and clean for optimal detection.' }}
+            Assurez-vous que votre plaque est visible et propre pour une détection optimale.
           </p>
         </div>
       </div>
@@ -94,22 +80,18 @@
       <div class="step-card bg-white p-6 shadow-lg animate-fade-in animate-delay-3">
         <div class="flex items-center mb-4">
           <div class="step-number bg-primary text-white mr-4">4</div>
-          <h3 class="text-xl font-bold">{{ currentLanguage === 'FR' ? 'Stationnement' : 'Parking' }}</h3>
+          <h3 class="text-xl font-bold">Stationnement</h3>
         </div>
         <p class="text-gray-700 mb-4">
-          {{ currentLanguage === 'FR' 
-            ? 'La barrière s\'ouvre automatiquement. Stationnez votre véhicule et suivez votre temps de stationnement via l\'application.'
-            : 'The barrier opens automatically. Park your vehicle and track your parking time via the app.' }}
+          La barrière s'ouvre automatiquement. Stationnez votre véhicule et suivez votre temps de stationnement via l'application.
         </p>
         <div class="bg-gray-100 p-4 rounded-lg">
           <div class="flex items-center text-primary">
             <i class="ri-time-line mr-2"></i>
-            <span class="font-medium">{{ currentLanguage === 'FR' ? 'Conseil' : 'Tip' }}</span>
+            <span class="font-medium">Conseil</span>
           </div>
           <p class="text-sm text-gray-600 mt-1">
-            {{ currentLanguage === 'FR' 
-              ? 'Vous recevrez une notification avant l\'expiration de votre temps de stationnement.'
-              : 'You will receive a notification before your parking time expires.' }}
+            Vous recevrez une notification avant l'expiration de votre temps de stationnement.
           </p>
         </div>
       </div>
@@ -118,19 +100,13 @@
   
   <!-- AI Technology Section -->
   <section class="mb-20 bg-gray-50 p-10 rounded-xl">
-    <h2 class="text-3xl font-bold text-center mb-12 section-title">
-      {{ currentLanguage === 'FR' ? 'Notre Technologie IA' : 'Our AI Technology' }}
-    </h2>
+    <h2 class="text-3xl font-bold text-center mb-12 section-title">Notre Technologie IA</h2>
     
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
       <div>
-        <h3 class="text-2xl font-bold mb-4 text-primary">
-          {{ currentLanguage === 'FR' ? 'Reconnaissance de Plaques Tunisiennes' : 'Tunisian License Plate Recognition' }}
-        </h3>
+        <h3 class="text-2xl font-bold mb-4 text-primary">Reconnaissance de Plaques Tunisiennes</h3>
         <p class="text-gray-700 mb-6 leading-relaxed">
-          {{ currentLanguage === 'FR' 
-            ? 'Notre système de reconnaissance de plaques d\'immatriculation est spécialement conçu pour les plaques tunisiennes. Il utilise une combinaison de technologies avancées pour détecter et lire les plaques avec une précision exceptionnelle, même dans des conditions difficiles.'
-            : 'Our license plate recognition system is specifically designed for Tunisian plates. It uses a combination of advanced technologies to detect and read plates with exceptional accuracy, even in challenging conditions.' }}
+          Notre système de reconnaissance de plaques d'immatriculation est spécialement conçu pour les plaques tunisiennes. Il utilise une combinaison de technologies avancées pour détecter et lire les plaques avec une précision exceptionnelle, même dans des conditions difficiles.
         </p>
         
         <div class="space-y-4">
@@ -139,11 +115,9 @@
               <i class="ri-eye-line"></i>
             </div>
             <div>
-              <h4 class="font-semibold mb-1">{{ currentLanguage === 'FR' ? 'Détection YOLO' : 'YOLO Detection' }}</h4>
+              <h4 class="font-semibold mb-1">Détection YOLO</h4>
               <p class="text-gray-600">
-                {{ currentLanguage === 'FR' 
-                  ? 'Utilise l\'algorithme YOLO (You Only Look Once) pour localiser rapidement la plaque dans l\'image.'
-                  : 'Uses the YOLO (You Only Look Once) algorithm to quickly locate the plate in the image.' }}
+                Utilise l'algorithme YOLO (You Only Look Once) pour localiser rapidement la plaque dans l'image.
               </p>
             </div>
           </div>
@@ -153,11 +127,9 @@
               <i class="ri-file-text-line"></i>
             </div>
             <div>
-              <h4 class="font-semibold mb-1">{{ currentLanguage === 'FR' ? 'Lecture EasyOCR' : 'EasyOCR Reading' }}</h4>
+              <h4 class="font-semibold mb-1">Lecture EasyOCR</h4>
               <p class="text-gray-600">
-                {{ currentLanguage === 'FR' 
-                  ? 'Applique EasyOCR pour lire les caractères de la plaque avec une haute précision.'
-                  : 'Applies EasyOCR to read the plate characters with high accuracy.' }}
+                Applique EasyOCR pour lire les caractères de la plaque avec une haute précision.
               </p>
             </div>
           </div>
@@ -167,11 +139,9 @@
               <i class="ri-translate-2"></i>
             </div>
             <div>
-              <h4 class="font-semibold mb-1">{{ currentLanguage === 'FR' ? 'Adaptation Locale' : 'Local Adaptation' }}</h4>
+              <h4 class="font-semibold mb-1">Adaptation Locale</h4>
               <p class="text-gray-600">
-                {{ currentLanguage === 'FR' 
-                  ? 'Reconnaît les différents formats tunisiens (civil, taxi, officiel, etc.) et extrait correctement les parties numériques et textuelles.'
-                  : 'Recognizes different Tunisian formats (civilian, taxi, official, etc.) and correctly extracts the numeric and textual parts.' }}
+                Reconnaît les différents formats tunisiens (civil, taxi, officiel, etc.) et extrait correctement les parties numériques et textuelles.
               </p>
             </div>
           </div>
@@ -179,48 +149,46 @@
       </div>
       
       <div class="bg-white p-6 rounded-xl shadow-lg">
-        <h3 class="text-xl font-bold mb-6 text-center">
-          {{ currentLanguage === 'FR' ? 'Processus de Reconnaissance' : 'Recognition Process' }}
-        </h3>
+        <h3 class="text-xl font-bold mb-6 text-center">Processus de Reconnaissance</h3>
         
         <div class="space-y-6">
           <div class="flex items-center">
             <div class="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full mr-4 text-primary font-bold">1</div>
             <div class="flex-1 bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-semibold">{{ currentLanguage === 'FR' ? 'Capture d\'image' : 'Image Capture' }}</h4>
-              <p class="text-sm text-gray-600">{{ currentLanguage === 'FR' ? 'Caméras haute résolution à l\'entrée du parking' : 'High-resolution cameras at parking entrance' }}</p>
+              <h4 class="font-semibold">Capture d'image</h4>
+              <p class="text-sm text-gray-600">Caméras haute résolution à l'entrée du parking</p>
             </div>
           </div>
           
           <div class="flex items-center">
             <div class="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full mr-4 text-primary font-bold">2</div>
             <div class="flex-1 bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-semibold">{{ currentLanguage === 'FR' ? 'Détection de plaque' : 'Plate Detection' }}</h4>
-              <p class="text-sm text-gray-600">{{ currentLanguage === 'FR' ? 'Localisation de la plaque dans l\'image' : 'Locating the plate in the image' }}</p>
+              <h4 class="font-semibold">Détection de plaque</h4>
+              <p class="text-sm text-gray-600">Localisation de la plaque dans l'image</p>
             </div>
           </div>
           
           <div class="flex items-center">
             <div class="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full mr-4 text-primary font-bold">3</div>
             <div class="flex-1 bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-semibold">{{ currentLanguage === 'FR' ? 'Lecture OCR' : 'OCR Reading' }}</h4>
-              <p class="text-sm text-gray-600">{{ currentLanguage === 'FR' ? 'Extraction des caractères de la plaque' : 'Extracting characters from the plate' }}</p>
+              <h4 class="font-semibold">Lecture OCR</h4>
+              <p class="text-sm text-gray-600">Extraction des caractères de la plaque</p>
             </div>
           </div>
           
           <div class="flex items-center">
             <div class="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full mr-4 text-primary font-bold">4</div>
             <div class="flex-1 bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-semibold">{{ currentLanguage === 'FR' ? 'Validation' : 'Validation' }}</h4>
-              <p class="text-sm text-gray-600">{{ currentLanguage === 'FR' ? 'Vérification du format et correction des erreurs' : 'Format verification and error correction' }}</p>
+              <h4 class="font-semibold">Validation</h4>
+              <p class="text-sm text-gray-600">Vérification du format et correction des erreurs</p>
             </div>
           </div>
           
           <div class="flex items-center">
             <div class="w-12 h-12 flex items-center justify-center bg-gray-100 rounded-full mr-4 text-primary font-bold">5</div>
             <div class="flex-1 bg-gray-50 p-4 rounded-lg">
-              <h4 class="font-semibold">{{ currentLanguage === 'FR' ? 'Vérification d\'accès' : 'Access Verification' }}</h4>
-              <p class="text-sm text-gray-600">{{ currentLanguage === 'FR' ? 'Comparaison avec la base de données des abonnés' : 'Comparison with subscriber database' }}</p>
+              <h4 class="font-semibold">Vérification d'accès</h4>
+              <p class="text-sm text-gray-600">Comparaison avec la base de données des abonnés</p>
             </div>
           </div>
         </div>
@@ -230,9 +198,7 @@
   
   <!-- Key Features -->
   <section class="mb-20">
-    <h2 class="text-3xl font-bold text-center mb-12 section-title">
-      {{ currentLanguage === 'FR' ? 'Caractéristiques Clés' : 'Key Features' }}
-    </h2>
+    <h2 class="text-3xl font-bold text-center mb-12 section-title">Caractéristiques Clés</h2>
     
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <!-- Feature 1 -->
@@ -240,11 +206,9 @@
         <div class="feature-icon bg-primary/10 text-primary mx-auto">
           <i class="ri-24-hours-line"></i>
         </div>
-        <h3 class="text-xl font-bold mb-3">{{ currentLanguage === 'FR' ? 'Accès 24/7' : '24/7 Access' }}</h3>
+        <h3 class="text-xl font-bold mb-3">Accès 24/7</h3>
         <p class="text-gray-700">
-          {{ currentLanguage === 'FR' 
-            ? 'Notre parking est accessible 24h/24 et 7j/7 pour tous les abonnés, offrant une flexibilité maximale pour vos besoins de stationnement.'
-            : 'Our parking is accessible 24/7 for all subscribers, offering maximum flexibility for your parking needs.' }}
+          Notre parking est accessible 24h/24 et 7j/7 pour tous les abonnés, offrant une flexibilité maximale pour vos besoins de stationnement.
         </p>
       </div>
       
@@ -253,11 +217,9 @@
         <div class="feature-icon bg-primary/10 text-primary mx-auto">
           <i class="ri-shield-check-line"></i>
         </div>
-        <h3 class="text-xl font-bold mb-3">{{ currentLanguage === 'FR' ? 'Sécurité Renforcée' : 'Enhanced Security' }}</h3>
+        <h3 class="text-xl font-bold mb-3">Sécurité Renforcée</h3>
         <p class="text-gray-700">
-          {{ currentLanguage === 'FR' 
-            ? 'Surveillance vidéo 24/7, éclairage optimal et accès contrôlé pour garantir la sécurité de votre véhicule à tout moment.'
-            : 'Video surveillance 24/7, optimal lighting, and controlled access to ensure your vehicle\'s security at all times.' }}
+          Surveillance vidéo 24/7, éclairage optimal et accès contrôlé pour garantir la sécurité de votre véhicule à tout moment.
         </p>
       </div>
       
@@ -266,11 +228,9 @@
         <div class="feature-icon bg-primary/10 text-primary mx-auto">
           <i class="ri-smartphone-line"></i>
         </div>
-        <h3 class="text-xl font-bold mb-3">{{ currentLanguage === 'FR' ? 'Application Mobile' : 'Mobile App' }}</h3>
+        <h3 class="text-xl font-bold mb-3">Application Mobile</h3>
         <p class="text-gray-700">
-          {{ currentLanguage === 'FR' 
-            ? 'Gérez vos réservations, consultez votre historique et recevez des notifications importantes directement sur votre smartphone.'
-            : 'Manage your reservations, check your history, and receive important notifications directly on your smartphone.' }}
+          Gérez vos réservations, consultez votre historique et recevez des notifications importantes directement sur votre smartphone.
         </p>
       </div>
       
@@ -279,11 +239,9 @@
         <div class="feature-icon bg-primary/10 text-primary mx-auto">
           <i class="ri-reserved-line"></i>
         </div>
-        <h3 class="text-xl font-bold mb-3">{{ currentLanguage === 'FR' ? 'Réservation de Place' : 'Spot Reservation' }}</h3>
+        <h3 class="text-xl font-bold mb-3">Réservation de Place</h3>
         <p class="text-gray-700">
-          {{ currentLanguage === 'FR' 
-            ? 'Les abonnés Premium et Entreprise peuvent réserver une place à l\'avance, garantissant la disponibilité même aux heures de pointe.'
-            : 'Premium and Enterprise subscribers can reserve a spot in advance, guaranteeing availability even during peak hours.' }}
+          Les abonnés Premium et Entreprise peuvent réserver une place à l'avance, garantissant la disponibilité même aux heures de pointe.
         </p>
       </div>
       
@@ -292,11 +250,9 @@
         <div class="feature-icon bg-primary/10 text-primary mx-auto">
           <i class="ri-database-2-line"></i>
         </div>
-        <h3 class="text-xl font-bold mb-3">{{ currentLanguage === 'FR' ? 'Stockage Local Sécurisé' : 'Secure Local Storage' }}</h3>
+        <h3 class="text-xl font-bold mb-3">Stockage Local Sécurisé</h3>
         <p class="text-gray-700">
-          {{ currentLanguage === 'FR' 
-            ? 'Toutes les données sont stockées localement avec un chiffrement de pointe pour garantir la confidentialité et la sécurité.'
-            : 'All data is stored locally with state-of-the-art encryption to ensure privacy and security.' }}
+          Toutes les données sont stockées localement avec un chiffrement de pointe pour garantir la confidentialité et la sécurité.
         </p>
       </div>
       
@@ -305,11 +261,9 @@
         <div class="feature-icon bg-primary/10 text-primary mx-auto">
           <i class="ri-customer-service-2-line"></i>
         </div>
-        <h3 class="text-xl font-bold mb-3">{{ currentLanguage === 'FR' ? 'Support Client' : 'Customer Support' }}</h3>
+        <h3 class="text-xl font-bold mb-3">Support Client</h3>
         <p class="text-gray-700">
-          {{ currentLanguage === 'FR' 
-            ? 'Notre équipe est disponible pour répondre à vos questions et résoudre rapidement tout problème que vous pourriez rencontrer.'
-            : 'Our team is available to answer your questions and quickly resolve any issues you may encounter.' }}
+          Notre équipe est disponible pour répondre à vos questions et résoudre rapidement tout problème que vous pourriez rencontrer.
         </p>
       </div>
     </div>
@@ -317,59 +271,49 @@
   
   <!-- Operating Hours -->
   <section class="mb-20 bg-primary text-white p-10 rounded-xl">
-    <h2 class="text-3xl font-bold text-center mb-8">
-      {{ currentLanguage === 'FR' ? 'Heures d\'Ouverture' : 'Operating Hours' }}
-    </h2>
+    <h2 class="text-3xl font-bold text-center mb-8">Heures d'Ouverture</h2>
     
     <div class="max-w-2xl mx-auto">
       <div class="flex justify-between items-center mb-6">
-        <div class="text-xl font-bold">{{ currentLanguage === 'FR' ? 'Statut actuel' : 'Current status' }}</div>
-        <div class="bg-green-500 text-white px-4 py-2 rounded-full font-bold">
-          {{ currentLanguage === 'FR' ? 'Ouvert' : 'Open' }}
-        </div>
+        <div class="text-xl font-bold">Statut actuel</div>
+        <div class="bg-green-500 text-white px-4 py-2 rounded-full font-bold">Ouvert</div>
       </div>
       
       <div class="bg-white/10 p-6 rounded-lg mb-8">
         <div class="flex justify-between items-center mb-4">
-          <div class="text-lg font-semibold">{{ currentLanguage === 'FR' ? 'Jours de semaine' : 'Weekdays' }}</div>
+          <div class="text-lg font-semibold">Jours de semaine</div>
           <div class="text-gold-300 font-bold">24/7</div>
         </div>
         
         <div class="flex justify-between items-center mb-4">
-          <div class="text-lg font-semibold">{{ currentLanguage === 'FR' ? 'Week-end' : 'Weekend' }}</div>
+          <div class="text-lg font-semibold">Week-end</div>
           <div class="text-gold-300 font-bold">24/7</div>
         </div>
         
         <div class="flex justify-between items-center">
-          <div class="text-lg font-semibold">{{ currentLanguage === 'FR' ? 'Jours fériés' : 'Holidays' }}</div>
+          <div class="text-lg font-semibold">Jours fériés</div>
           <div class="text-gold-300 font-bold">24/7</div>
         </div>
       </div>
       
       <p class="text-center text-gold-200">
-        {{ currentLanguage === 'FR' 
-          ? 'Notre parking est accessible 24h/24 et 7j/7 pour tous les abonnés avec un abonnement actif.'
-          : 'Our parking is accessible 24/7 for all subscribers with an active subscription.' }}
+        Notre parking est accessible 24h/24 et 7j/7 pour tous les abonnés avec un abonnement actif.
       </p>
     </div>
   </section>
   
   <!-- CTA Section -->
   <section class="bg-gradient-to-r from-primary to-purple-800 text-white p-12 rounded-xl text-center">
-    <h2 class="text-3xl font-bold mb-4">
-      {{ currentLanguage === 'FR' ? 'Prêt à essayer Parkiny ?' : 'Ready to try Parkiny?' }}
-    </h2>
+    <h2 class="text-3xl font-bold mb-4">Prêt à essayer Parkiny ?</h2>
     <p class="text-xl text-gold-200 mb-8">
-      {{ currentLanguage === 'FR' 
-        ? 'Inscrivez-vous dès aujourd\'hui et découvrez une nouvelle façon de stationner.'
-        : 'Sign up today and discover a new way to park.' }}
+      Inscrivez-vous dès aujourd'hui et découvrez une nouvelle façon de stationner.
     </p>
     <div class="flex flex-col sm:flex-row justify-center gap-4">
-      <a routerLink="/auth/register" class="bg-gold-500 text-dark px-8 py-3 rounded-lg font-bold text-lg hover:bg-gold-600 transition-colors inline-block">
-        {{ currentLanguage === 'FR' ? 'S\'inscrire' : 'Sign Up' }}
+      <a routerLink="/auth" [queryParams]="{signup: true}" class="bg-gold-500 text-dark px-8 py-3 rounded-lg font-bold text-lg hover:bg-gold-600 transition-colors inline-block">
+        S'inscrire
       </a>
-      <a routerLink="/app/user/dashboard/faq" class="bg-white/10 text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-white/20 transition-colors inline-block">
-        {{ currentLanguage === 'FR' ? 'En savoir plus' : 'Learn More' }}
+      <a routerLink="/faq" class="bg-white/10 text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-white/20 transition-colors inline-block">
+        En savoir plus
       </a>
     </div>
   </section>

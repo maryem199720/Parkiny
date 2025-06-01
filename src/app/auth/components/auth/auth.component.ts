@@ -1,3 +1,4 @@
+// src/app/auth/components/auth/auth.component.ts
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,14 +8,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-auth',
-  templateUrl: './auth.component.html',
-  styleUrls: ['./auth.component.css'],
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatSnackBarModule
-  ]
+  imports: [CommonModule, ReactiveFormsModule, MatSnackBarModule],
+  templateUrl: './auth.component.html',
+  styleUrls: ['./auth.component.css']
 })
 export class AuthComponent implements OnInit {
   isSignUp = false;
@@ -33,7 +30,7 @@ export class AuthComponent implements OnInit {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      rememberMe: [false] // Added rememberMe control
+      rememberMe: [false]
     });
 
     this.signupForm = this.fb.group({
@@ -47,7 +44,6 @@ export class AuthComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Load remembered email if exists
     const rememberedEmail = localStorage.getItem('rememberedEmail');
     if (rememberedEmail) {
       this.loginForm.patchValue({ email: rememberedEmail, rememberMe: true });
@@ -62,7 +58,6 @@ export class AuthComponent implements OnInit {
 
   toggleForm(): void {
     this.isSignUp = !this.isSignUp;
-    console.log('isSignUp:', this.isSignUp); // Debug log
   }
 
   toggleLoginPassword(): void {
@@ -84,18 +79,14 @@ export class AuthComponent implements OnInit {
     }
 
     const { email, password, rememberMe } = this.loginForm.value;
-    
-    // Handle remember me locally
     if (rememberMe) {
       localStorage.setItem('rememberedEmail', email);
     } else {
       localStorage.removeItem('rememberedEmail');
     }
 
-    // Only send email and password to the API
     this.authService.login({ email, password }).subscribe({
-      next: (response) => {
-        // Success is handled in the service
+      next: () => {
         this.snackBar.open('Connexion réussie!', 'Fermer', { duration: 3000 });
       },
       error: (err) => {
@@ -112,13 +103,9 @@ export class AuthComponent implements OnInit {
 
     const { confirmPassword, ...userData } = this.signupForm.value;
     this.authService.register(userData).subscribe({
-      next: (res) => {
-        if (res.message?.toLowerCase().includes('success')) {
-          this.snackBar.open('Inscription réussie !', 'Fermer', { duration: 3000 });
-          this.isSignUp = false;
-        } else {
-          this.snackBar.open('Compte créé avec succès !', 'Fermer', { duration: 3000 });
-        }
+      next: () => {
+        this.snackBar.open('Inscription réussie !', 'Fermer', { duration: 3000 });
+        this.isSignUp = false;
       },
       error: (err) => {
         this.snackBar.open(err.error?.message || 'Erreur lors de l\'inscription', 'Fermer', { duration: 3000 });

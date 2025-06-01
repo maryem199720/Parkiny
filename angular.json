@@ -6,36 +6,29 @@
     "smart-parking-app": {
       "projectType": "application",
       "schematics": {},
-      "root": "./",
+      "root": "",
       "sourceRoot": "src",
       "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
+          "builder": "@angular-builders/custom-webpack:browser",
           "options": {
+            "customWebpackConfig": {
+              "path": "./src/custom-webpack.config.js"
+            },
             "outputPath": "dist/smart-parking-app",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": ["qrcode"],
             "assets": [
               "src/favicon.ico",
-              "src/assets",
-              {
-                "glob": "**/*",
-                "input": "src/assets/fonts/remixicon",
-                "output": "/assets/fonts/remixicon/"
-              }
+              "src/assets"
             ],
             "styles": [
-              "node_modules/mapbox-gl/dist/mapbox-gl.css",
-              "src/assets/fonts/remixicon/remixicon.css",
+              "node_modules/flatpickr/dist/flatpickr.min.css",
               "src/styles.scss"
             ],
-            "stylePreprocessorOptions": {
-              "includePaths": ["src"]
-            },
             "scripts": []
           },
           "configurations": {
@@ -52,24 +45,21 @@
                   "maximumError": "4kb"
                 }
               ],
-              "outputHashing": "all",
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.prod.ts"
-                }
-              ]
+              "outputHashing": "all"
             },
             "development": {
+              "buildOptimizer": false,
               "optimization": false,
+              "vendorChunk": true,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "namedChunks": true
             }
           },
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
+          "builder": "@angular-builders/custom-webpack:dev-server",
           "configurations": {
             "production": {
               "buildTarget": "smart-parking-app:build:production"
@@ -91,10 +81,11 @@
           "options": {
             "polyfills": ["zone.js", "zone.js/testing"],
             "tsConfig": "tsconfig.spec.json",
-            "assets": ["src/favicon.ico", "src/assets"],
+            "assets": [
+              "src/favicon.ico",
+              "src/assets"
+            ],
             "styles": [
-              "node_modules/mapbox-gl/dist/mapbox-gl.css",
-              "src/assets/fonts/remixicon/remixicon.css",
               "src/styles.scss"
             ],
             "scripts": []
@@ -104,6 +95,6 @@
     }
   },
   "cli": {
-    "analytics": "235f2836-1332-441d-a87a-3e9f610f3eae"
+    "analytics": false
   }
 }

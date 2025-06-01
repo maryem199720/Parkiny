@@ -1,87 +1,55 @@
+<!-- src/app/components/about/about.component.html -->
 <div class="about-hero mb-16">
   <div class="container mx-auto px-6">
-    <h1 class="text-4xl md:text-5xl font-bold mb-4">{{ translate('about.hero.title') }}</h1>
-    <p class="text-xl text-gold-200">{{ translate('about.hero.subtitle') }}</p>
+    <h1 class="text-4xl md:text-5xl font-bold mb-4">{{ aboutContent.hero.title }}</h1>
+    <p class="text-xl text-gold-200">{{ aboutContent.hero.subtitle }}</p>
   </div>
 </div>
 
-<!-- Loading Spinner -->
-<div class="loading-spinner" *ngIf="isLoading">
-  <div class="spinner"></div>
+<div *ngIf="isLoading" class="flex justify-center items-center h-64">
+  <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"></div>
 </div>
 
 <div class="container mx-auto px-6 py-16" *ngIf="!isLoading">
-  <!-- Client Section -->
   <section class="mb-20">
-    <h2 class="text-3xl font-bold text-center mb-12 section-title">
-      <span *ngIf="currentLanguage === 'FR'">Notre Client</span>
-      <span *ngIf="currentLanguage === 'EN'">Our Client</span>
-    </h2>
-    
+    <h2 class="text-3xl font-bold text-center mb-12 section-title">Our Client</h2>
     <div class="bg-white rounded-xl shadow-lg overflow-hidden client-card">
       <div class="md:flex">
         <div class="md:w-1/3 bg-primary p-8 text-white flex flex-col justify-center items-center text-center">
-          <h3 class="text-2xl font-bold mb-2">{{ aboutContent.client?.name || 'TuniPark' }}</h3>
-          <p class="text-gold-200 mb-4">
-            <span *ngIf="currentLanguage === 'FR'">Fondée en </span>
-            <span *ngIf="currentLanguage === 'EN'">Founded in </span>
-            {{ aboutContent.client?.founded || '2020' }}
-          </p>
-          <p class="text-sm">{{ aboutContent.client?.location || 'Tunis, Tunisie' }}</p>
+          <h3 class="text-2xl font-bold mb-2">{{ aboutContent.client.name }}</h3>
+          <p class="text-gold-200 mb-4">Founded in {{ aboutContent.client.founded }}</p>
+          <p class="text-sm">{{ aboutContent.client.location }}</p>
         </div>
         <div class="md:w-2/3 p-8">
-          <p class="text-gray-700 leading-relaxed">
-            {{ aboutContent.client?.description || 'Description not available' }}
-          </p>
+          <p class="text-gray-700 leading-relaxed">{{ aboutContent.client.description }}</p>
         </div>
       </div>
     </div>
   </section>
-  
-  <!-- Project Section -->
+
   <section class="mb-20">
-    <h2 class="text-3xl font-bold text-center mb-12 section-title">
-      {{ aboutContent.project?.title || (currentLanguage === 'FR' ? 'Projet de Fin d\'Études - Juin 2025' : 'Final Year Project - June 2025') }}
-    </h2>
-    
+    <h2 class="text-3xl font-bold text-center mb-12 section-title">{{ aboutContent.project.title }}</h2>
     <div class="bg-gray-50 p-8 rounded-xl">
-      <p class="text-gray-700 leading-relaxed mb-8">
-        {{ aboutContent.project?.description || 'Description not available' }}
-      </p>
-      
-      <h3 class="text-xl font-semibold mb-4">
-        <span *ngIf="currentLanguage === 'FR'">Fonctionnalités Principales</span>
-        <span *ngIf="currentLanguage === 'EN'">Main Features</span>
-      </h3>
-      
+      <p class="text-gray-700 leading-relaxed mb-8">{{ aboutContent.project.description }}</p>
+      <h3 class="text-xl font-semibold mb-4">Main Features</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-start" *ngFor="let feature of aboutContent.project?.features">
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex items-start" *ngFor="let feature of aboutContent.project.features">
           <div class="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-full mr-4 mt-1 text-primary">
             <i class="ri-check-line"></i>
           </div>
-          <div>
-            <p class="text-gray-700">{{ feature }}</p>
-          </div>
+          <p class="text-gray-700">{{ feature }}</p>
         </div>
       </div>
     </div>
   </section>
-  
-  <!-- Team Section -->
+
   <section class="mb-20">
-    <h2 class="text-3xl font-bold text-center mb-12 section-title">
-      {{ aboutContent.team?.title || (currentLanguage === 'FR' ? 'Notre Équipe' : 'Our Team') }}
-    </h2>
-    
+    <h2 class="text-3xl font-bold text-center mb-12 section-title">{{ aboutContent.team.title }}</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-      <div class="team-member text-center" *ngFor="let member of aboutContent.team?.members">
+      <div class="team-member text-center" *ngFor="let member of aboutContent.team.members">
         <div class="w-32 h-32 mx-auto bg-gray-200 rounded-full mb-4 overflow-hidden">
-          <img 
-            [src]="member.image || 'https://via.placeholder.com/128x128'" 
-            alt="{{ member.name }}"
-            class="w-full h-full object-cover"
-            onerror="this.src='https://via.placeholder.com/128x128'; this.onerror=null;"
-          >
+          <img [src]="member.image || 'https://via.placeholder.com/128x128'" alt="{{ member.name }}"
+               class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/128x128'; this.onerror=null;">
         </div>
         <h3 class="text-xl font-semibold mb-1">{{ member.name }}</h3>
         <p class="text-primary mb-3">{{ member.role }}</p>
@@ -89,20 +57,13 @@
       </div>
     </div>
   </section>
-  
-  <!-- Technology Section -->
+
   <section class="mb-20">
-    <h2 class="text-3xl font-bold text-center mb-12 section-title">
-      {{ aboutContent.technology?.title || (currentLanguage === 'FR' ? 'Notre Technologie' : 'Our Technology') }}
-    </h2>
-    
+    <h2 class="text-3xl font-bold text-center mb-12 section-title">{{ aboutContent.technology.title }}</h2>
     <div class="bg-white p-8 rounded-xl shadow-lg mb-10">
-      <p class="text-gray-700 leading-relaxed mb-8">
-        {{ aboutContent.technology?.description || 'Description not available' }}
-      </p>
-      
+      <p class="text-gray-700 leading-relaxed mb-8">{{ aboutContent.technology.description }}</p>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div class="tech-feature p-6 rounded-lg border border-gray-200" *ngFor="let feature of aboutContent.technology?.features">
+        <div class="tech-feature p-6 rounded-lg border border-gray-200" *ngFor="let feature of aboutContent.technology.features">
           <div class="flex items-center mb-3">
             <div class="w-8 h-8 flex items-center justify-center bg-gold-100 rounded-full mr-3 text-gold-600">
               <i class="ri-check-line"></i>
@@ -112,36 +73,21 @@
         </div>
       </div>
     </div>
-    
     <div class="bg-primary text-white p-8 rounded-xl">
       <div class="flex flex-col md:flex-row items-center justify-between">
         <div class="mb-6 md:mb-0 md:mr-8">
-          <h3 class="text-2xl font-bold mb-4">
-            <span *ngIf="currentLanguage === 'FR'">Vous voulez en savoir plus ?</span>
-            <span *ngIf="currentLanguage === 'EN'">Want to know more?</span>
-          </h3>
-          <p class="text-gold-200">
-            <span *ngIf="currentLanguage === 'FR'">Contactez-nous pour plus d'informations sur notre technologie de reconnaissance de plaques d'immatriculation.</span>
-            <span *ngIf="currentLanguage === 'EN'">Contact us for more information about our license plate recognition technology.</span>
-          </p>
+          <h3 class="text-2xl font-bold mb-4">Want to know more?</h3>
+          <p class="text-gold-200">Contact us for more information about our license plate recognition technology.</p>
         </div>
-        <a routerLink="/app/user/dashboard/contact" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-          <span *ngIf="currentLanguage === 'FR'">Nous contacter</span>
-          <span *ngIf="currentLanguage === 'EN'">Contact Us</span>
-        </a>
+        <a routerLink="/contact" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">Contact Us</a>
       </div>
     </div>
   </section>
-  
-  <!-- Timeline Section -->
+
   <section class="mb-20">
-    <h2 class="text-3xl font-bold text-center mb-16 section-title">
-      {{ aboutContent.timeline?.title || (currentLanguage === 'FR' ? 'Notre Parcours' : 'Our Journey') }}
-    </h2>
-    
+    <h2 class="text-3xl font-bold text-center mb-16 section-title">{{ aboutContent.timeline.title }}</h2>
     <div class="timeline">
-      <div *ngFor="let event of aboutContent.timeline?.events; let i = index" 
-           [ngClass]="{'timeline-item': true, 'timeline-left': i % 2 === 0, 'timeline-right': i % 2 !== 0}">
+      <div *ngFor="let event of aboutContent.timeline.events; let i = index" [ngClass]="{'timeline-item': true, 'timeline-left': i % 2 === 0, 'timeline-right': i % 2 !== 0}">
         <div class="timeline-content">
           <h3 class="text-lg font-semibold text-primary mb-1">{{ event.date }}</h3>
           <h4 class="text-xl font-bold mb-2">{{ event.title }}</h4>
@@ -150,20 +96,10 @@
       </div>
     </div>
   </section>
-  
-  <!-- CTA Section -->
+
   <section class="bg-gradient-to-r from-primary to-purple-800 text-white p-12 rounded-xl text-center">
-    <h2 class="text-3xl font-bold mb-4">
-      <span *ngIf="currentLanguage === 'FR'">Projet de Fin d'Études - Juin 2025</span>
-      <span *ngIf="currentLanguage === 'EN'">Final Year Project - June 2025</span>
-    </h2>
-    <p class="text-xl text-gold-200 mb-8">
-      <span *ngIf="currentLanguage === 'FR'">Développé par des étudiants en informatique pour répondre aux besoins de TuniPark.</span>
-      <span *ngIf="currentLanguage === 'EN'">Developed by computer science students to meet TuniPark's needs.</span>
-    </p>
-    <a routerLink="/app/user/dashboard/contact" class="bg-gold-500 text-dark px-10 py-4 rounded-lg font-bold text-lg hover:bg-gold-600 transition-colors inline-block">
-      <span *ngIf="currentLanguage === 'FR'">Contactez-nous</span>
-      <span *ngIf="currentLanguage === 'EN'">Contact Us</span>
-    </a>
+    <h2 class="text-3xl font-bold mb-4">Final Year Project - June 2025</h2>
+    <p class="text-xl text-gold-200 mb-8">Developed by computer science students to meet TuniPark’s needs.</p>
+    <a routerLink="/contact" class="bg-gold-500 text-dark px-10 py-4 rounded-lg font-bold text-lg hover:bg-gold-600 transition-colors inline-block">Contact Us</a>
   </section>
 </div>

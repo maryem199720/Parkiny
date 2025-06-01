@@ -1,3 +1,4 @@
+// src/app/auth/services/auth/auth.service.ts
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -6,7 +7,7 @@ import { tap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 
 interface AuthResponse {
-  message: any;
+  message: string; // Changed from any to string
   token: string;
   id: number;
   firstName: string;
@@ -26,6 +27,14 @@ interface User {
   initials: string;
 }
 
+interface RegisterData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private apiUrl = 'http://localhost:8082/parking/api/auth';
@@ -40,8 +49,11 @@ export class AuthService {
     private router: Router,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    console.log('AuthService initialized');
     if (isPlatformBrowser(this.platformId)) {
-      this.authStatus.next(!!localStorage.getItem(this.tokenKey));
+      const token = localStorage.getItem(this.tokenKey);
+      console.log('Initial auth check: token exists:', !!token);
+      this.authStatus.next(!!token);
     }
   }
 
@@ -71,7 +83,7 @@ export class AuthService {
     );
   }
 
-  register(userData: any): Observable<AuthResponse> {
+  register(userData: RegisterData): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, userData).pipe(
       tap({
         next: (response) => {
@@ -112,6 +124,7 @@ export class AuthService {
     const returnUrl = urlParams.get('returnUrl') || redirectPath;
 
     if (isPlatformBrowser(this.platformId)) {
+      console.log('Redirecting to:', returnUrl);
       this.router.navigateByUrl(returnUrl, { replaceUrl: true }).then(success => {
         if (!success) {
           console.error('Navigation failed to:', returnUrl);
@@ -178,6 +191,8 @@ export class AuthService {
   }
 
   toggleSidebar(): void {
-    this.sidebarOpen.next(!this.sidebarOpen.value);
+    const current = this.sidebarOpen.value;
+    this.sidebarOpen.next(!current);
+    console.log('Sidebar toggled:', !current);
   }
 }

@@ -1,33 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateService } from '../../services/translate.service';
+import { RouterModule } from '@angular/router'; // Add for routerLink
 import { ParkingService } from 'src/app/services/parking.service';
-
 
 @Component({
   selector: 'app-how-it-works',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule], // Add RouterModule for routerLink
   templateUrl: './how-it-works.component.html',
   styleUrls: ['./how-it-works.component.css']
 })
 export class HowItWorksComponent implements OnInit {
-  currentLanguage = 'FR';
   isLoading = true;
   parkingConfig: any = {};
-  
-  constructor(
-    private translateService: TranslateService,
-    private parkingService: ParkingService
-  ) { }
+
+  constructor(private parkingService: ParkingService) {}
 
   ngOnInit(): void {
-    // Subscribe to language changes
-    this.translateService.getLanguage().subscribe(lang => {
-      this.currentLanguage = lang;
-    });
-    
-    // Get parking configuration
+    console.log('HowItWorksComponent initialized'); // Debug log
     this.loadParkingConfig();
   }
 
@@ -46,12 +36,5 @@ export class HowItWorksComponent implements OnInit {
         this.isLoading = false;
       }
     });
-  }
-
-  /**
-   * Translate a key using the translation service
-   */
-  translate(key: string): string {
-    return this.translateService.translate(key);
   }
 }
