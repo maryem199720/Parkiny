@@ -1,24 +1,56 @@
 :host {
   display: block;
-  height: 100vh;
+  min-height: 100vh;
 }
 
 header {
-  height: 4rem; /* Adjust based on actual header height */
+  height: 5rem;
 }
 
 @media (min-width: 768px) {
   header {
-    height: 5rem; /* Adjust for desktop */
+    height: 6rem;
   }
 }
 
 main {
-  height: calc(100vh - 4rem); /* Adjust for header height */
+  min-height: calc(100vh - 5rem);
 }
 
 @media (min-width: 768px) {
   main {
-    height: calc(100vh - 5rem); /* Adjust for desktop header height */
+    min-height: calc(100vh - 6rem);
   }
+}
+
+.gold-glow {
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.5);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #4C2C9B; /* dark-purple */
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(107, 70, 193, 0.5); /* primary-purple/50 */
+}
+
+aside {
+  min-height: 100vh;
+  transition: transform 0.3s ease, width 0.3s ease;
+}
+
+aside a {
+  color: #4C2C9B;
+  text-decoration: none;
+}
+
+aside a.router-link-active {
+  background-color: #6A1B9A / 20;
+  color: #6A1B9A;
 }

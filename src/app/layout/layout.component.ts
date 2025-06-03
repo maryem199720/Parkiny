@@ -1,4 +1,3 @@
-// src/app/components/layout/layout.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
@@ -12,44 +11,55 @@ import { NavbarComponent } from '../navbar/navbar.component';
   standalone: true,
   imports: [CommonModule, RouterOutlet, NavbarComponent, FooterComponent],
   template: `
-    <app-navbar *ngIf="showNavbar"></app-navbar>
-    <div class="content" [ngClass]="{ 'with-navbar': showNavbar }">
+    <app-navbar></app-navbar>
+    <div class="content">
       <router-outlet></router-outlet>
     </div>
-    <app-footer *ngIf="showNavbar"></app-footer>
+    <app-footer></app-footer>
   `,
   styles: [`
+    :host {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
     .content {
-      padding-top: 0;
-      min-height: calc(100vh - 64px); /* Adjust based on navbar height */
+      flex: 1;
+      /* Remove padding-top to avoid gap */
+    }
+
+    /* Ensure navbar height is accounted for without extra space */
+    app-navbar {
+      height: 64px; /* Match the assumed navbar height */
+      margin-bottom: 0;
+    }
+
+    app-footer {
+      margin-top: 0;
+    }
+
+    .content > * {
+      margin-top: 0;
     }
   `]
 })
 export class LayoutComponent implements OnInit, OnDestroy {
-  showNavbar = true;
   private routerSubscription!: Subscription;
 
   constructor(private router: Router) {}
 
   ngOnInit(): void {
     console.log('LayoutComponent initialized, Initial URL:', this.router.url);
-    this.updateNavbarVisibility(this.router.url);
 
     this.routerSubscription = this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
       .subscribe(event => {
         console.log('NavigationEnd URL:', event.urlAfterRedirects || event.url);
-        this.updateNavbarVisibility(event.urlAfterRedirects || event.url);
       });
   }
 
   ngOnDestroy(): void {
     this.routerSubscription?.unsubscribe();
-  }
-
-  private updateNavbarVisibility(url: string): void {
-    const shouldHide = url.startsWith('/auth') || url.startsWith('/dashboard') || url.startsWith('/app/admin/dashboard');
-    this.showNavbar = !shouldHide;
-    console.log('URL:', url, 'showNavbar:', this.showNavbar);
   }
 }

@@ -1,0 +1,25 @@
+<div class="p-6">
+  <h1 class="text-3xl font-bold text-primary-purple mb-6">Notifications</h1>
+  <div class="space-y-4">
+    <div *ngIf="notifications.length === 0" class="flex flex-col items-center py-8 text-dark-purple">
+      <i class="ri-notification-3-line text-5xl mb-3 text-gold-500"></i>
+      <p class="text-lg">Aucune notification</p>
+    </div>
+    <div *ngFor="let notification of notifications" 
+         class="p-4 rounded-lg border-l-4 border-primary-purple bg-primary-purple/10 hover:bg-primary-purple/20 transition-all duration-300 flex justify-between items-center"
+         [ngClass]="{'opacity-50': notification.isRead}">
+      <div>
+        <p class="text-sm text-dark-purple">{{ notification.createdAt | date:'short' }}</p>
+        <p class="text-base font-medium text-primary-purple">{{ notification.message }}</p>
+        <div *ngIf="notification.action && notification.action.action === 'RENEW'" class="mt-2">
+          <button mat-raised-button class="btn-primary px-4 py-1 text-sm" (click)="handleAction(notification)">Renouveler</button>
+        </div>
+      </div>
+      <button mat-icon-button (click)="markAsRead(notification)" 
+              [disabled]="notification.isRead"
+              class="text-primary-purple hover:text-dark-purple">
+        <i class="ri-check-line text-xl" [ngClass]="{'text-gray-400': notification.isRead}"></i>
+      </button>
+    </div>
+  </div>
+</div>

@@ -4,27 +4,30 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthService } from 'src/app/auth/services/auth/auth.service';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 @Component({
-  selector: 'app-profile-password',
+  selector: 'app-forgot-password',
   standalone: true,
   imports: [CommonModule, FormsModule, MatSnackBarModule, RouterLink],
-  templateUrl: './profile-password.component.html',
+  templateUrl: './forgot-password.component.html',
+  styleUrls: ['./forgot-password.component.css'],
   styles: [`
     :host {
       display: block;
     }
   `]
 })
-export class ProfilePasswordComponent implements OnInit {
+export class ForgotPasswordComponent implements OnInit {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
 
-  changePasswordForm = {
-    currentPassword: '',
+  forgotPasswordForm = {
+    email: '',
     newPassword: '',
+    repeatPassword: '',
     verificationCode: ''
   };
 
@@ -42,26 +45,22 @@ export class ProfilePasswordComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.resetForm();
+    this.resetForm(); // Reset form state on component initialization
   }
 
-  // Step 1: Request Verification Code (Logged-In Users)
-  requestVerificationCode(): void {
+  // Step 1: Request Password Reset
+  requestPasswordReset(): void {
     this.isFormSubmitted.set(true);
-    if (!this.changePasswordForm.currentPassword || !this.changePasswordForm.newPassword) {
-      this.errorMessage.set('Veuillez remplir tous les champs');
+    if (!this.forgotPasswordForm.email) {
+      this.errorMessage.set('Email requis');
       return;
     }
     this.isLoading.set(true);
     this.errorMessage.set(null);
     this.http
       .post<{ message: string }>(
-        'http://localhost:8082/parking/api/user/request-change-password-code',
-        {
-          currentPassword: this.changePasswordForm.currentPassword,
-          newPassword: this.changePasswordForm.newPassword,
-          verificationCode: ''
-        },
+        'http://localhost:8082/parking/api/user/request-password-reset',
+        { method: 'email', email: this.forgotPasswordForm.email, phone: null },
         { headers: this.getHeaders() }
       )
       .subscribe({
@@ -77,28 +76,39 @@ export class ProfilePasswordComponent implements OnInit {
       });
   }
 
-  // Step 2: Submit Change Password (Logged-In Users)
-  submitChangePassword(): void {
+  // Step 2: Reset Password
+  resetPassword(): void {
     this.isFormSubmitted.set(true);
     if (
-      !this.changePasswordForm.currentPassword ||
-      !this.changePasswordForm.newPassword ||
-      !this.changePasswordForm.verificationCode
+      !this.forgotPasswordForm.newPassword ||
+      !this.forgotPasswordForm.repeatPassword ||
+      !this.forgotPasswordForm.verificationCode
     ) {
       this.errorMessage.set('Veuillez remplir tous les champs');
+      return;
+    }
+    if (this.forgotPasswordForm.newPassword !== this.forgotPasswordForm.repeatPassword) {
+      this.errorMessage.set('Les mots de passe ne correspondent pas');
       return;
     }
     this.isLoading.set(true);
     this.errorMessage.set(null);
     this.http
-      .post<{ message: string }>('http://localhost:8082/parking/api/user/change-password', this.changePasswordForm, {
-        headers: this.getHeaders()
-      })
+      .post<{ message: string }>(
+        'http://localhost:8082/parking/api/user/change-password',
+        {
+          currentPassword: null,
+          newPassword: this.forgotPasswordForm.newPassword,
+          verificationCode: this.forgotPasswordForm.verificationCode
+        },
+        { headers: this.getHeaders() }
+      )
       .subscribe({
         next: (response) => {
           this.isLoading.set(false);
-          this.snackBar.open('Mot de passe mis à jour avec succès', 'Fermer', { duration: 3000 });
+          this.snackBar.open('Mot de passe réinitialisé avec succès', 'Fermer', { duration: 3000 });
           this.resetForm();
+          this.router.navigate(['/dashboard/profile/password']);
         },
         error: (err) => {
           this.errorMessage.set(`Erreur: ${err.error?.message || err.message}`);
@@ -110,14 +120,16 @@ export class ProfilePasswordComponent implements OnInit {
   // Go back to Step 1
   goBack(): void {
     this.isVerificationStep.set(false);
-    this.changePasswordForm.verificationCode = '';
+    this.forgotPasswordForm.newPassword = '';
+    this.forgotPasswordForm.repeatPassword = '';
+    this.forgotPasswordForm.verificationCode = '';
     this.errorMessage.set(null);
     this.isFormSubmitted.set(false);
   }
 
   // Reset the form
   resetForm(): void {
-    this.changePasswordForm = { currentPassword: '', newPassword: '', verificationCode: '' };
+    this.forgotPasswordForm = { email: '', newPassword: '', repeatPassword: '', verificationCode: '' };
     this.isVerificationStep.set(false);
     this.isFormSubmitted.set(false);
     this.errorMessage.set(null);

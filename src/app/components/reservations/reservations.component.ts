@@ -1,3 +1,4 @@
+
 import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { CommonModule, DatePipe } from '@angular/common';
@@ -11,7 +12,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { ReactiveFormsModule } from '@angular/forms';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { StorageService } from 'src/app/auth/services/storage/storage.service';
 import { SubscriptionService } from 'src/app/services/subscription.service';
@@ -26,14 +27,14 @@ export interface ParkingSpot {
 
 export interface ReservationResponse {
   reservationId: string;
-  paymentVerificationCode?: string;
-  reservationConfirmationCode?: string;
+  paymentVerificationCode?: string | null;
+  reservationConfirmationCode?: string | null;
   message?: string;
 }
 
 export interface PaymentResponse {
   reservationId: string;
-  paymentVerificationCode?: string;
+  paymentVerificationCode?: string | null;
   message?: string;
 }
 
@@ -359,17 +360,13 @@ export class ReservationsComponent implements OnInit {
         this.userVehicles = (response.vehicles || []).map((v: any) => ({
           id: v.id || 'UNKNOWN',
           matricule: (v.matricule || 'UNKNOWN').toUpperCase(),
-          vehicleType: v.vehicleType?.toUpperCase() || 'CAR', // Normalize to uppercase
-          name: `${v.brand || ''} ${v.model || ''}`.trim() || 'Vehicle'
+          vehicleType: v.vehicleType?.toUpperCase() || 'CAR',
+          name: `${v.brand || ''}${v.model || ''}`.trim() || 'Vehicle'
         }));
         if (this.userVehicles.length > 0) {
           this.selectedVehicleIndex = 0;
-        } else {
-          this.selectedVehicleIndex = null;
-          this.snackBar.open('Aucun véhicule enregistré. Veuillez en ajouter un.', 'OK', { duration: 5000 });
-          this.router.navigate(['/vehicles/add']);
         }
-        console.log('User vehicles:', this.userVehicles);
+        console.log('User vehicles:', JSON.stringify(this.userVehicles));
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
@@ -399,7 +396,7 @@ export class ReservationsComponent implements OnInit {
     const formattedEndTime = `${this.formatDateForBackend(date)}T${endTime.padStart(5, '0')}:00`;
 
     this.isLoading = true;
-    this.http.get<any[]>(`${this.apiUrl}/parking-spots/available`, {
+    this.http.get<{ id: string; available: boolean }[]>(`${this.apiUrl}/parking-spots/available`, {
       headers: this.getAuthHeaders(),
       params: {
         startTime: formattedStartTime,
@@ -407,7 +404,7 @@ export class ReservationsComponent implements OnInit {
       }
     }).subscribe({
       next: (response) => {
-        this.availableSpots = response.map(spot => ({
+        this.availableSpots = response.map((spot: { id: string; available: boolean }) => ({
           id: spot.id.toString(),
           status: spot.available ? 'available' : 'reserved'
         }));
@@ -416,7 +413,7 @@ export class ReservationsComponent implements OnInit {
           this.selectedPlace = null;
         }
         this.isLoading = false;
-        console.log('Available spots:', this.availableSpots);
+        console.log('Available spots:', JSON.stringify(this.availableSpots));
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
@@ -443,7 +440,7 @@ export class ReservationsComponent implements OnInit {
         features: spot.id.includes('A') ? ['Couvert', 'Large'] : ['Couvert']
       };
       this.calculateTotalAmount();
-      console.log('Selected spot:', this.selectedSpot);
+      console.log('Selected spot:', JSON.stringify(this.selectedSpot));
       this.cdr.detectChanges();
     } else {
       this.snackBar.open('Cette place est déjà réservée.', 'OK', { duration: 5000 });
@@ -466,9 +463,9 @@ export class ReservationsComponent implements OnInit {
     let cost = durationHours * basePrice;
 
     if (this.hasActiveSubscription) {
-      cost = 0; // Free for subscribed users
+      cost = 0;
     } else if (durationHours > 5) {
-      cost *= 0.9; // 10% discount for > 5 hours
+      cost *= 0.9;
     }
 
     this.totalAmount = cost > 0 ? Number(cost.toFixed(2)) : 0;
@@ -476,130 +473,97 @@ export class ReservationsComponent implements OnInit {
   }
 
  submitReservation(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
+  this.isLoading = true;
+  this.errorMessage = '';
 
-    if (!this.reservationForm.valid) {
-      this.errorMessage = 'Veuillez corriger les erreurs dans le formulaire.';
+  // Check form validity
+  if (!this.reservationForm.valid) {
+    this.errorMessage = 'Veuillez corriger les erreurs dans le formulaire.';
+    this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
+    this.isLoading = false;
+    this.cdr.detectChanges();
+    return;
+  }
+
+  // Check selected spot
+  if (!this.selectedSpot || !this.selectedSpot.id) {
+    this.errorMessage = 'Veuillez sélectionner une place de parking.';
+    this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
+    this.isLoading = false;
+    this.cdr.detectChanges();
+    return;
+  }
+
+  // Check selected vehicle
+  if (this.selectedVehicleIndex === null) {
+    this.errorMessage = 'Veuillez sélectionner un véhicule.';
+    this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
+    this.isLoading = false;
+    this.cdr.detectChanges();
+    return;
+  }
+
+  // Get form values
+  const dateValue = this.reservationForm.get('date')?.value || '';
+  const startTime = this.reservationForm.get('startTime')?.value || '';
+  const endTime = this.reservationForm.get('endTime')?.value || '';
+  const vehicleMatricule = this.userVehicles[this.selectedVehicleIndex].matricule;
+  const email = this.reservationForm.get('email')?.value;
+
+  // Log the matricule for debugging
+  console.log('Matricule being checked:', vehicleMatricule);
+  console.log('Length:', vehicleMatricule.length);
+  console.log('Characters (codes):', vehicleMatricule.split('').map(c => c.charCodeAt(0)));
+
+  // Updated regex to include Arabic Presentation Forms
+  const tunisianPlateRegex = /^[A-Za-z0-9\s\-\u0600-\u06FF\uFE70-\uFEFF]{6,}$/;
+  if (!tunisianPlateRegex.test(vehicleMatricule)) {
+    console.error('Invalid matricule detected:', vehicleMatricule);
+    this.errorMessage = 'Matricule invalide. Utilisez le format tunisien (ex. : 123 ABC 456 ou 987 تونس 6543)';
+    this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
+    this.isLoading = false;
+    this.cdr.detectChanges();
+    return;
+  }
+
+  // Rest of the reservation logic
+  const id = parseInt(this.selectedSpot.id.split('-')[1], 10);
+  const reservationData = {
+    userId: this.loggedInUserId!,
+    parkingPlaceId: id,
+    matricule: vehicleMatricule,
+    startTime: `${this.formatDateForBackend(dateValue)}T${startTime.padStart(5, '0')}:00`,
+    endTime: `${this.formatDateForBackend(dateValue)}T${endTime.padStart(5, '0')}:00`,
+    vehicleType: this.userVehicles[this.selectedVehicleIndex].vehicleType,
+    paymentMethod: this.hasActiveSubscription ? 'SUBSCRIPTION' : 'CARTE_BANCAIRE',
+    email: email,
+    subscriptionId: this.hasActiveSubscription ? this.subscriptionId : null,
+    specialRequest: null
+  };
+
+  console.log('Sending data:', reservationData);
+
+  this.http.post(`${this.apiUrl}/reservation`, reservationData, {
+    headers: this.getAuthHeaders()
+  }).subscribe({
+    next: (response) => {
+      this.isLoading = false;
+      this.snackBar.open('Réservation réussie!', 'OK', { duration: 5000 });
+      this.cdr.detectChanges();
+    },
+    error: (err) => {
+      console.error('Reservation error:', err);
+      this.errorMessage = 'Erreur lors de la réservation.';
       this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
       this.isLoading = false;
       this.cdr.detectChanges();
-      return;
     }
-
-    if (!this.selectedSpot || !this.selectedSpot.id) {
-      this.errorMessage = 'Veuillez sélectionner une place de parking.';
-      this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
-      this.isLoading = false;
-      this.cdr.detectChanges();
-      return;
-    }
-
-    if (this.selectedVehicleIndex === null) {
-      this.errorMessage = 'Veuillez sélectionner un véhicule.';
-      this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
-      this.isLoading = false;
-      this.cdr.detectChanges();
-      return;
-    }
-
-    const dateValue: string = this.reservationForm.get('date')?.value ?? '';
-    const startTime: string = this.reservationForm.get('startTime')?.value ?? '';
-    const endTime: string = this.reservationForm.get('endTime')?.value ?? '';
-    const vehicleMatricule = this.userVehicles[this.selectedVehicleIndex].matricule;
-    const email = this.reservationForm.get('email')?.value;
-
-    if (!/^[A-Z0-9]{3,10}$/.test(vehicleMatricule)) {
-      this.errorMessage = 'Matricule invalide. Utilisez 3 à 10 caractères alphanumériques en majuscules.';
-      this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
-      this.isLoading = false;
-      this.cdr.detectChanges();
-      return;
-    }
-
-    if (this.hasActiveSubscription && this.remainingPlaces <= 0) {
-      this.errorMessage = 'Aucune place restante dans votre abonnement.';
-      this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
-      this.isLoading = false;
-      this.cdr.detectChanges();
-      return;
-    }
-
-    // Parse parkingPlaceId safely
-    const idStr = this.selectedSpot.id.includes('-') ? this.selectedSpot.id.split('-').pop() : this.selectedSpot.id;
-    const parkingPlaceId = parseInt(idStr || '0', 10);
-    if (isNaN(parkingPlaceId) || parkingPlaceId <= 0) {
-      this.errorMessage = `ID de place de parking invalide: ${this.selectedSpot.id}`;
-      this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
-      this.isLoading = false;
-      this.cdr.detectChanges();
-      return;
-    }
-
-    // Ensure time format is HH:mm:ss
-    const formattedStartTime = `${this.formatDateForBackend(dateValue)}T${startTime.padStart(5, '0')}:00`;
-    const formattedEndTime = `${this.formatDateForBackend(dateValue)}T${endTime.padStart(5, '0')}:00`;
-
-    const reservationData = {
-      userId: this.loggedInUserId!,
-      parkingPlaceId: parkingPlaceId,
-      matricule: vehicleMatricule,
-      startTime: formattedStartTime,
-      endTime: formattedEndTime,
-      vehicleType: this.userVehicles[this.selectedVehicleIndex].vehicleType.toUpperCase() || 'CAR',
-      paymentMethod: this.hasActiveSubscription ? 'SUBSCRIPTION' : 'CARTE_BANCAIRE',
-      email: email,
-      subscriptionId: this.hasActiveSubscription ? this.subscriptionId : null,
-      specialRequest: null
-    };
-
-    console.log('Reservation request payload:', JSON.stringify(reservationData, null, 2));
-
-    this.http.post<ReservationResponse>(`${this.apiUrl}/createReservation`, reservationData, {
-      headers: this.getAuthHeaders()
-    }).subscribe({
-      next: (response) => {
-        this.reservationId = response.reservationId || null;
-        this.reservationConfirmationCode = response.reservationConfirmationCode || null;
-        this.paymentVerificationCode = response.paymentVerificationCode || null; // Handle payment verification code
-        this.reservationDetails = {
-          date: dateValue,
-          startTime: startTime,
-          endTime: endTime,
-          vehicleMatricule: vehicleMatricule
-        };
-        this.emailConfirmation = true;
-        if (this.hasActiveSubscription && this.reservationConfirmationCode) {
-          this.reservationForm.get('reservationConfirmationCode')?.setValidators([Validators.required]);
-          this.reservationForm.get('reservationConfirmationCode')?.updateValueAndValidity();
-          this.snackBar.open('Réservation créée. Vérifiez votre email pour le code de confirmation.', 'OK', { duration: 5000 });
-          this.currentStep = 3;
-        } else if (this.paymentVerificationCode) {
-          this.reservationForm.get('paymentVerificationCode')?.setValidators([Validators.required]);
-          this.reservationForm.get('paymentVerificationCode')?.updateValueAndValidity();
-          this.snackBar.open('Réservation créée. Vérifiez votre email pour le code de vérification de paiement.', 'OK', { duration: 5000 });
-          this.currentStep = 3;
-        } else {
-          this.snackBar.open('Réservation créée. Veuillez entrer les détails de paiement.', 'OK', { duration: 5000 });
-          this.currentStep = 3;
-        }
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('Reservation error response:', JSON.stringify(err, null, 2));
-        this.errorMessage = err.error?.message || 'Erreur lors de la création de la réservation.';
-        this.emailConfirmation = false;
-        this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      }
-    });
+  });
 }
 
   submitPayment(): void {
-    if (!this.paymentForm.valid) {
-      this.errorMessage = 'Veuillez compléter les informations de paiement.';
+    if (!this.paymentForm.valid || !this.paymentForm.get('cardNumber')?.value) {
+      this.errorMessage = 'Veuillez compléter et valider les informations de paiement.';
       this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
       this.isLoading = false;
       this.cdr.detectChanges();
@@ -614,25 +578,35 @@ export class ReservationsComponent implements OnInit {
       return;
     }
 
+    if (this.totalAmount <= 0) {
+      this.errorMessage = 'Le montant du paiement doit être supérieur à zéro.';
+      this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
+      this.isLoading = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
     const reservationIdNum = parseInt(this.reservationId.split('-').pop() || '0', 10);
     const paymentData = {
       reservationId: reservationIdNum,
       amount: this.totalAmount,
-      paymentMethod: 'CREDIT_CARD',
-      paymentReference: this.paymentForm.get('cardNumber')?.value?.substring(12) || 'XXXX',
+      payment_method: 'CARTE_BANCAIRE',
+      paymentReference: this.paymentForm.get('cardNumber')?.value?.substring(12, 16) || 'XXXX',
       cardDetails: {
-        cardName: this.paymentForm.get('cardName')?.value,
-        cardNumber: this.paymentForm.get('cardNumber')?.value,
-        cardExpiry: this.paymentForm.get('cardExpiry')?.value,
-        cardCvv: this.paymentForm.get('cardCvv')?.value
+        cardName: this.paymentForm.get('cardName')?.value || '',
+        cardNumber: this.paymentForm.get('cardNumber')?.value || '',
+        cardExpiry: this.paymentForm.get('cardExpiry')?.value || '',
+        cardCvv: this.paymentForm.get('cardCvv')?.value || ''
       }
     };
+
+    console.log('POST request:', JSON.stringify(paymentData));
 
     this.isLoading = true;
     this.http.post<PaymentResponse>(`${this.apiUrl}/payment/processPayment`, paymentData, {
       headers: this.getAuthHeaders()
     }).subscribe({
-      next: (response) => {
+      next: (response: PaymentResponse) => {
         this.paymentVerificationCode = response.paymentVerificationCode || null;
         this.reservationForm.get('paymentVerificationCode')?.setValidators([Validators.required]);
         this.reservationForm.get('paymentVerificationCode')?.updateValueAndValidity();
@@ -642,8 +616,8 @@ export class ReservationsComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
-        console.error('Payment error:', JSON.stringify(err, null, 2));
-        this.errorMessage = err.error?.message || 'Erreur lors du traitement du paiement.';
+        console.error('Error:', JSON.stringify(err, null, 2));
+        this.errorMessage = err.error?.message || 'Erreur lors du traitement du paiement';
         this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -665,12 +639,13 @@ export class ReservationsComponent implements OnInit {
       return;
     }
 
+    const params = new HttpParams()
+      .set('reservationId', reservationId)
+      .set('paymentVerificationCode', paymentVerificationCode);
+
     this.http.post(`${this.apiUrl}/confirmPayment`, null, {
       headers: this.getAuthHeaders(),
-      params: {
-        reservationId: reservationId,
-        paymentVerificationCode: paymentVerificationCode
-      }
+      params
     }).subscribe({
       next: (response: any) => {
         this.reservationId = response.reservationId || this.reservationId;
@@ -683,7 +658,7 @@ export class ReservationsComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
-        console.error('Payment confirmation error:', JSON.stringify(err, null, 2));
+        console.error('Error:', JSON.stringify(err, null, 2));
         this.errorMessage = err.error?.message || 'Erreur lors de la confirmation du paiement.';
         this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
         this.isLoading = false;
@@ -706,12 +681,13 @@ export class ReservationsComponent implements OnInit {
       return;
     }
 
+    const params = new HttpParams()
+      .set('reservationId', reservationId)
+      .set('reservationConfirmationCode', confirmationCode);
+
     this.http.post(`${this.apiUrl}/confirmReservation`, null, {
       headers: this.getAuthHeaders(),
-      params: {
-        reservationId: reservationId,
-        reservationConfirmationCode: confirmationCode
-      }
+      params
     }).subscribe({
       next: () => {
         this.isReservationConfirmed = true;
@@ -723,8 +699,8 @@ export class ReservationsComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
-        console.error('Reservation confirmation error:', JSON.stringify(err, null, 2));
-        this.errorMessage = err.error?.message || 'Erreur lors de la confirmation de la réservation.';
+        console.error('Error:', JSON.stringify(err, null, 2));
+        this.errorMessage = err.error?.message || 'Erreur lors de la confirmation';
         this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -741,11 +717,12 @@ export class ReservationsComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
+    const params = new HttpParams()
+      .set('reservationId', this.reservationId);
+
     this.http.post(`${this.apiUrl}/resendConfirmation`, null, {
       headers: this.getAuthHeaders(),
-      params: {
-        reservationId: this.reservationId
-      }
+      params
     }).subscribe({
       next: () => {
         this.snackBar.open('Email de confirmation renvoyé.', 'OK', { duration: 5000 });
@@ -753,8 +730,8 @@ export class ReservationsComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
-        console.error('Resend confirmation error:', JSON.stringify(err, null, 2));
-        this.errorMessage = err.error?.message || 'Erreur lors du renvoi de l\'email.';
+        console.error('Error:', JSON.stringify(err, null, 2));
+        this.errorMessage = err.error?.message || 'Erreur lors du renvoi de l\'email';
         this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -800,7 +777,7 @@ export class ReservationsComponent implements OnInit {
           this.cdr.detectChanges();
         })
         .catch(err => {
-          console.error('QR code generation error:', err);
+          console.error('Error:', err);
           this.errorMessage = 'Erreur lors de la génération du QR code.';
           this.snackBar.open(this.errorMessage, 'OK', { duration: 6000 });
           this.cdr.detectChanges();
@@ -853,7 +830,7 @@ export class ReservationsComponent implements OnInit {
 
   selectVehicle(index: number): void {
     this.selectedVehicleIndex = index;
-    console.log('Selected vehicle:', this.userVehicles[index]);
+    console.log('Selected vehicle:', JSON.stringify(this.userVehicles[index]));
     this.cdr.detectChanges();
   }
 

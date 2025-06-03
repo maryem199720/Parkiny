@@ -1,528 +1,531 @@
-<main class="container mx-auto px-4 py-8">
-  <div class="max-w-4xl mx-auto">
-    <!-- Header -->
-    <div class="text-center mb-12">
-      <h1 class="text-4xl font-bold text-dark mb-4 font-display">
-        Réservez avec <span class="text-primary-purple">Parki</span>
-      </h1>
-      <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-        Réservez votre place de parking en quelques étapes simples.
-      </p>
-    </div>
 
-    <!-- Subscription Banner -->
-    <div *ngIf="hasActiveSubscription; else noSubscription" class="subscription-banner">
-      <div class="flex items-center">
-        <i class="ri-verified-badge-line text-primary-purple text-2xl mr-3"></i>
-        <div>
-          <h3 class="font-semibold text-dark">Abonnement Premium (ID: {{ subscriptionId }})</h3>
-          <p class="text-sm text-gray-600">
-            Valide jusqu'au {{ subscriptionEndDate | date:'MM/dd/yyyy' }} | {{ remainingPlaces }}/10 places restantes
-          </p>
-        </div>
-      </div>
-    </div>
-    <ng-template #noSubscription>
-      <div class="subscription-banner text-center">
-        <p class="text-gray-600">
-          Vous n'avez pas d'abonnement actif. <a routerLink="/app/user/subscriptions" class="text-primary-purple underline hover:text-dark-purple">Souscrire maintenant</a>
+<div class="bg-gray-50 min-h-screen">
+  <main class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-dark mb-4 font-display">
+          Réservez avec <span class="text-primary-purple">Parkiny</span>
+        </h1>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+          Réservez votre place de parking en quelques étapes simples.
         </p>
       </div>
-    </ng-template>
 
-    <!-- Progress Bar -->
-    <div class="mb-12">
-      <div class="flex items-center mb-4">
-        <!-- Step 1 -->
+      <!-- Subscription Banner -->
+      <div *ngIf="hasActiveSubscription; else noSubscription" class="subscription-banner">
         <div class="flex items-center">
-          <div class="step-indicator"
-               [ngClass]="{
-                 'active': currentStep >= 1,
-                 'border-gray-300 text-gray-400': currentStep < 1
-               }">
-            <div class="flex items-center justify-center">
-              <i *ngIf="currentStep > 1" class="ri-check-line"></i>
-              <span *ngIf="currentStep <= 1">1</span>
-            </div>
-          </div>
-          <span class="ml-2 text-sm font-medium text-gray-700">
-            <i class="ri-map-pin-line mr-1 text-primary-purple"></i> Choix de la place
-          </span>
-        </div>
-        <div class="flex-1 mx-4">
-          <div class="progress-bar">
-            <div class="progress-fill" [style.width]="currentStep >= 2 ? '33.3%' : '0%'"></div>
-          </div>
-        </div>
-        <!-- Step 2 -->
-        <div class="flex items-center">
-          <div class="step-indicator"
-               [ngClass]="{
-                 'active': currentStep >= 2,
-                 'border-gray-300 text-gray-400': currentStep < 2
-               }">
-            <div class="flex items-center justify-center">
-              <i *ngIf="currentStep > 2" class="ri-check-line"></i>
-              <span *ngIf="currentStep <= 2">2</span>
-            </div>
-          </div>
-          <span class="ml-2 text-sm font-medium text-gray-700">
-            <i class="ri-file-list-line mr-1 text-primary-purple"></i> Détails
-          </span>
-        </div>
-        <div class="flex-1 mx-4">
-          <div class="progress-bar">
-            <div class="progress-fill" [style.width]="currentStep >= 3 ? '66.6%' : '0%'"></div>
-          </div>
-        </div>
-        <!-- Step 3 -->
-        <div class="flex items-center">
-          <div class="step-indicator"
-               [ngClass]="{
-                 'active': currentStep >= 3,
-                 'border-gray-300 text-gray-400': currentStep < 3
-               }">
-            <div class="flex items-center justify-center">
-              <i *ngIf="currentStep > 3" class="ri-check-line"></i>
-              <span *ngIf="currentStep <= 3">3</span>
-            </div>
-          </div>
-          <span class="ml-2 text-sm font-medium text-gray-700">
-            <i class="ri-shield-check-line mr-1 text-primary-purple"></i> {{ hasActiveSubscription ? 'Vérification' : 'Paiement' }}
-          </span>
-        </div>
-        <div class="flex-1 mx-4">
-          <div class="progress-bar">
-            <div class="progress-fill" [style.width]="currentStep >= 4 ? '100%' : '0%'"></div>
-          </div>
-        </div>
-        <!-- Step 4 -->
-        <div class="flex items-center">
-          <div class="step-indicator"
-               [ngClass]="{
-                 'active': currentStep >= 4,
-                 'border-gray-300 text-gray-400': currentStep < 4
-               }">
-            <span>4</span>
-          </div>
-          <span class="ml-2 text-sm font-medium text-gray-700">
-            <i class="ri-ticket-line mr-1 text-primary-purple"></i> Confirmation
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Error Message -->
-    <div *ngIf="errorMessage" class="error-message">
-      <i class="ri-error-warning-line mr-2"></i>
-      <span>{{ errorMessage }}</span>
-    </div>
-
-    <!-- Step 1: Spot Selection -->
-    <div *ngIf="currentStep === 1" class="mb-12">
-      <h2 class="text-2xl font-semibold text-dark mb-6 font-display">Choix de la place</h2>
-      <div class="form-container">
-        <div class="flex flex-wrap gap-3 mb-6">
-          <div class="flex items-center">
-            <div class="w-4 h-4 bg-blue-500 rounded-sm mr-2"></div>
-            <span class="text-sm text-gray-600">Standard (5 TND/h)</span>
-          </div>
-          <div class="flex items-center">
-            <div class="w-4 h-4 bg-purple-600 rounded-sm mr-2"></div>
-            <span class="text-sm text-gray-600">Premium (8 TND/h)</span>
-          </div>
-          <div class="flex items-center">
-            <div class="w-4 h-4 bg-gray-400 rounded-sm mr-2"></div>
-            <span class="text-sm text-gray-600">Réservé</span>
-          </div>
-          <div class="flex items-center">
-            <div class="w-4 h-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-sm mr-2"></div>
-            <span class="text-sm text-gray-600">Incluse dans abonnement</span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4 mb-6" *ngIf="!isLoading; else loadingSpinner">
-          <div *ngIf="availableSpots.length === 0" class="col-span-full text-center py-6">
-            <i class="ri-emotion-sad-line text-gray-500 text-3xl"></i>
-            <p class="text-gray-600 mt-2">Aucune place disponible.</p>
-          </div>
-          <div *ngFor="let spot of availableSpots"
-               class="parking-space"
-               [ngClass]="{
-                 'bg-blue-500 text-white': spot.status === 'available' && !spot.id.includes('A') && !hasActiveSubscription,
-                 'bg-purple-600 text-white': spot.status === 'available' && spot.id.includes('A') && !hasActiveSubscription,
-                 'bg-gradient-to-r from-purple-500 to-blue-500 text-white': spot.status === 'available' && hasActiveSubscription,
-                 'bg-gray-400 text-gray': spot.status === 'reserved',
-                 'border-2 border-primary-purple': selectedSpot?.id === spot.id
-               }"
-               (click)="selectSpot(spot)">
-            <div class="space-number font-bold text-center">{{ spot.id }}</div>
-            <div class="flex items-center mt-1 text-sm" *ngIf="spot.status === 'reserved'; else priceDisplay">
-              <i class="ri-lock-line text-gray-200 mr-1"></i>
-              <span>Réservé</span>
-            </div>
-            <ng-template #priceDisplay>
-              <div class="space-price text-sm mt-1 flex items-center">
-                <i *ngIf="hasActiveSubscription" class="ri-check-circle-line text-green-600 mr-1"></i>
-                {{ hasActiveSubscription ? 'INCLUSE' : (spot.id.includes('A') ? '8 TND/h' : '5 TND/h') }}
-              </div>
-            </ng-template>
-          </div>
-        </div>
-
-        <ng-template #loadingSpinner>
-          <div class="col-span-full text-center py-6">
-            <mat-spinner diameter="30"></mat-spinner>
-            <p class="text-gray-600 mt-2">Chargement...</p>
-          </div>
-        </ng-template>
-
-        <div *ngIf="selectedPlace" class="reservation-details">
-          <h4 class="text-lg font-semibold text-dark mb-4">Détails de la place</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="detail-item">
-              <i class="ri-map-pin-line text-primary-purple mr-2"></i>
-              <span>Place: <span class="font-medium">{{ selectedPlace.name }}</span></span>
-            </div>
-            <div class="detail-item">
-              <i class="ri-car-line text-primary-purple mr-2"></i>
-              <span>Type: <span class="font-medium">{{ selectedPlace.type }}</span></span>
-            </div>
-            <div class="detail-item">
-              <i class="ri-money-dollar-circle-line text-primary-purple mr-2"></i>
-              <span>Tarif: <span class="font-medium">{{ hasActiveSubscription ? 'Incluse' : (selectedPlace.price + ' TND/h') }}</span></span>
-            </div>
-            <div class="detail-item">
-              <i class="ri-star-line text-primary-purple mr-2"></i>
-              <span>Avantages: <span class="font-medium">{{ selectedPlace.features.join(', ') }}</span></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-8 flex justify-between">
-          <button type="button" class="btn-secondary px-6 py-3 rounded-md font-medium flex items-center" (click)="reset()">
-            <i class="ri-arrow-left-line mr-2"></i> Réinitialiser
-          </button>
-          <button type="button" class="btn-primary px-6 py-3 rounded-md font-medium flex items-center" (click)="nextStep()" [disabled]="!selectedSpot">
-            Suivant <i class="ri-arrow-right-line ml-2"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 2: Reservation Details -->
-    <div *ngIf="currentStep === 2" class="mb-12">
-      <h2 class="text-2xl font-semibold text-dark mb-6 font-display">Détails de la réservation</h2>
-      <div class="form-container">
-        <form [formGroup]="reservationForm" (ngSubmit)="nextStep()">
-          <div class="grid md:grid-cols-2 gap-6">
-            <div>
-              <label for="date" class="block text-sm font-medium text-gray-700 mb-2">Date de réservation</label>
-              <div class="relative">
-                <input id="date" formControlName="date" type="text" mask="00/00/0000" [showMaskTyped]="true" [dropSpecialCharacters]="false"
-                       class="input-field" placeholder="jj/MM/aaaa"
-                       (change)="onDateTimeChange()">
-                <i class="input-icon ri-calendar-line"></i>
-                <span class="floating-label">Date de réservation</span>
-              </div>
-              <div *ngIf="reservationForm.get('date')?.touched && reservationForm.get('date')?.invalid" class="text-red-600 text-sm mt-1">
-                <span *ngIf="reservationForm.get('date')?.hasError('required')">Date requise</span>
-                <span *ngIf="reservationForm.get('date')?.hasError('invalidFormat')">Format: jj/MM/aaaa</span>
-                <span *ngIf="reservationForm.get('date')?.hasError('invalidDate')">Date invalide</span>
-                <span *ngIf="reservationForm.get('date')?.hasError('outOfRange')">Date doit être aujourd'hui ou après</span>
-              </div>
-            </div>
-            <div>
-              <label for="startTime" class="block text-sm font-medium text-gray-700 mb-2">Heure de début</label>
-              <div class="relative">
-                <input id="startTime" formControlName="startTime" type="time"
-                       class="input-field"
-                       (change)="onDateTimeChange()">
-                <i class="input-icon ri-time-line"></i>
-                <span class="floating-label">Heure de début</span>
-              </div>
-              <div *ngIf="reservationForm.get('startTime')?.touched && reservationForm.get('startTime')?.invalid" class="text-red-600 text-sm mt-1">
-                <span *ngIf="reservationForm.get('startTime')?.hasError('required')">Heure requise</span>
-                <span *ngIf="reservationForm.get('startTime')?.hasError('invalidTime')">Heure doit être dans 1h minimum</span>
-              </div>
-            </div>
-            <div>
-              <label for="endTime" class="block text-sm font-medium text-gray-700 mb-2">Heure de fin</label>
-              <div class="relative">
-                <input id="endTime" formControlName="endTime" type="time"
-                       class="input-field"
-                       (change)="onDateTimeChange()">
-                <i class="input-icon ri-time-line"></i>
-                <span class="floating-label">Heure de fin</span>
-              </div>
-              <div *ngIf="reservationForm.get('endTime')?.touched && reservationForm.get('endTime')?.invalid" class="text-red-600 text-sm mt-1">
-                <span *ngIf="reservationForm.get('endTime')?.hasError('required')">Heure requise</span>
-                <span *ngIf="reservationForm.get('endTime')?.hasError('invalidEndTime')">Doit être après le début</span>
-              </div>
-            </div>
-            <div>
-              <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <div class="relative">
-                <input id="email" formControlName="email" type="email"
-                       class="input-field" placeholder="votre@email.com">
-                <i class="input-icon ri-mail-line"></i>
-                <span class="floating-label">Email</span>
-              </div>
-              <div *ngIf="reservationForm.get('email')?.touched && reservationForm.get('email')?.invalid" class="text-red-600 text-sm mt-1">
-                <span *ngIf="reservationForm.get('email')?.hasError('required')">Email requis</span>
-                <span *ngIf="reservationForm.get('email')?.hasError('pattern')">Email invalide</span>
-              </div>
-            </div>
-          </div>
-        </form>
-
-        <div class="mt-6">
-          <h3 class="text-lg font-semibold text-dark mb-3">Sélectionnez votre véhicule</h3>
-          <div class="border border-gray-200 rounded-lg">
-            <div *ngFor="let vehicle of userVehicles; let i = index"
-                 class="vehicle-item"
-                 [ngClass]="{'selected': selectedVehicleIndex === i}"
-                 (click)="selectVehicle(i)">
-              <i class="ri-car-line text-primary-purple text-2xl"></i>
-              <div>
-                <p class="font-medium text-dark">{{ vehicle.name }}</p>
-                <p class="text-sm text-gray-600">{{ vehicle.matricule }}</p>
-              </div>
-            </div>
-            <div *ngIf="userVehicles.length === 0" class="p-4 text-center text-gray-500">
-              <i class="ri-car-line text-2xl mb-2"></i>
-              <p>Aucun véhicule. <a routerLink="/app/user/profile" class="text-primary-purple underline hover:text-dark-purple">Ajoutez un véhicule</a>.</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-8 flex justify-between">
-          <button type="button" class="btn-secondary px-6 py-3 rounded-md font-medium flex items-center" (click)="prevStep()">
-            <i class="ri-arrow-left-line mr-2"></i> Retour
-          </button>
-          <button type="submit" class="btn-primary px-6 py-3 rounded-md font-medium flex items-center"
-                  [disabled]="reservationForm.invalid || selectedVehicleIndex === null"
-                  matTooltip="Complétez tous les champs"
-                  [matTooltipDisabled]="reservationForm.valid && selectedVehicleIndex !== null"
-                  (click)="nextStep()">
-            Suivant <i class="ri-arrow-right-line ml-2"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Step 3: Payment (Non-Subscribed) or Verification (Subscribed) -->
-    <div *ngIf="currentStep === 3" class="mb-6">
-      <h2 class="text-xl font-semibold text-dark mb-3">{{ hasActiveSubscription ? 'Vérification de la réservation' : 'Paiement' }}</h2>
-      <div class="form-container">
-        <div *ngIf="!hasActiveSubscription">
-          <form [formGroup]="paymentForm" (ngSubmit)="nextStep()">
-            <div class="grid md:grid-cols-2 gap-4">
-              <div>
-                <label for="cardName" class="block text-sm font-medium text-gray-700 mb-1">Nom sur la carte</label>
-                <div class="relative">
-                  <input id="cardName" formControlName="cardName" type="text"
-                         placeholder="Ex: Jean Dupont" class="input-field">
-                  <i class="input-icon ri-user-line"></i>
-                  <span class="floating-label">Nom sur la carte</span>
-                </div>
-                <div *ngIf="paymentForm.get('cardName')?.touched && paymentForm.get('cardName')?.hasError('required')" class="text-red-600 text-xs mt-1">Nom requis</div>
-              </div>
-              <div>
-                <label for="cardNumber" class="block text-sm font-medium text-gray-700 mb-1">Numéro de carte</label>
-                <div class="relative">
-                  <input id="cardNumber" formControlName="cardNumber" mask="0000 0000 0000 0000" [showMaskTyped]="true"
-                         placeholder="XXXX XXXX XXXX XXXX" class="input-field">
-                  <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2">
-                    <i class="ri-visa-line text-xl text-blue-600"></i>
-                    <i class="ri-mastercard-line text-xl text-orange-500"></i>
-                  </div>
-                  <span class="floating-label">Numéro de carte</span>
-                </div>
-                <div *ngIf="paymentForm.get('cardNumber')?.touched && paymentForm.get('cardNumber')?.invalid" class="text-red-600 text-xs mt-1">
-                  <span *ngIf="paymentForm.get('cardNumber')?.hasError('required')">Numéro requis</span>
-                  <span *ngIf="paymentForm.get('cardNumber')?.hasError('pattern')">Doit être 16 chiffres</span>
-                </div>
-              </div>
-              <div>
-                <label for="cardExpiry" class="block text-sm font-medium text-gray-700 mb-1">Date d'expiration</label>
-                <div class="relative">
-                  <input id="cardExpiry" formControlName="cardExpiry" type="text" mask="00/0000" [showMaskTyped]="true" [dropSpecialCharacters]="true"
-                         (input)="normalizeExpiry($event)" (blur)="paymentForm.get('cardExpiry')?.updateValueAndValidity()"
-                         placeholder="MM/AAAA" class="input-field">
-                  <i class="input-icon ri-calendar-line"></i>
-                  <span class="floating-label">Date d'expiration</span>
-                </div>
-                <div *ngIf="paymentForm.get('cardExpiry')?.touched && paymentForm.get('cardExpiry')?.invalid" class="text-red-600 text-xs mt-1">
-                  <span *ngIf="paymentForm.get('cardExpiry')?.hasError('required')">Date requise</span>
-                  <span *ngIf="paymentForm.get('cardExpiry')?.hasError('invalidFormat')">Format invalide, ex: 07/29 ou 07/2029</span>
-                  <span *ngIf="paymentForm.get('cardExpiry')?.hasError('expired')">Carte expirée</span>
-                </div>
-              </div>
-              <div>
-                <label for="cardCvv" class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                <div class="relative">
-                  <input id="cardCvv" formControlName="cardCvv" type="text" mask="000" [showMaskTyped]="true"
-                         placeholder="123" class="input-field">
-                  <i class="input-icon ri-question-line cursor-pointer" matTooltip="3 chiffres au dos de la carte"></i>
-                  <span class="floating-label">CVV</span>
-                </div>
-                <div *ngIf="paymentForm.get('cardCvv')?.touched && paymentForm.get('cardCvv')?.invalid" class="text-red-600 text-xs mt-1">
-                  <span *ngIf="paymentForm.get('cardCvv')?.hasError('required')">CVV requis</span>
-                  <span *ngIf="paymentForm.get('cardCvv')?.hasError('pattern')">Doit être 3 chiffres</span>
-                </div>
-              </div>
-            </div>
-            <div class="mt-6">
-              <p class="text-gray-600 text-sm">Montant: {{ totalAmount.toFixed(2) }} TND</p>
-            </div>
-            <div class="mt-4 flex justify-between">
-              <button type="button" class="btn-secondary px-4 py-2 rounded-md font-medium flex items-center" (click)="prevStep()">
-                <i class="ri-arrow-left-line mr-1"></i> Retour
-              </button>
-              <button type="submit" class="btn-primary px-10 py-2 rounded-md font-medium flex items-center"
-                      [disabled]="isLoading || !paymentForm.valid"
-                      matTooltip="Complétez tous les champs">
-                <span *ngIf="!isLoading">Payer <i class="ri-arrow-right-line ml-1"></i></span>
-                <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-              </button>
-            </div>
-          </form>
-        </div>
-        <div *ngIf="hasActiveSubscription">
-          <form [formGroup]="reservationForm" (ngSubmit)="verifyReservation()">
-            <p class="text-gray-600 text-sm mb-4">
-              Un code de vérification a été envoyé à {{ reservationForm.get('email')?.value || 'votre email' }}.
+          <i class="ri-verified-badge-line text-primary-purple text-2xl mr-3"></i>
+          <div>
+            <h3 class="font-semibold text-dark">Abonnement Premium (ID: {{ subscriptionId }})</h3>
+            <p class="text-sm text-gray-600">
+              Valide jusqu'au {{ subscriptionEndDate | date:'MM/dd/yyyy' }} | {{ remainingPlaces }}/10 places restantes
             </p>
-            <div class="mb-4">
-              <label for="reservationConfirmationCode" class="block text-sm font-medium text-gray-700 mb-1">Code de Vérification</label>
-              <div class="relative">
-                <input id="reservationConfirmationCode" formControlName="reservationConfirmationCode"
-                       type="text" class="input-field"
-                       placeholder="Entrez le code">
-                <i class="input-icon ri-shield-check-line"></i>
-                <span class="floating-label">Code de Vérification</span>
-              </div>
-              <div *ngIf="reservationForm.get('reservationConfirmationCode')?.touched && reservationForm.get('reservationConfirmationCode')?.hasError('required')"
-                   class="text-red-600 text-sm mt-1">Code requis</div>
-            </div>
-            <div *ngIf="!emailConfirmation" class="text-red-600 text-sm mb-4 flex items-center">
-              <i class="ri-error-warning-line mr-2"></i>
-              Échec de l'envoi de l'email
-              <button type="button" class="text-blue-600 underline ml-2 hover:text-primary-purple" (click)="resendConfirmationEmail()" [disabled]="isLoading">Renvoyer</button>
-            </div>
-            <div class="flex justify-between">
-              <button type="button" class="btn-secondary px-4 py-2 rounded-md font-medium flex items-center" (click)="prevStep()">
-                <i class="ri-arrow-left-line mr-1"></i> Retour
-              </button>
-              <button type="submit" class="btn-primary px-4 py-2 rounded-md font-medium flex items-center"
-                      [disabled]="isLoading || !reservationForm.get('reservationConfirmationCode')?.valid">
-                <span *ngIf="!isLoading">Vérifier <i class="ri-check-line"></i></span>
-                <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
-    </div>
-
-    <!-- Step 4: Confirmation -->
-    <div *ngIf="currentStep === 4" class="mb-6">
-      <h2 class="text-xl font-semibold text-dark mb-3">Confirmation de la réservation</h2>
-      <div class="form-container">
-        <!-- Payment Verification for Unsubscribed Users -->
-        <div *ngIf="!hasActiveSubscription && !isReservationConfirmed">
-          <form [formGroup]="reservationForm" (ngSubmit)="confirmPayment()">
-            <p class="text-gray-600 text-sm mb-4">
-              Un code de vérification de paiement a été envoyé à {{ reservationForm.get('email')?.value || 'votre email' }}.
-            </p>
-            <div class="mb-4">
-              <label for="paymentVerificationCode" class="block text-sm font-medium text-gray-700 mb-1">
-                Code de Vérification de Paiement
-              </label>
-              <div class="relative">
-                <input id="paymentVerificationCode" formControlName="paymentVerificationCode"
-                       type="text" class="input-field"
-                       placeholder="Entrez le code">
-                <i class="input-icon ri-shield-check-line"></i>
-                <span class="floating-label">Code de Vérification de Paiement</span>
-              </div>
-              <div *ngIf="reservationForm.get('paymentVerificationCode')?.touched && reservationForm.get('paymentVerificationCode')?.hasError('required')"
-                   class="text-red-600 text-sm mt-1">Code requis</div>
-            </div>
-            <div *ngIf="!emailConfirmation" class="text-red-600 text-sm mb-4 flex items-center">
-              <i class="ri-error-warning-line mr-2"></i>
-              Échec de l'envoi de l'email
-              <button type="button" class="text-blue-600 underline ml-2 hover:text-primary-purple" (click)="resendConfirmationEmail()" [disabled]="isLoading">Renvoyer</button>
-            </div>
-            <div class="bg-gray-100 rounded-md p-3 mb-4">
-              <p class="text-center text-gray-500 text-sm font-medium">Réservation en attente de confirmation</p>
-              <div class="flex justify-center items-center mt-2">
-                <i class="ri-ticket-line text-primary-purple mr-2"></i>
-                <span class="font-semibold">N° de Réservation : {{ reservationId }}</span>
-              </div>
-            </div>
-            <div class="flex justify-between">
-              <button type="button" class="btn-secondary px-4 py-2 rounded-md font-medium flex items-center" (click)="prevStep()">
-                <i class="ri-arrow-left-line mr-1"></i> Retour
-              </button>
-              <button type="submit" class="btn-primary px-4 py-2 rounded-md font-medium flex items-center"
-                      [disabled]="isLoading || !reservationForm.get('paymentVerificationCode')?.valid">
-                <span *ngIf="!isLoading">Confirmer <i class="ri-check-line"></i></span>
-                <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-              </button>
-            </div>
-          </form>
+      <ng-template #noSubscription>
+        <div class="subscription-banner text-center">
+          <p class="text-gray-600">
+            Vous n'avez pas d'abonnement actif. <a routerLink="/app/user/subscriptions" class="text-primary-purple underline hover:text-dark-purple">Souscrire maintenant</a>
+          </p>
         </div>
-        <!-- Reservation Confirmed (Both Subscribed and Unsubscribed) -->
-        <div *ngIf="isReservationConfirmed" class="text-center">
-          <div class="flex justify-center mb-4 animate-bounce">
-            <i class="ri-check-circle-line text-4xl text-green-600"></i>
+      </ng-template>
+
+      <!-- Progress Bar -->
+      <div class="mb-12">
+        <div class="flex items-center mb-4">
+          <!-- Step 1 -->
+          <div class="flex items-center">
+            <div class="step-indicator"
+                 [ngClass]="{
+                   'active': currentStep >= 1,
+                   'border-gray-300 text-gray-400': currentStep < 1
+                 }">
+              <div class="flex items-center justify-center">
+                <i *ngIf="currentStep > 1" class="ri-check-line"></i>
+                <span *ngIf="currentStep <= 1">1</span>
+              </div>
+            </div>
+            <span class="ml-2 text-sm font-medium text-gray-700">
+              <i class="ri-map-pin-line mr-1 text-primary-purple"></i> Choix de la place
+            </span>
           </div>
-          <h3 class="text-xl font-semibold text-dark mb-2 typing-effect">Réservation Confirmée !</h3>
-          <p class="text-gray-600 text-sm mb-6">Votre réservation a été validée. Vous recevrez un email avec les détails.</p>
-          <div class="bg-gray-100 rounded-md p-3 mb-3">
-            <i class="ri-ticket-line text-primary-purple mr-2"></i>
-            <span class="font-semibold">N° de Réservation: {{ reservationId }}</span>
+          <div class="flex-1 mx-4">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width]="currentStep >= 2 ? '33.3%' : '0%'"></div>
+            </div>
           </div>
-          <div class="reservation-details max-w-sm mx-auto">
-            <h4 class="text-sm font-semibold text-gray-800 mb-3">Détails de la réservation</h4>
-            <div class="space-y-3">
+          <!-- Step 2 -->
+          <div class="flex items-center">
+            <div class="step-indicator"
+                 [ngClass]="{
+                   'active': currentStep >= 2,
+                   'border-gray-300 text-gray-400': currentStep < 2
+                 }">
+              <div class="flex items-center justify-center">
+                <i *ngIf="currentStep > 2" class="ri-check-line"></i>
+                <span *ngIf="currentStep <= 2">2</span>
+              </div>
+            </div>
+            <span class="ml-2 text-sm font-medium text-gray-700">
+              <i class="ri-file-list-line mr-1 text-primary-purple"></i> Détails
+            </span>
+          </div>
+          <div class="flex-1 mx-4">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width]="currentStep >= 3 ? '66.6%' : '0%'"></div>
+            </div>
+          </div>
+          <!-- Step 3 -->
+          <div class="flex items-center">
+            <div class="step-indicator"
+                 [ngClass]="{
+                   'active': currentStep >= 3,
+                   'border-gray-300 text-gray-400': currentStep < 3
+                 }">
+              <div class="flex items-center justify-center">
+                <i *ngIf="currentStep > 3" class="ri-check-line"></i>
+                <span *ngIf="currentStep <= 3">3</span>
+              </div>
+            </div>
+            <span class="ml-2 text-sm font-medium text-gray-700">
+              <i class="ri-shield-check-line mr-1 text-primary-purple"></i> {{ hasActiveSubscription ? 'Vérification' : 'Paiement' }}
+            </span>
+          </div>
+          <div class="flex-1 mx-4">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width]="currentStep >= 4 ? '100%' : '0%'"></div>
+            </div>
+          </div>
+          <!-- Step 4 -->
+          <div class="flex items-center">
+            <div class="step-indicator"
+                 [ngClass]="{
+                   'active': currentStep >= 4,
+                   'border-gray-300 text-gray-400': currentStep < 4
+                 }">
+              <span>4</span>
+            </div>
+            <span class="ml-2 text-sm font-medium text-gray-700">
+              <i class="ri-ticket-line mr-1 text-primary-purple"></i> Confirmation
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="error-message">
+        <i class="ri-error-warning-line mr-2"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Step 1: Spot Selection -->
+      <div *ngIf="currentStep === 1" class="mb-12">
+        <h2 class="text-2xl font-semibold text-dark mb-6 font-display">Choix de la place</h2>
+        <div class="form-container">
+          <div class="flex flex-wrap gap-3 mb-6">
+            <div class="flex items-center">
+              <div class="w-4 h-4 bg-blue-500 rounded-sm mr-2"></div>
+              <span class="text-sm text-gray-600">Standard (5 TND/h)</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-4 h-4 bg-purple-600 rounded mr-2"></div>
+              <span class="text-sm text-gray-600">Premium (8 TND/h)</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-4 h-4 bg-gray-400 rounded-sm mr-2"></div>
+              <span class="text-sm text-gray-600">Réservé</span>
+            </div>
+            <div class="flex items-center">
+              <div class="w-4 h-4 bg-gradient-to-r from-purple-500 to-blue-500 rounded-sm mr-2"></div>
+              <span class="text-sm text-gray-600">Incluse dans abonnement</span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4 mb-6" *ngIf="!isLoading; else loadingSpinner">
+            <div *ngIf="availableSpots.length === 0" class="col-span-full text-center py-6">
+              <i class="ri-emotion-sad-line text-gray-500 text-3xl"></i>
+              <p class="text-gray-600 mt-2">Aucune place disponible.</p>
+            </div>
+            <div *ngFor="let spot of availableSpots"
+                 class="parking-space"
+                 [ngClass]="{
+                   'bg-blue-500 text-white': spot.status === 'available' && !spot.id.includes('A') && !hasActiveSubscription,
+                   'bg-purple-600 text-white': spot.status === 'available' && spot.id.includes('A') && !hasActiveSubscription,
+                   'bg-gradient-to-r from-purple-500 to-blue-500 text-white': spot.status === 'available' && hasActiveSubscription,
+                   'bg-gray-400 text-gray': spot.status === 'reserved',
+                   'border-2 border-primary-purple': selectedSpot?.id === spot.id
+                 }"
+                 (click)="selectSpot(spot)">
+              <div class="space-number font-bold text-center">{{ spot.id }}</div>
+              <div class="flex items-center mt-1 text-sm" *ngIf="spot.status === 'reserved'; else priceDisplay">
+                <i class="ri-lock-line text-gray-200 mr-1"></i>
+                <span>Réservé</span>
+              </div>
+              <ng-template #priceDisplay>
+                <div class="space-price text-sm mt-1 flex items-center">
+                  <i *ngIf="hasActiveSubscription" class="ri-check-circle-line text-green-600 mr-1"></i>
+                  {{ hasActiveSubscription ? 'INCLUSE' : (spot.id.includes('A') ? '8 TND/h' : '5 TND/h') }}
+                </div>
+              </ng-template>
+            </div>
+          </div>
+
+          <ng-template #loadingSpinner>
+            <div class="col-span-full text-center py-6">
+              <mat-spinner diameter="30"></mat-spinner>
+              <p class="text-gray-600 mt-2">Chargement...</p>
+            </div>
+          </ng-template>
+
+          <div *ngIf="selectedPlace" class="reservation-details">
+            <h4 class="text-lg font-semibold text-dark mb-4">Détails de la place</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="detail-item">
                 <i class="ri-map-pin-line text-primary-purple mr-2"></i>
-                <span>Place: <span class="font-medium">{{ selectedSpot?.id || 'N/A' }}</span></span>
-              </div>
-              <div class="detail-item">
-                <i class="ri-calendar-line text-primary-purple mr-2"></i>
-                <span>Date: <span class="font-medium">{{ reservationDetails?.date || reservationForm.get('date')?.value || 'N/A' }}</span></span>
-              </div>
-              <div class="detail-item">
-                <i class="ri-time-line text-primary-purple mr-2"></i>
-                <span>Début: <span class="font-medium">{{ reservationDetails?.startTime || reservationForm.get('startTime')?.value || 'N/A' }}</span></span>
-              </div>
-              <div class="detail-item">
-                <i class="ri-time-line text-primary-purple mr-2"></i>
-                <span>Fin: <span class="font-medium">{{ reservationDetails?.endTime || reservationForm.get('endTime')?.value || 'N/A' }}</span></span>
+                <span>Place: <span class="font-medium">{{ selectedPlace.name }}</span></span>
               </div>
               <div class="detail-item">
                 <i class="ri-car-line text-primary-purple mr-2"></i>
-                <span>Véhicule: <span class="font-medium">{{ reservationDetails?.vehicleMatricule || selectedVehicleMatricule || 'N/A' }}</span></span>
+                <span>Type: <span class="font-medium">{{ selectedPlace.type }}</span></span>
               </div>
-              <div class="detail-item" *ngIf="!hasActiveSubscription">
+              <div class="detail-item">
                 <i class="ri-money-dollar-circle-line text-primary-purple mr-2"></i>
-                <span>Montant: <span class="font-medium">{{ totalAmount.toFixed(2) }} TND</span></span>
+                <span>Tarif: <span class="font-medium">{{ hasActiveSubscription ? 'Incluse' : (selectedPlace.price + ' TND/h') }}</span></span>
+              </div>
+              <div class="detail-item">
+                <i class="ri-star-line text-primary-purple mr-2"></i>
+                <span>Avantages: <span class="font-medium">{{ selectedPlace.features.join(', ') }}</span></span>
               </div>
             </div>
           </div>
-          <div class="qr-code-container rounded-lg p-4 mb-6 mx-auto max-w-xs">
-            <canvas #qrCanvas></canvas>
-            <p class="mt-2 text-gold text-sm">Présentez ce QR code à l'entrée</p>
+
+          <div class="mt-8 flex justify-between">
+            <button type="button" class="btn-secondary px-6 py-3 rounded-md font-medium flex items-center" (click)="reset()">
+              <i class="ri-arrow-left-line mr-2"></i> Réinitialiser
+            </button>
+            <button type="button" class="btn-primary px-6 py-3 rounded-md font-medium flex items-center" (click)="nextStep()" [disabled]="!selectedSpot">
+              Suivant <i class="ri-arrow-right-line ml-2"></i>
+            </button>
           </div>
-          <button class="btn-primary px-4 py-2 rounded-md font-medium" (click)="reset()">
-            Nouvelle réservation <i class="ri-refresh-line ml-1"></i>
-          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Reservation Details -->
+      <div *ngIf="currentStep === 2" class="mb-12">
+        <h2 class="text-2xl font-semibold text-dark mb-6 font-display">Détails de la réservation</h2>
+        <div class="form-container">
+          <form [formGroup]="reservationForm" (ngSubmit)="nextStep()">
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label for="date" class="block text-sm font-medium text-gray-700 mb-2">Date de réservation</label>
+                <div class="relative">
+                  <input id="date" formControlName="date" type="text" mask="00/00/0000" [showMaskTyped]="true" [dropSpecialCharacters]="false"
+                         class="input-field" placeholder="jj/MM/aaaa"
+                         (change)="onDateTimeChange()">
+                  <i class="input-icon ri-calendar-line"></i>
+                  <span class="floating-label">Date de réservation</span>
+                </div>
+                <div *ngIf="reservationForm.get('date')?.touched && reservationForm.get('date')?.invalid" class="text-red-600 text-sm mt-1">
+                  <span *ngIf="reservationForm.get('date')?.hasError('required')">Date requise</span>
+                  <span *ngIf="reservationForm.get('date')?.hasError('invalidFormat')">Format: jj/MM/aaaa</span>
+                  <span *ngIf="reservationForm.get('date')?.hasError('invalidDate')">Date invalide</span>
+                  <span *ngIf="reservationForm.get('date')?.hasError('outOfRange')">Date doit être aujourd'hui ou après</span>
+                </div>
+              </div>
+              <div>
+                <label for="startTime" class="block text-sm font-medium text-gray-700 mb-2">Heure de début</label>
+                <div class="relative">
+                  <input id="startTime" formControlName="startTime" type="time"
+                         class="input-field"
+                         (change)="onDateTimeChange()">
+                  <i class="input-icon ri-time-line"></i>
+                  <span class="floating-label">Heure de début</span>
+                </div>
+                <div *ngIf="reservationForm.get('startTime')?.touched && reservationForm.get('startTime')?.invalid" class="text-red-600 text-sm mt-1">
+                  <span *ngIf="reservationForm.get('startTime')?.hasError('required')">Heure requise</span>
+                  <span *ngIf="reservationForm.get('startTime')?.hasError('invalidTime')">Heure doit être dans 1h minimum</span>
+                </div>
+              </div>
+              <div>
+                <label for="endTime" class="block text-sm font-medium text-gray-700 mb-2">Heure de fin</label>
+                <div class="relative">
+                  <input id="endTime" formControlName="endTime" type="time"
+                         class="input-field"
+                         (change)="onDateTimeChange()">
+                  <i class="input-icon ri-time-line"></i>
+                  <span class="floating-label">Heure de fin</span>
+                </div>
+                <div *ngIf="reservationForm.get('endTime')?.touched && reservationForm.get('endTime')?.invalid" class="text-red-600 text-sm mt-1">
+                  <span *ngIf="reservationForm.get('endTime')?.hasError('required')">Heure requise</span>
+                  <span *ngIf="reservationForm.get('endTime')?.hasError('invalidEndTime')">Doit être après le début</span>
+                </div>
+              </div>
+              <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <div class="relative">
+                  <input id="email" formControlName="email" type="email"
+                         class="input-field" placeholder="votre@email.com">
+                  <i class="input-icon ri-mail-line"></i>
+                  <span class="floating-label">Email</span>
+                </div>
+                <div *ngIf="reservationForm.get('email')?.touched && reservationForm.get('email')?.invalid" class="text-red-600 text-sm mt-1">
+                  <span *ngIf="reservationForm.get('email')?.hasError('required')">Email requis</span>
+                  <span *ngIf="reservationForm.get('email')?.hasError('pattern')">Email invalide</span>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <div class="mt-6">
+            <h3 class="text-lg font-semibold text-dark mb-3">Sélectionnez votre véhicule</h3>
+            <div class="border border-gray-200 rounded-lg">
+              <div *ngFor="let vehicle of userVehicles; let i = index"
+                   class="vehicle-item"
+                   [ngClass]="{'selected': selectedVehicleIndex === i}"
+                   (click)="selectVehicle(i)">
+                <i class="ri-car-line text-primary-purple text-2xl"></i>
+                <div>
+                  <p class="font-medium text-dark">{{ vehicle.name }}</p>
+                  <p class="text-sm text-gray-600">{{ vehicle.matricule }}</p>
+                </div>
+              </div>
+              <div *ngIf="userVehicles.length === 0" class="p-4 text-center text-gray-500">
+                <i class="ri-car-line text-2xl mb-2"></i>
+                <p>Aucun véhicule. <a routerLink="/app/user/profile" class="text-primary-purple underline hover:text-dark-purple">Ajoutez un véhicule</a>.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 flex justify-between">
+            <button type="button" class="btn-secondary px-6 py-3 rounded-md font-medium flex items-center" (click)="prevStep()">
+              <i class="ri-arrow-left-line mr-2"></i> Retour
+            </button>
+            <button type="submit" class="btn-primary px-6 py-3 rounded-md font-medium flex items-center"
+                    [disabled]="reservationForm.invalid || selectedVehicleIndex === null"
+                    matTooltip="Complétez tous les champs"
+                    [matTooltipDisabled]="reservationForm.valid && selectedVehicleIndex !== null"
+                    (click)="nextStep()">
+              Suivant <i class="ri-arrow-right-line ml-2"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Payment (Non-Subscribed) or Verification (Subscribed) -->
+      <div *ngIf="currentStep === 3" class="mb-6">
+        <h2 class="text-xl font-semibold text-dark mb-3">{{ hasActiveSubscription ? 'Vérification de la réservation' : 'Paiement' }}</h2>
+        <div class="form-container">
+          <div *ngIf="!hasActiveSubscription">
+            <form [formGroup]="paymentForm" (ngSubmit)="nextStep()">
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label for="cardName" class="block text-sm font-medium text-gray-700 mb-1">Nom sur la carte</label>
+                  <div class="relative">
+                    <input id="cardName" formControlName="cardName" type="text"
+                           placeholder="Ex: Jean Dupont" class="input-field">
+                    <i class="input-icon ri-user-line"></i>
+                    <span class="floating-label">Nom sur la carte</span>
+                  </div>
+                  <div *ngIf="paymentForm.get('cardName')?.touched && paymentForm.get('cardName')?.hasError('required')" class="text-red-600 text-xs mt-1">Nom requis</div>
+                </div>
+                <div>
+                  <label for="cardNumber" class="block text-sm font-medium text-gray-700 mb-1">Numéro de carte</label>
+                  <div class="relative">
+                    <input id="cardNumber" formControlName="cardNumber" mask="0000 0000 0000 0000" [showMaskTyped]="true"
+                           placeholder="XXXX XXXX XXXX XXXX" class="input-field">
+                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2 flex gap-2">
+                      <i class="ri-visa-line text-xl text-blue-600"></i>
+                      <i class="ri-mastercard-line text-xl text-orange-500"></i>
+                    </div>
+                    <span class="floating-label">Numéro de carte</span>
+                  </div>
+                  <div *ngIf="paymentForm.get('cardNumber')?.touched && paymentForm.get('cardNumber')?.invalid" class="text-red-600 text-xs mt-1">
+                    <span *ngIf="paymentForm.get('cardNumber')?.hasError('required')">Numéro requis</span>
+                    <span *ngIf="paymentForm.get('cardNumber')?.hasError('pattern')">Doit être 16 chiffres</span>
+                  </div>
+                </div>
+                <div>
+                  <label for="cardExpiry" class="block text-sm font-medium text-gray-700 mb-1">Date d'expiration</label>
+                  <div class="relative">
+                    <input id="cardExpiry" formControlName="cardExpiry" type="text" mask="00/0000" [showMaskTyped]="true" [dropSpecialCharacters]="true"
+                           (input)="normalizeExpiry($event)" (blur)="paymentForm.get('cardExpiry')?.updateValueAndValidity()"
+                           placeholder="MM/AAAA" class="input-field">
+                    <i class="input-icon ri-calendar-line"></i>
+                    <span class="floating-label">Date d'expiration</span>
+                  </div>
+                  <div *ngIf="paymentForm.get('cardExpiry')?.touched && paymentForm.get('cardExpiry')?.invalid" class="text-red-600 text-xs mt-1">
+                    <span *ngIf="paymentForm.get('cardExpiry')?.hasError('required')">Date requise</span>
+                    <span *ngIf="paymentForm.get('cardExpiry')?.hasError('invalidFormat')">Format invalide, ex: 07/29 ou 07/2029</span>
+                    <span *ngIf="paymentForm.get('cardExpiry')?.hasError('expired')">Carte expirée</span>
+                  </div>
+                </div>
+                <div>
+                  <label for="cardCvv" class="block text-sm font-medium text-gray-700 mb-1">CVV</label>
+                  <div class="relative">
+                    <input id="cardCvv" formControlName="cardCvv" type="text" mask="000" [showMaskTyped]="true"
+                           placeholder="123" class="input-field">
+                    <i class="input-icon ri-question-line cursor-pointer" matTooltip="3 chiffres au dos de la carte"></i>
+                    <span class="floating-label">CVV</span>
+                  </div>
+                  <div *ngIf="paymentForm.get('cardCvv')?.touched && paymentForm.get('cardCvv')?.invalid" class="text-red-600 text-xs mt-1">
+                    <span *ngIf="paymentForm.get('cardCvv')?.hasError('required')">CVV requis</span>
+                    <span *ngIf="paymentForm.get('cardCvv')?.hasError('pattern')">Doit être 3 chiffres</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mt-6">
+                <p class="text-gray-600 text-sm">Montant: {{ totalAmount.toFixed(2) }} TND</p>
+              </div>
+              <div class="mt-4 flex justify-between">
+                <button type="button" class="btn-secondary px-4 py-2 rounded-md font-medium flex items-center" (click)="prevStep()">
+                  <i class="ri-arrow-left-line mr-1"></i> Retour
+                </button>
+                <button type="submit" class="btn-primary px-10 py-2 rounded-md font-medium flex items-center"
+                        [disabled]="isLoading || !paymentForm.valid"
+                        matTooltip="Complétez tous les champs">
+                  <span *ngIf="!isLoading">Payer <i class="ri-arrow-right-line ml-1"></i></span>
+                  <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+                </button>
+              </div>
+            </form>
+          </div>
+          <div *ngIf="hasActiveSubscription">
+            <form [formGroup]="reservationForm" (ngSubmit)="verifyReservation()">
+              <p class="text-gray-600 text-sm mb-4">
+                Un code de vérification a été envoyé à {{ reservationForm.get('email')?.value || 'votre email' }}.
+              </p>
+              <div class="mb-4">
+                <label for="reservationConfirmationCode" class="block text-sm font-medium text-gray-700 mb-1">Code de Vérification</label>
+                <div class="relative">
+                  <input id="reservationConfirmationCode" formControlName="reservationConfirmationCode"
+                         type="text" class="input-field"
+                         placeholder="Entrez le code">
+                  <i class="input-icon ri-shield-check-line"></i>
+                  <span class="floating-label">Code de Vérification</span>
+                </div>
+                <div *ngIf="reservationForm.get('reservationConfirmationCode')?.touched && reservationForm.get('reservationConfirmationCode')?.hasError('required')"
+                     class="text-red-600 text-sm mt-1">Code requis</div>
+              </div>
+              <div *ngIf="!emailConfirmation" class="text-red-600 text-sm mb-4 flex items-center">
+                <i class="ri-error-warning-line mr-2"></i>
+                Échec de l'envoi de l'email
+                <button type="button" class="text-blue-600 underline ml-2 hover:text-primary-purple" (click)="resendConfirmationEmail()" [disabled]="isLoading">Renvoyer</button>
+              </div>
+              <div class="flex justify-between">
+                <button type="button" class="btn-secondary px-4 py-2 rounded-md font-medium flex items-center" (click)="prevStep()">
+                  <i class="ri-arrow-left-line mr-1"></i> Retour
+                </button>
+                <button type="submit" class="btn-primary px-4 py-2 rounded-md font-medium flex items-center"
+                        [disabled]="isLoading || !reservationForm.get('reservationConfirmationCode')?.valid">
+                  <span *ngIf="!isLoading">Vérifier <i class="ri-check-line"></i></span>
+                  <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Confirmation -->
+      <div *ngIf="currentStep === 4" class="mb-6">
+        <h2 class="text-xl font-semibold text-dark mb-3">Confirmation de la réservation</h2>
+        <div class="form-container">
+          <!-- Payment Verification for Unsubscribed Users -->
+          <div *ngIf="!hasActiveSubscription && !isReservationConfirmed">
+            <form [formGroup]="reservationForm" (ngSubmit)="confirmPayment()">
+              <p class="text-gray-600 text-sm mb-4">
+                Un code de vérification de paiement a été envoyé à {{ reservationForm.get('email')?.value || 'votre email' }}.
+              </p>
+              <div class="mb-4">
+                <label for="paymentVerificationCode" class="block text-sm font-medium text-gray-700 mb-1">
+                  Code de Vérification de Paiement
+                </label>
+                <div class="relative">
+                  <input id="paymentVerificationCode" formControlName="paymentVerificationCode"
+                         type="text" class="input-field"
+                         placeholder="Entrez le code">
+                  <i class="input-icon ri-shield-check-line"></i>
+                  <span class="floating-label">Code de Vérification de Paiement</span>
+                </div>
+                <div *ngIf="reservationForm.get('paymentVerificationCode')?.touched && reservationForm.get('paymentVerificationCode')?.hasError('required')"
+                     class="text-red-600 text-sm mt-1">Code requis</div>
+              </div>
+              <div *ngIf="!emailConfirmation" class="text-red-600 text-sm mb-4 flex items-center">
+                <i class="ri-error-warning-line mr-2"></i>
+                Échec de l'envoi de l'email
+                <button type="button" class="text-blue-600 underline ml-2 hover:text-primary-purple" (click)="resendConfirmationEmail()" [disabled]="isLoading">Renvoyer</button>
+              </div>
+              <div class="bg-gray-100 rounded-md p-3 mb-4">
+                <p class="text-center text-gray-500 text-sm font-medium">Réservation en attente de confirmation</p>
+                <div class="flex justify-center items-center mt-2">
+                  <i class="ri-ticket-line text-primary-purple mr-2"></i>
+                  <span class="font-semibold">N° de Réservation : {{ reservationId }}</span>
+                </div>
+              </div>
+              <div class="flex justify-between">
+                <button type="button" class="btn-secondary px-4 py-2 rounded-md font-medium flex items-center" (click)="prevStep()">
+                  <i class="ri-arrow-left-line mr-1"></i> Retour
+                </button>
+                <button type="submit" class="btn-primary px-4 py-2 rounded-md font-medium flex items-center"
+                        [disabled]="isLoading || !reservationForm.get('paymentVerificationCode')?.valid">
+                  <span *ngIf="!isLoading">Confirmer <i class="ri-check-line"></i></span>
+                  <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+                </button>
+              </div>
+            </form>
+          </div>
+          <!-- Reservation Confirmed (Both Subscribed and Unsubscribed) -->
+          <div *ngIf="isReservationConfirmed" class="text-center">
+            <div class="flex justify-center mb-4 animate-bounce">
+              <i class="ri-check-circle-line text-4xl text-green-600"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-dark mb-2 typing-effect">Réservation Confirmée !</h3>
+            <p class="text-gray-600 text-sm mb-6">Votre réservation a été validée. Vous recevrez un email avec les détails.</p>
+            <div class="bg-gray-100 rounded-md p-3 mb-3">
+              <i class="ri-ticket-line text-primary-purple mr-2"></i>
+              <span class="font-semibold">N° de Réservation: {{ reservationId }}</span>
+            </div>
+            <div class="reservation-details max-w-sm mx-auto">
+              <h4 class="text-sm font-semibold text-gray-800 mb-3">Détails de la réservation</h4>
+              <div class="space-y-3">
+                <div class="detail-item">
+                  <i class="ri-map-pin-line text-primary-purple mr-2"></i>
+                  <span>Place: <span class="font-medium">{{ selectedSpot?.id || 'N/A' }}</span></span>
+                </div>
+                <div class="detail-item">
+                  <i class="ri-calendar-line text-primary-purple mr-2"></i>
+                  <span>Date: <span class="font-medium">{{ reservationDetails?.date || reservationForm.get('date')?.value || 'N/A' }}</span></span>
+                </div>
+                <div class="detail-item">
+                  <i class="ri-time-line text-primary-purple mr-2"></i>
+                  <span>Début: <span class="font-medium">{{ reservationDetails?.startTime || reservationForm.get('startTime')?.value || 'N/A' }}</span></span>
+                </div>
+                <div class="detail-item">
+                  <i class="ri-time-line text-primary-purple mr-2"></i>
+                  <span>Fin: <span class="font-medium">{{ reservationDetails?.endTime || reservationForm.get('endTime')?.value || 'N/A' }}</span></span>
+                </div>
+                <div class="detail-item">
+                  <i class="ri-car-line text-primary-purple mr-2"></i>
+                  <span>Véhicule: <span class="font-medium">{{ reservationDetails?.vehicleMatricule || selectedVehicleMatricule || 'N/A' }}</span></span>
+                </div>
+                <div class="detail-item" *ngIf="!hasActiveSubscription">
+                  <i class="ri-money-dollar-circle-line text-primary-purple mr-2"></i>
+                  <span>Montant: <span class="font-medium">{{ totalAmount.toFixed(2) }} TND</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="qr-code-container rounded-lg p-4 mb-6 mx-auto max-w-xs">
+              <canvas #qrCanvas></canvas>
+              <p class="mt-2 text-gold text-sm">Présentez ce QR code à l'entrée</p>
+            </div>
+            <button class="btn-primary px-4 py-2 rounded-md font-medium" (click)="reset()">
+              Nouvelle réservation <i class="ri-refresh-line ml-1"></i>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</main>
+  </main>
+</div>

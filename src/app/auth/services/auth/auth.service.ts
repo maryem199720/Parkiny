@@ -16,7 +16,7 @@ interface AuthResponse {
   roles: string[];
 }
 
-interface User {
+export interface User {
   id: number;
   firstName: string;
   lastName: string;
@@ -43,7 +43,10 @@ export class AuthService {
   private sidebarOpen = new BehaviorSubject<boolean>(false);
   public sidebarOpen$ = this.sidebarOpen.asObservable();
   private userSubject = new BehaviorSubject<User | null>(null);
-  public user$ = this.userSubject.asObservable(); // Added user$ observable
+  public user$ = this.userSubject.asObservable();
+  
+  private isSidebarCollapsedSubject = new BehaviorSubject<boolean>(false);
+  isSidebarCollapsed$: Observable<boolean> = this.isSidebarCollapsedSubject.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -55,7 +58,6 @@ export class AuthService {
       const token = localStorage.getItem(this.tokenKey);
       console.log('Initial auth check: token exists:', !!token);
       this.authStatus.next(!!token);
-      // Load user data on initialization
       const user = this.getCurrentUser();
       this.userSubject.next(user);
     }
@@ -79,7 +81,7 @@ export class AuthService {
             };
             localStorage.setItem('user', JSON.stringify(user));
             this.authStatus.next(true);
-            this.userSubject.next(user); // Emit updated user
+            this.userSubject.next(user);
             this.redirectBasedOnRole(response.roles);
           }
         },
@@ -106,7 +108,7 @@ export class AuthService {
             };
             localStorage.setItem('user', JSON.stringify(user));
             this.authStatus.next(true);
-            this.userSubject.next(user); // Emit updated user
+            this.userSubject.next(user);
             this.redirectBasedOnRole(response.roles);
           }
         },
@@ -140,11 +142,15 @@ export class AuthService {
     }
   }
 
+  toggleSidebarCollapse() {
+    this.isSidebarCollapsedSubject.next(!this.isSidebarCollapsedSubject.value);
+  }
+
   logout(): void {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.clear();
       this.authStatus.next(false);
-      this.userSubject.next(null); // Clear user on logout
+      this.userSubject.next(null);
       this.sidebarOpen.next(false);
       console.log('Logout successful, auth status:', false);
       this.router.navigate(['/auth']);

@@ -1,74 +1,150 @@
-<div class="container mx-auto px-4 py-8 max-w-4xl">
-  <div class="bg-white rounded-xl shadow-lg p-6">
-    <h1 class="text-2xl font-bold text-gray-800 mb-4">Mes Véhicules</h1>
-    @if (isLoading()) {
-      <div class="flex justify-center py-4">
-        <p class="text-gray-500">Chargement...</p>
-      </div>
-    } @else {
-      <div class="space-y-4">
-        @if (vehicles().length === 0) {
-          <div class="flex flex-col items-center py-6 text-gray-500">
-            <i class="ri-car-line text-4xl mb-2"></i>
-            <p>Aucun véhicule</p>
-          </div>
-        } @else {
-          @for (vehicle of vehicles(); track vehicle.matricule) {
-            <div class="border-l-4 border-primary-purple p-4 rounded-r-lg bg-gray-50 hover:bg-gray-100 transition-colors flex items-start justify-between">
-              <div>
-                <h4 class="font-medium text-gray-800">{{ vehicle.brand }} {{ vehicle.model }}</h4>
-                <div class="text-sm text-gray-600 space-y-1">
-                  <p>Matricule: {{ vehicle.matricule }}</p>
-                  <p>Couleur: {{ vehicle.color }}</p>
-                </div>
+<div class="form-container">
+  <h1 class="text-3xl font-display font-bold text-primary mb-2 text-center">Mes Véhicules</h1>
+  <p class="text-gray-600 text-center mb-6">Gérez vos véhicules enregistrés</p>
+  @if (isLoading()) {
+    <div class="flex justify-center py-4">
+      <p class="text-gray-500">Chargement...</p>
+    </div>
+  } @else {
+    <div class="space-y-4">
+      @if (vehicles().length === 0) {
+        <div class="flex flex-col items-center py-6 text-gray-500">
+          <i class="ri-car-line text-4xl mb-2"></i>
+          <p>Aucun véhicule</p>
+        </div>
+      } @else {
+        @for (vehicle of vehicles(); track vehicle.matricule) {
+          <div class="border-l-4 border-primary-purple p-4 rounded-r-lg bg-gray-50 hover:bg-gray-100 transition-colors flex items-start justify-between">
+            <div>
+              <h4 class="font-medium text-gray-800">{{ vehicle.brand }} {{ vehicle.model }}</h4>
+              <div class="text-sm text-gray-600 space-y-1">
+                <p>Matricule: {{ vehicle.matricule }}</p>
+                <p>Couleur: {{ vehicle.color }}</p>
               </div>
-              <button (click)="deleteVehicle(vehicle.matricule)" class="text-red-500 hover:text-red-700">
+            </div>
+            <div class="flex space-x-2">
+              <button (click)="startEditVehicle(vehicle)" class="text-blue-500 hover:text-blue-700">
+                <i class="ri-edit-line text-xl"></i>
+              </button>
+              <button (click)="deleteVehicle(vehicle)" class="text-red-500 hover:text-red-700">
                 <i class="ri-delete-bin-line text-xl"></i>
               </button>
             </div>
-          }
+          </div>
         }
-        <h3 class="text-lg font-semibold text-gray-800 mt-6">Ajouter un Véhicule</h3>
-        <div class="space-y-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Matricule</label>
-            <input [(ngModel)]="vehicleForm.matricule" placeholder="Matricule" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple" />
+      }
+
+      @if (editVehicleForm) {
+        <div class="space-y-5 mt-6">
+          <h3 class="text-xl font-semibold text-gray-800 text-center">Modifier le Véhicule</h3>
+          <div class="input-wrapper">
+            <input id="edit-matricule" [(ngModel)]="editVehicleForm.matricule" name="matricule" class="input-field" placeholder=" " />
+            <label for="edit-matricule" class="floating-label">Matricule</label>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Marque</label>
-            <select [(ngModel)]="vehicleForm.brand" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple">
-              <option value="" disabled>Sélectionner une marque</option>
-              @for (brand of brands; track brand) {
-                <option [value]="brand">{{ brand }}</option>
-              }
-            </select>
+          <div class="input-wrapper">
+            <input id="edit-brand" [(ngModel)]="editVehicleForm.brand" name="brand" class="input-field" placeholder=" " disabled />
+            <label for="edit-brand" class="floating-label">Marque</label>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Modèle</label>
-            <select [(ngModel)]="vehicleForm.model" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple">
-              <option value="" disabled>Sélectionner un modèle</option>
-              @for (model of models; track model) {
-                <option [value]="model">{{ model }}</option>
-              }
-            </select>
+          <div class="input-wrapper">
+            <input id="edit-model" [(ngModel)]="editVehicleForm.model" name="model" class="input-field" placeholder=" " disabled />
+            <label for="edit-model" class="floating-label">Modèle</label>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Couleur</label>
-            <select [(ngModel)]="vehicleForm.color" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-purple">
-              <option value="" disabled>Sélectionner une couleur</option>
+          <div class="input-wrapper">
+            <select id="edit-color" [(ngModel)]="editVehicleForm.color" name="color" class="input-field">
+              <option value="" disabled selected>Sélectionner une couleur</option>
               @for (color of colors; track color) {
                 <option [value]="color">{{ color }}</option>
               }
             </select>
+            <label for="edit-color" class="floating-label">Couleur</label>
           </div>
-          @if (errorMessage()) {
-            <p class="text-red-500 text-sm">{{ errorMessage() }}</p>
+          @if (editVehicleForm.color === 'Other') {
+            <div class="input-wrapper">
+              <input id="edit-custom-color" [(ngModel)]="editVehicleForm.customColor" name="customColor" class="input-field" placeholder=" " />
+              <label for="edit-custom-color" class="floating-label">Spécifier la couleur</label>
+            </div>
           }
-          <button (click)="submitVehicle()" class="mt-4 px-4 py-2 bg-primary-purple text-white rounded-lg hover:bg-dark-purple transition-all w-full flex items-center justify-center">
+          <div class="flex justify-end space-x-2 mt-4">
+            <button type="button" (click)="updateVehicle()" class="btn-primary">
+              Mettre à jour <i class="ri-save-line ml-2"></i>
+            </button>
+            <button type="button" (click)="cancelEdit()" class="btn-secondary">
+              Annuler
+            </button>
+          </div>
+        </div>
+      } @else {
+        <div class="space-y-5 mt-6">
+          <h3 class="text-xl font-semibold text-gray-800 text-center">Ajouter un Véhicule</h3>
+          <div class="input-wrapper">
+            <input type="file" id="plate-image" (change)="onFileSelected($event)" accept="image/*" class="input-field" />
+            <label for="plate-image" class="floating-label">Image de la Plaque</label>
+            <button type="button" (click)="sendPlateImage()" class="btn-primary mt-2 w-full">
+              Envoyer l'Image <i class="ri-upload-line ml-2"></i>
+            </button>
+            @if (vehicleForm.matriculeImageUrl) {
+              <img [src]="vehicleForm.matriculeImageUrl" alt="Plate Preview" class="mt-2 w-32 h-auto rounded-md mx-auto" />
+            }
+          </div>
+          <div class="input-wrapper">
+            <input id="matricule" [(ngModel)]="vehicleForm.matricule" name="matricule" class="input-field" placeholder=" " readonly />
+            <label for="matricule" class="floating-label">Matricule (sera rempli par l'IA)</label>
+          </div>
+          <div class="input-wrapper">
+            <select id="brand" [(ngModel)]="vehicleForm.brand" name="brand" class="input-field">
+              <option value="" disabled selected>Sélectionner une marque</option>
+              @for (brand of brands; track brand) {
+                <option [value]="brand">{{ brand }}</option>
+              }
+            </select>
+            <label for="brand" class="floating-label">Marque</label>
+          </div>
+          @if (vehicleForm.brand === 'Other') {
+            <div class="input-wrapper">
+              <input id="custom-brand" [(ngModel)]="vehicleForm.customBrand" name="customBrand" class="input-field" placeholder=" " />
+              <label for="custom-brand" class="floating-label">Spécifier la marque</label>
+            </div>
+          }
+          <div class="input-wrapper">
+            <select id="model" [(ngModel)]="vehicleForm.model" name="model" class="input-field">
+              <option value="" disabled selected>Sélectionner un modèle</option>
+              @for (model of models; track model) {
+                <option [value]="model">{{ model }}</option>
+              }
+            </select>
+            <label for="model" class="floating-label">Modèle</label>
+          </div>
+          @if (vehicleForm.model === 'Other') {
+            <div class="input-wrapper">
+              <input id="custom-model" [(ngModel)]="vehicleForm.customModel" name="customModel" class="input-field" placeholder=" " />
+              <label for="custom-model" class="floating-label">Spécifier le modèle</label>
+            </div>
+          }
+          <div class="input-wrapper">
+            <select id="color" [(ngModel)]="vehicleForm.color" name="color" class="input-field">
+              <option value="" disabled selected>Sélectionner une couleur</option>
+              @for (color of colors; track color) {
+                <option [value]="color">{{ color }}</option>
+              }
+            </select>
+            <label for="color" class="floating-label">Couleur</label>
+          </div>
+          @if (vehicleForm.color === 'Other') {
+            <div class="input-wrapper">
+              <input id="custom-color" [(ngModel)]="vehicleForm.customColor" name="customColor" class="input-field" placeholder=" " />
+              <label for="custom-color" class="floating-label">Spécifier la couleur</label>
+            </div>
+          }
+          @if (errorMessage()) {
+            <div class="error-message-container">
+              {{ errorMessage() }}
+            </div>
+          }
+          <button type="button" (click)="submitVehicle()" class="btn-primary mt-4 w-full">
             Ajouter un Véhicule <i class="ri-add-line ml-2"></i>
           </button>
         </div>
-      </div>
-    }
-  </div>
+      }
+    </div>
+  }
 </div>

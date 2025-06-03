@@ -1,49 +1,57 @@
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation flex flex-col justify-between">
+<div *ngIf="isLoading" class="text-center py-4">
+  <i class="ri-loader-4-line animate-spin text-primary-purple text-2xl" aria-label="Loading"></i>
+  <span class="ml-2">Loading...</span>
+</div>
+<div *ngIf="error" class="text-red-500 text-center py-4">
+  {{ error }}
+  <button (click)="loadStats()" class="ml-2 text-primary-purple underline">Retry</button>
+</div>
+<div *ngIf="!isLoading && !error" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation flex flex-col justify-between" tabindex="0">
     <div>
       <p class="text-gray-500 text-sm">Available Spots</p>
-      <h3 class="text-2xl font-bold mt-2 text-dark-purple">{{ stats.availableSpots }}</h3>
+      <h3 class="text-2xl font-bold mt-2 text-dark-purple">{{ stats.availableSpots || 0 }}</h3>
     </div>
     <div class="flex items-center justify-between mt-4">
-      <p class="text-green-500 text-sm"><i class="ri-arrow-up-line"></i> {{ stats.availableSpotsTrend }}</p>
+      <p class="text-green-500 text-sm"><i class="ri-arrow-up-line" aria-label="Trend Icon"></i> {{ stats.availableSpotsTrend || '0+' }}</p>
       <div class="bg-light-purple p-3 rounded-full">
-        <i class="ri-parking-box-fill text-primary-purple"></i>
+        <i class="ri-parking-box-fill text-primary-purple" aria-label="Parking Spot Icon"></i>
       </div>
     </div>
   </div>
-  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation flex flex-col justify-between">
+  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation flex flex-col justify-between" tabindex="0">
     <div>
       <p class="text-gray-500 text-sm">Active Reservations</p>
-      <h3 class="text-2xl font-bold mt-2 text-dark-purple">{{ stats.activeReservations }}</h3>
+      <h3 class="text-2xl font-bold mt-2 text-dark-purple">{{ stats.activeReservations || 0 }}</h3>
     </div>
     <div class="flex items-center justify-between mt-4">
-      <p class="text-gray-500 text-sm">Next reservation: {{ stats.nextReservation }}</p>
+      <p class="text-gray-500 text-sm">Next: {{ stats.nextReservation || 'None' }}</p>
       <div class="bg-blue-100 p-3 rounded-full">
-        <i class="ri-calendar-check-fill text-blue-500"></i>
+        <i class="ri-calendar-check-fill text-blue-500" aria-label="Calendar Icon"></i>
       </div>
     </div>
   </div>
-  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation flex flex-col justify-between">
+  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation flex flex-col justify-between" tabindex="0">
     <div>
       <p class="text-gray-500 text-sm">Monthly Savings</p>
-      <h3 class="text-2xl font-bold mt-2 text-dark-purple">{{ stats.monthlySavings }}</h3>
+      <h3 class="text-2xl font-bold mt-2 text-dark-purple">{{ stats.monthlySavings || '$0' }}</h3>
     </div>
     <div class="flex items-center justify-between mt-4">
-      <p class="text-green-500 text-sm"><i class="ri-arrow-up-line"></i> {{ stats.savingsTrend }}</p>
+      <p class="text-green-500 text-sm"><i class="ri-arrow-up-line" aria-label="Trend Icon"></i> {{ stats.savingsStatus || '0%' }}</p>
       <div class="bg-green-100 p-3 rounded-full">
-        <i class="ri-wallet-fill text-green-500"></i>
+        <i class="ri-wallet-fill text-green-500" aria-label="Wallet Icon"></i>
       </div>
     </div>
   </div>
-  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation flex flex-col justify-between">
+  <div class="bg-white rounded-lg p-6 border-l-4 border-gold-500 shadow-reservation flex flex-col justify-between" tabindex="0">
     <div>
-      <p class="text-gray-500 text-sm">Favorite Locations</p>
-      <h3 class="text-2xl font-bold mt-2 text-dark-purple">{{ stats.favoriteLocations }}</h3>
+      <p class="text-gray-500 text-sm">Reservations This Month</p>
+      <h3 class="text-2xl font-bold mt-2 text-dark-purple">{{ stats.reservationsThisMonth || 0 }}</h3>
     </div>
     <div class="flex items-center justify-between mt-4">
-      <p class="text-gray-500 text-sm">Most used: {{ stats.topLocation }}</p>
+      <p class="text-gray-500 text-sm">{{ stats.totalReservations || 'Reservations This Month' }}</p>
       <div class="bg-yellow-100 p-3 rounded-full">
-        <i class="ri-heart-fill text-orange-500"></i>
+        <i class="ri-heart-fill text-orange-500" aria-label="Reservations Icon"></i>
       </div>
     </div>
   </div>

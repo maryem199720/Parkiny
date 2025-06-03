@@ -23,6 +23,7 @@ export class SidebarComponent implements OnInit {
   userInitials: string | null = null;
   subscriptionType: string | null = null;
   isProfileMenuOpen = false;
+  isCollapsed = false;
 
   constructor(
     private authService: AuthService,
@@ -41,6 +42,9 @@ export class SidebarComponent implements OnInit {
   ngOnInit() {
     this.isMobile$.subscribe(isMobile => {
       this.isMobile = isMobile;
+      if (isMobile) {
+        this.isCollapsed = false;
+      }
     });
 
     const user = this.authService.getCurrentUser();
@@ -54,6 +58,10 @@ export class SidebarComponent implements OnInit {
 
   toggleSidebar() {
     this.authService.toggleSidebar();
+  }
+
+  toggleCollapse() {
+    this.isCollapsed = !this.isCollapsed;
   }
 
   logout() {

@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { StatsService } from 'src/app/services/stats.service';
 import { AuthService } from 'src/app/auth/services/auth/auth.service';
 
@@ -8,29 +9,32 @@ interface Stats {
   activeReservations: number;
   nextReservation: string;
   monthlySavings: string;
-  savingsTrend: string;
-  favoriteLocations: number;
-  topLocation: string;
+  savingsStatus: string;
+  reservationsThisMonth: number;
+  totalReservations: string;
 }
 
 @Component({
   selector: 'app-stats-card',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './stats-card.component.html',
-  styleUrl: './stats-card.component.css'
+  styleUrls: ['./stats-card.component.css']
 })
-export class StatsCardsComponent implements OnInit {
+export class StatsCardsComponent implements OnInit, OnDestroy {
   stats: Stats = {
     availableSpots: 0,
-    availableSpotsTrend: '',
+    availableSpotsTrend: '0+',
     activeReservations: 0,
-    nextReservation: '',
-    monthlySavings: '',
-    savingsTrend: '',
-    favoriteLocations: 0,
-    topLocation: ''
+    nextReservation: 'No upcoming reservations',
+    monthlySavings: '$0',
+    savingsStatus: '0%',
+    reservationsThisMonth: 0,
+    totalReservations: 'Reservations This Month'
   };
+  isLoading = false;
+  error: string | null = null;
+  private pollingInterval: any;
 
   constructor(
     private statsService: StatsService,
@@ -38,11 +42,29 @@ export class StatsCardsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.loadStats();
+    this.pollingInterval = setInterval(() => this.loadStats(), 30000); // Poll every 30 seconds
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.pollingInterval);
+  }
+
+  loadStats() {
     const user = this.authService.getCurrentUser();
     if (user && user.id) {
-      // Convert user.id (number) to string
-      this.statsService.getUserStats(user.id.toString()).subscribe((data: Stats) => {
-        this.stats = data;
+      this.isLoading = true;
+      this.statsService.getUserStats(user.id.toString()).subscribe({
+        next: (data: Stats) => {
+          this.stats = data;
+          this.isLoading = false;
+          this.error = null;
+        },
+        error: (err) => {
+          this.error = 'Failed to load stats. Please try again.';
+          this.isLoading = false;
+          console.error('Error fetching stats:', err);
+        }
       });
     }
   }

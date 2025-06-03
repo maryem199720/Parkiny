@@ -1,17 +1,96 @@
-/* src/app/auth/components/auth/auth.component.css */
+/* Tailwind Directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Colors */
+@layer base {
+  :root {
+    --light-purple: #e9d5ff;
+  }
+}
+
 /* Base Styles */
 body {
-  @apply font-sans bg-gradient-to-r from-purple-100/10 to-dark-purple/10 min-h-screen flex items-center justify-center p-4;
+  @apply font-sans bg-gradient-to-r from-purple-100/10 to-dark-purple/10 min-h-screen flex flex-col p-4;
+}
+
+/* Navbar Styles (Complementary to NavbarComponent) */
+.navbar {
+  @apply bg-primary-purple text-white py-4 shadow-md z-50;
+}
+
+.navbar .container {
+  @apply mx-auto px-6 flex items-center justify-between;
+}
+
+.navbar .logo {
+  @apply text-2xl font-bold flex items-center text-gold-500;
+}
+
+.navbar .nav-links {
+  @apply flex space-x-6;
+}
+
+.navbar .nav-links a {
+  @apply text-white hover:text-gold-500 transition-colors;
+}
+
+.navbar .auth-buttons {
+  @apply flex space-x-4;
+}
+
+.navbar .auth-buttons a {
+  @apply px-4 py-2 rounded-md font-medium transition-colors;
+}
+
+.navbar .auth-buttons .login {
+  @apply bg-transparent border border-white hover:bg-white hover:text-primary-purple;
+}
+
+.navbar .auth-buttons .signup {
+  @apply bg-gold-500 text-gray-900 hover:bg-gold-600;
 }
 
 /* Form Container */
-.form-container {
-  @apply bg-white/90 backdrop-blur-md transition-all duration-500 ease-in-out;
+#auth-container {
+  @apply relative max-w-4xl mx-auto mt-8 p-6 bg-white/90 backdrop-blur-md rounded-3xl shadow-md flex flex-1 overflow-hidden;
 }
 
 /* Toggle Container */
 .toggle {
   @apply bg-gradient-to-br from-primary-purple to-dark-purple rounded-3xl;
+}
+
+#toggle-container {
+  @apply absolute w-1/2 h-full transition-all duration-500 ease-in-out z-10 flex items-center justify-center;
+}
+
+#toggle {
+  @apply relative h-full w-full flex;
+}
+
+.toggle-panel {
+  @apply w-full h-full flex flex-col items-center justify-center p-8 text-center transition-all duration-500 ease-in-out absolute top-0 left-0;
+}
+
+.toggle-panel h2 {
+  @apply text-3xl font-display font-bold text-white mb-4;
+}
+
+.toggle-panel p {
+  @apply text-gold-200 mb-6;
+}
+
+/* Form Panels */
+#sign-up,
+#sign-in {
+  @apply absolute w-1/2 h-full p-8 flex items-center justify-center transition-all duration-500 ease-in-out;
+}
+
+#sign-up form,
+#sign-in form {
+  @apply w-full max-w-md;
 }
 
 /* Input Field */
@@ -21,27 +100,6 @@ body {
 
 .input-field:focus {
   @apply border-gold-500;
-}
-
-/* Buttons */
-.btn-primary {
-  @apply bg-gradient-to-r from-primary-purple to-purple-400 text-white font-medium py-3 rounded-lg transition-all duration-300;
-}
-
-.btn-primary:hover {
-  @apply bg-gradient-to-r from-purple-600 to-purple-500 transform -translate-y-0.5 shadow-lg;
-}
-
-.btn-primary:disabled {
-  @apply bg-gray-400 cursor-not-allowed;
-}
-
-.btn-secondary {
-  @apply bg-gradient-to-r from-gold-500 to-yellow-200 text-dark-purple font-medium px-8 py-3 rounded-lg transition-all duration-300;
-}
-
-.btn-secondary:hover {
-  @apply bg-gradient-to-r from-gold-600 to-yellow-300 transform -translate-y-0.5 shadow-lg;
 }
 
 /* Floating Label */
@@ -63,25 +121,38 @@ body {
   @apply text-primary-purple;
 }
 
-/* Toggle Functionality */
-#auth-container {
-  @apply relative h-[600px] overflow-hidden;
+/* Buttons */
+.btn-primary {
+  @apply bg-gradient-to-r from-primary-purple to-purple-400 text-white font-medium py-3 rounded-lg w-full transition-all duration-300;
 }
 
-#sign-up, #sign-in {
-  @apply absolute w-1/2 h-full transition-all duration-500 ease-in-out;
+.btn-primary:hover {
+  @apply bg-gradient-to-r from-purple-600 to-purple-500 transform -translate-y-0.5 shadow-lg;
 }
 
-#toggle-container {
-  @apply absolute w-1/2 h-full transition-all duration-500 ease-in-out z-10;
+.btn-primary:disabled {
+  @apply bg-gray-400 cursor-not-allowed;
 }
 
-#toggle {
-  @apply relative h-full w-full flex;
+.btn-secondary {
+  @apply bg-gradient-to-r from-gold-500 to-yellow-200 text-dark-purple font-medium px-8 py-3 rounded-lg transition-all duration-300;
 }
 
-.toggle-panel {
-  @apply w-full h-full flex flex-col items-center justify-center p-8 text-center transition-all duration-500 ease-in-out absolute top-0 left-0;
+.btn-secondary:hover {
+  @apply bg-gradient-to-r from-gold-600 to-yellow-300 transform -translate-y-0.5 shadow-lg;
+}
+
+/* Footer Styles */
+.footer {
+  @apply bg-dark-purple text-white py-6 mt-auto;
+}
+
+.footer .container {
+  @apply mx-auto px-6 text-center;
+}
+
+.footer a {
+  @apply text-gold-200 hover:text-gold-500 transition-colors;
 }
 
 /* Mobile Responsive */
@@ -90,7 +161,8 @@ body {
     @apply flex-col h-auto w-full;
   }
 
-  #sign-up, #sign-in {
+  #sign-up,
+  #sign-in {
     @apply relative w-full left-0 h-auto p-8;
   }
 
@@ -104,5 +176,13 @@ body {
 
   .toggle-panel {
     @apply w-full static;
+  }
+
+  .navbar .nav-links {
+    @apply hidden;
+  }
+
+  .navbar .auth-buttons {
+    @apply flex-col space-y-2;
   }
 }

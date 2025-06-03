@@ -31,6 +31,7 @@ export class ProfileInfoComponent implements OnInit {
   };
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
+  isFormSubmitted = false;
 
   ngOnInit() {
     this.loadUserProfile();
@@ -47,6 +48,7 @@ export class ProfileInfoComponent implements OnInit {
   loadUserProfile(): void {
     this.isLoading.set(true);
     this.errorMessage.set(null);
+    this.isFormSubmitted = false; // Reset form submission state
     this.http
       .get('http://localhost:8082/parking/api/user/profile', { headers: this.getHeaders() })
       .subscribe({
@@ -76,6 +78,12 @@ export class ProfileInfoComponent implements OnInit {
   }
 
   saveProfileChanges(): void {
+    this.isFormSubmitted = true;
+    if (!this.editForm.firstName || !this.editForm.lastName || !this.editForm.phone) {
+      this.snackBar.open('Veuillez remplir tous les champs requis', 'Fermer', { duration: 3000 });
+      return;
+    }
+
     this.isLoading.set(true);
     this.errorMessage.set(null);
     this.http
