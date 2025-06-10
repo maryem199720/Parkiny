@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       title: 'Parkiny',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
-      darkTheme: darkTheme,
+      darkTheme: lightTheme,
       themeMode: ThemeMode.system,
       home: const SplashScreen(),
     );

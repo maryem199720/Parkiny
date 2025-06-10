@@ -1,1568 +1,334 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:qr_flutter/qr_flutter.dart';
-import 'ParkingSelectionPage.dart';
+import 'package:http/http.dart' as http;
+import 'package:smart_parking/core/constants.dart';
 
-const Color primaryColor = Color(0xFF6A1B9A);
-const Color secondaryColor = Color(0xFFD4AF37);
-const Color backgroundColor = Color(0xFFF5F5F5);
-const Color textColor = Color(0xFF1E0D2B);
-const Color subtitleColor = Color(0xFF757575);
-const Color errorColor = Color(0xFFE57373);
-const Color successColor = Color(0xFF81C784);
-const Color whiteColor = Color(0xFFFFFFFF);
-const Color grayColor = Color(0xFFEEEEEE);
+import '../../services/api_service.dart';
 
-class ReservationPage extends StatefulWidget {
-  const ReservationPage({super.key});
+
+class ReservationsPage extends StatefulWidget {
+  const ReservationsPage({Key? key}) : super(key: key);
 
   @override
-  State<ReservationPage> createState() => _ReservationPageState();
+  State<ReservationsPage> createState() => _ReservationsPageState();
 }
 
-class _ReservationPageState extends State<ReservationPage> {
-  int currentStep = 1;
-  final _formKey = GlobalKey<FormState>();
+class _ReservationsPageState extends State<ReservationsPage> {
+  final _storage = const FlutterSecureStorage();
+  // Form controllers
+  final _dateController = TextEditingController();
+  final _startTimeController = TextEditingController();
+  final _endTimeController = TextEditingController();
   final _emailController = TextEditingController();
+  final _cardNameController = TextEditingController();
   final _cardNumberController = TextEditingController();
-  final _expiryDateController = TextEditingController();
-  final _cvvController = TextEditingController();
-  final _brandController = TextEditingController();
-  final _modelController = TextEditingController();
+  final _cardExpiryController = TextEditingController();
+  final _cardCvvController = TextEditingController();
   final _verificationCodeController = TextEditingController();
 
-  DateTime? selectedDate;
-  TimeOfDay? startTime;
-  TimeOfDay? endTime;
-  int? selectedVehicleIndex;
-  String? selectedSpotId;
-  Map<String, dynamic>? selectedPlace;
-  List<Map<String, dynamic>> userVehicles = [];
-  bool showAddVehicleForm = false;
-  bool isLoading = false;
-  String? errorMessage;
-  double? totalAmount;
-  bool isSubscribed = false;
-  XFile? _matriculeImage;
-  String? reservationId;
-  String? paymentVerificationCode;
+  // Form keys
+  final _reservationFormKey = GlobalKey<FormState>();
+  final _paymentFormKey = GlobalKey<FormState>();
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
-  final ImagePicker _picker = ImagePicker();
+  // State variables
+  int currentStep = 1;
+  bool isLoading = false;
+  bool hasActiveSubscription = false;
+  String? subscriptionId;
+  String? subscriptionEndDate;
+  int remainingPlaces = 0;
+  String errorMessage = '';
+  bool isReservationConfirmed = false;
+  String? reservationId;
+  String? qrCodeString;
+  ParkingSpot? selectedSpot;
+  int? selectedVehicleIndex;
+  List<Vehicle> userVehicles = [];
+  List<ParkingSpot> availableSpots = [];
+  double totalAmount = 0.0;
+  bool emailConfirmation = true;
+  bool saveCard = false;
+  Subscription? subscription;
 
   @override
   void initState() {
     super.initState();
-    selectedDate = DateTime.now();
-    if (userVehicles.isNotEmpty) selectedVehicleIndex = 0;
-    _fetchUserVehicles();
-    _checkSubscriptionStatus();
+    _initializeDefaultValues();
+    _loadTokenAndFetchData();
+  }
+
+  Future<void> _loadTokenAndFetchData() async {
+    setState(() => isLoading = true);
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      if (token == null) {
+        throw Exception('Token non trouvé');
+      }
+      final userId = await _storage.read(key: 'user_id');
+      if (userId == null) {
+        await _fetchUserProfile(token);
+        if (userId == null) throw Exception('User ID not found');
+      } else {
+        StorageService.setUserId(int.parse(userId));
+      }
+      StorageService.setToken(token);
+
+      await Future.wait([
+        _fetchUserVehicles(token),
+        _checkSubscriptionStatus(token),
+        _checkSpotAvailability(),
+      ]);
+
+      if (userVehicles.isEmpty) {
+        errorMessage = 'Veuillez ajouter un véhicule dans votre profil.';
+      }
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Erreur lors du chargement des données : $e';
+      });
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  void _initializeDefaultValues() {
+    final now = DateTime.now();
+    final startTime = now.add(const Duration(minutes: 10));
+    final endTime = startTime.add(const Duration(hours: 1));
+
+    _dateController.text = '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}';
+    _startTimeController.text = '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}';
+    _endTimeController.text = '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}';
+    _emailController.text = 'user@example.com'; // This should come from user profile
   }
 
   @override
   void dispose() {
+    _dateController.dispose();
+    _startTimeController.dispose();
+    _endTimeController.dispose();
     _emailController.dispose();
+    _cardNameController.dispose();
     _cardNumberController.dispose();
-    _expiryDateController.dispose();
-    _cvvController.dispose();
-    _brandController.dispose();
-    _modelController.dispose();
+    _cardExpiryController.dispose();
+    _cardCvvController.dispose();
     _verificationCodeController.dispose();
     super.dispose();
-  }
-
-  Future<void> _checkSubscriptionStatus() async {
-    print('Checking subscription status...');
-    final String? token = await _storage.read(key: 'auth_token');
-    if (token != null) {
-      try {
-        final response = await http.get(
-          Uri.parse('http://10.0.2.2:8082/parking/api/user/subscription'),
-          headers: {'Authorization': 'Bearer $token'},
-        );
-        if (response.statusCode == 200) {
-          setState(() {
-            isSubscribed = json.decode(response.body)['isSubscribed'] ?? false;
-          });
-        }
-      } catch (e) {
-        setState(() {
-          errorMessage = 'Erreur de vérification de l\'abonnement: $e';
-        });
-      }
-    }
-  }
-
-  Future<String?> _getToken() async {
-    try {
-      final token = await _storage.read(key: 'auth_token');
-      return token;
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Erreur lors de la récupération du token: $e';
-      });
-      return null;
-    }
-  }
-
-  Future<bool> _checkConnectivity() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult == ConnectivityResult.none) {
-      setState(() {
-        errorMessage = 'Aucune connexion Internet. Veuillez vérifier votre connexion.';
-      });
-      return false;
-    }
-    return true;
-  }
-
-  Future<void> _fetchUserVehicles() async {
-    print('Fetching user vehicles...');
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-    final String? token = await _getToken();
-    if (token == null) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Erreur: Token d\'authentification manquant.';
-      });
-      return;
-    }
-    try {
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:8082/parking/api/user/profile'),
-        headers: {'Authorization': 'Bearer $token'},
-      ).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        final userProfile = json.decode(response.body);
-        setState(() {
-          userVehicles = List<Map<String, dynamic>>.from(userProfile['vehicles'] ?? [])
-              .map((v) => {
-            'id': v['id'] ?? 'UNKNOWN',
-            'name': '${v['brand']} ${v['model']}',
-          })
-              .toList();
-          showAddVehicleForm = userVehicles.isEmpty;
-          if (userVehicles.isNotEmpty && selectedVehicleIndex == null) {
-            selectedVehicleIndex = 0;
-          }
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          errorMessage = 'Erreur lors de la récupération des véhicules: ${response.statusCode}';
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Erreur réseau: Impossible de récupérer les véhicules.';
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _addVehicle() async {
-    print('Adding vehicle...');
-    if (!_formKey.currentState!.validate() || _matriculeImage == null) {
-      setState(() {
-        errorMessage = 'Veuillez remplir tous les champs et ajouter une image.';
-      });
-      return;
-    }
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-
-    final isConnected = await _checkConnectivity();
-    if (!isConnected) {
-      setState(() {
-        isLoading = false;
-      });
-      return;
-    }
-
-    try {
-      final String matricule = await _processMatriculeImage(_matriculeImage!);
-      final String? token = await _getToken();
-      if (token == null) {
-        setState(() {
-          isLoading = false;
-          errorMessage = 'Erreur de création du véhicule';
-        });
-        return;
-      }
-      final vehicleRequest = {
-        'userId': 1,
-        'matricule': matricule,
-        'vehicleType': 'car',
-        'brand': _brandController.text.trim(),
-        'model': _modelController.text.trim(),
-        'matriculeImageUrl': '',
-      };
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:8082/parking/api/vehicle'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-        body: json.encode(vehicleRequest),
-      );
-      if (response.statusCode == 201) {
-        await _fetchUserVehicles();
-        setState(() {
-          showAddVehicleForm = false;
-          selectedVehicleIndex = 0;
-          _matriculeImage = null;
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          errorMessage = 'Erreur de création du véhicule: ${response.body}';
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Erreur: $e';
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _selectParkingSpot() async {
-    print('Selecting parking spot...');
-    final startDateTime = DateTime(
-      (selectedDate ?? DateTime.now()).year,
-      (selectedDate ?? DateTime.now()).month,
-      (selectedDate ?? DateTime.now()).day,
-      (startTime ?? TimeOfDay.now()).hour,
-      (startTime ?? TimeOfDay.now()).minute,
-    );
-    final endDateTime = DateTime(
-      (selectedDate ?? DateTime.now()).year,
-      (selectedDate ?? DateTime.now()).month,
-      (selectedDate ?? DateTime.now()).day,
-      (endTime ?? TimeOfDay.now().replacing(hour: TimeOfDay.now().hour + 1)).hour,
-      (endTime ?? TimeOfDay.now().replacing(hour: TimeOfDay.now().hour + 1)).minute,
-    );
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ParkingSelectionPage(
-          startTime: startDateTime.toIso8601String(),
-          endTime: endDateTime.toIso8601String(),
-          matricule: selectedVehicleIndex != null && userVehicles[selectedVehicleIndex!]['id'] != null
-              ? userVehicles[selectedVehicleIndex!]['id'].toString()
-              : 'N/A',
-          userId: 1,
-        ),
-      ),
-    );
-    if (result != null) {
-      if (result is String) {
-        setState(() {
-          selectedSpotId = result;
-          selectedPlace = {
-            'id': result,
-            'name': result,
-            'type': result.contains('A') ? 'premium' : 'standard',
-            'price': result.contains('A') ? 8.0 : 5.0,
-            'features': result.contains('A') ? ['Couvert', 'Large'] : ['Couvert'],
-          };
-          totalAmount = calculateTotalCost();
-        });
-      } else {
-        setState(() {
-          errorMessage = 'Erreur: La place sélectionnée n\'est pas valide.';
-        });
-      }
-    }
-  }
-
-  Future<void> _captureOrPickImage() async {
-    print('Capturing or picking image...');
-    var storageStatus = await Permission.storage.status;
-
-    if (!storageStatus.isGranted) {
-      storageStatus = await Permission.storage.request();
-      if (!storageStatus.isGranted) {
-        setState(() {
-          errorMessage = 'Permission de stockage refusée.';
-        });
-        return;
-      }
-    }
-
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: const Icon(Icons.photo_library),
-            title: const Text('Choisir depuis la galerie'),
-            onTap: () async {
-              Navigator.pop(context);
-              setState(() {
-                isLoading = true;
-                errorMessage = null;
-              });
-              try {
-                final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-                if (image != null) {
-                  setState(() {
-                    _matriculeImage = image;
-                    isLoading = false;
-                  });
-                } else {
-                  setState(() {
-                    isLoading = false;
-                  });
-                }
-              } catch (e) {
-                setState(() {
-                  errorMessage = 'Erreur lors de la sélection: $e';
-                  isLoading = false;
-                });
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<String> _processMatriculeImage(XFile image) async {
-    print('Processing matricule image...');
-    final String? token = await _getToken();
-    var request = http.MultipartRequest(
-      'POST',
-      Uri.parse('http://10.0.2.2:5000/api/process-matricule'),
-    );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.files.add(await http.MultipartFile.fromPath('image', image.path));
-
-    try {
-      final response = await request.send().timeout(const Duration(seconds: 10));
-      if (response.statusCode == 200) {
-        final responseBody = await response.stream.bytesToString();
-        final data = json.decode(responseBody);
-        return data['matricule'] as String;
-      } else {
-        final errorBody = await response.stream.bytesToString();
-        throw Exception('Erreur serveur: $errorBody (Status: ${response.statusCode})');
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Erreur de connexion au serveur: $e';
-      });
-      rethrow;
-    }
-  }
-
-  double calculateTotalCost() {
-    if (selectedPlace == null || startTime == null || endTime == null) return 0.0;
-    final duration = endTime!.hour - startTime!.hour + (endTime!.minute - startTime!.minute) / 60;
-    final basePrice = selectedPlace!['price'] ?? 5.0;
-    double cost = duration * basePrice;
-    if (isSubscribed) cost *= 0.5;
-    return cost > 0 ? cost : 0.0;
-  }
-
-  Future<void> _submitReservation() async {
-    print('Submitting reservation...');
-    if (selectedDate == null || startTime == null || endTime == null || selectedSpotId == null || _emailController.text.isEmpty) {
-      setState(() {
-        errorMessage = 'Veuillez remplir tous les champs.';
-      });
-      return;
-    }
-    if (selectedVehicleIndex == null) {
-      setState(() {
-        errorMessage = 'Veuillez sélectionner un véhicule.';
-      });
-      return;
-    }
-    if (!isSubscribed && totalAmount! > 0) {
-      if (_cardNumberController.text.isEmpty || _expiryDateController.text.isEmpty || _cvvController.text.isEmpty) {
-        setState(() {
-          errorMessage = 'Veuillez remplir les informations de paiement.';
-        });
-        return;
-      }
-    }
-
-    setState(() {
-      isLoading = true;
-      errorMessage = null;
-    });
-
-    final String? token = await _getToken();
-    if (token == null) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Erreur de réservation: token manquant';
-      });
-      return;
-    }
-
-    final selectedVehicle = userVehicles[selectedVehicleIndex!];
-    final startDateTime = DateTime(
-      selectedDate!.year,
-      selectedDate!.month,
-      selectedDate!.day,
-      startTime!.hour,
-      startTime!.minute,
-    );
-    final endDateTime = DateTime(
-      selectedDate!.year,
-      selectedDate!.month,
-      selectedDate!.day,
-      endTime!.hour,
-      endTime!.minute,
-    );
-
-    final formatter = DateFormat("yyyy-MM-dd'T'HH:mm:ss");
-    final reservationRequest = {
-      'userId': 1,
-      'parkingPlaceId': int.parse(selectedSpotId!.split('-').last),
-      'matricule': selectedVehicle['id'].toString(),
-      'startTime': formatter.format(startDateTime),
-      'endTime': formatter.format(endDateTime),
-      'vehicleType': 'Voiture',
-      'paymentMethod': 'CARTE_BANCAIRE',
-      'specialRequest': '',
-      'email': _emailController.text.trim(),
-    };
-    print('Reservation request: $reservationRequest');
-
-    for (int retry = 0; retry < 3; retry++) {
-      try {
-        final response = await http.post(
-          Uri.parse('http://10.0.2.2:8082/parking/api/createReservation'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: json.encode(reservationRequest),
-        ).timeout(const Duration(seconds: 10), onTimeout: () {
-          print('Timeout on attempt ${retry + 1}/3');
-          throw Exception('Délai de connexion dépassé. Tentative ${retry + 1}/3.');
-        });
-        print('Response status: ${response.statusCode}, body: ${response.body}');
-        if (response.statusCode == 200) {
-          final data = json.decode(response.body);
-          setState(() {
-            reservationId = data['reservationId'] as String?;
-            paymentVerificationCode = data['paymentVerificationCode'] as String?;
-            totalAmount = calculateTotalCost();
-          });
-
-          if (!isSubscribed && totalAmount! > 0) {
-            await _finalizePayment();
-            await _sendConfirmationEmail();
-            await _showReservationConfirmationDialog();
-          } else {
-            await _sendConfirmationEmail();
-            await _showReservationConfirmationDialog();
-          }
-          setState(() {
-            isLoading = false;
-          });
-          return;
-        } else {
-          setState(() {
-            errorMessage = 'Erreur de réservation: ${response.statusCode} - ${response.body}';
-          });
-          if (retry == 2) throw Exception('Échec après 3 tentatives.');
-        }
-      } catch (e) {
-        print('Exception during reservation attempt ${retry + 1}: $e');
-        setState(() {
-          errorMessage = 'Erreur de réservation: $e';
-        });
-        if (retry < 2) {
-          await Future.delayed(const Duration(seconds: 2));
-        } else {
-          setState(() {
-            isLoading = false;
-          });
-          return;
-        }
-      }
-    }
-  }
-
-  Future<void> _finalizePayment() async {
-    final String? token = await _getToken();
-    if (token == null) {
-      setState(() {
-        isLoading = false;
-        errorMessage = 'Erreur de paiement: token manquant';
-      });
-      return;
-    }
-
-    final paymentRequest = {
-      'cardNumber': _cardNumberController.text.trim(),
-      'expiryDate': _expiryDateController.text.trim(),
-      'cvv': _cvvController.text.trim(),
-      'amount': totalAmount,
-    };
-
-    try {
-      final response = await http.post(
-        Uri.parse('http://10.0.2.2:8082/parking/api/payment'),
-        headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-        body: json.encode(paymentRequest),
-      ).timeout(const Duration(seconds: 10));
-      print('Payment response: ${response.statusCode}, ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final redirectUrl = data['redirect_url'] as String?;
-        if (redirectUrl != null) {
-          await _launchURL(redirectUrl);
-        }
-      } else {
-        setState(() {
-          errorMessage = 'Erreur de paiement: ${response.statusCode} - ${response.body}';
-          isLoading = false;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        errorMessage = 'Erreur de paiement: $e';
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _showReservationConfirmationDialog() async {
-    final formKey = GlobalKey<FormState>();
-
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => AlertDialog(
-        backgroundColor: whiteColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Row(
-          children: [
-            const Icon(Icons.security, color: primaryColor, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              'Confirmation de la réservation',
-              style: GoogleFonts.roboto(fontSize: 18, fontWeight: FontWeight.bold, color: textColor),
-            ),
-          ],
-        ),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Un code de confirmation a été envoyé à ${_emailController.text}. Veuillez entrer le code ci-dessous.',
-                style: GoogleFonts.roboto(fontSize: 14, color: subtitleColor),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _verificationCodeController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Code de confirmation',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer le code';
-                  }
-                  return null;
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              setState(() {
-                isLoading = false;
-              });
-            },
-            child: Text('Annuler', style: GoogleFonts.roboto(color: errorColor)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                Navigator.pop(context);
-                await _confirmReservation();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            child: Text('Confirmer', style: GoogleFonts.roboto(color: whiteColor)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _confirmReservation() async {
-    final String? token = await _getToken();
-    if (token == null) {
-      setState(() {
-        errorMessage = 'Erreur de confirmation de réservation: token manquant';
-        isLoading = false;
-      });
-      return;
-    }
-
-    final numericReservationId = int.parse(reservationId!.split('-').last);
-
-    final response = await http.post(
-      Uri.parse('http://10.0.2.2:8082/parking/api/confirmReservation'),
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-      body: json.encode({
-        'reservationId': numericReservationId,
-        'reservationConfirmationCode': _verificationCodeController.text,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        currentStep = 3;
-        isLoading = false;
-      });
-    } else {
-      setState(() {
-        errorMessage = 'Erreur de confirmation de réservation: ${response.body}';
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _sendConfirmationEmail() async {
-    print('Sending confirmation email...');
-    final String? token = await _getToken();
-    if (token != null) {
-      final formatter = DateFormat('dd/MM/yyyy HH:mm');
-      final emailRequest = {
-        'email': _emailController.text.trim(),
-        'reservationId': reservationId,
-        'details': {
-          'reservationId': reservationId,
-          'startTime': formatter.format(DateTime(
-            selectedDate!.year,
-            selectedDate!.month,
-            selectedDate!.day,
-            startTime!.hour,
-            startTime!.minute,
-          )),
-          'endTime': formatter.format(DateTime(
-            selectedDate!.year,
-            selectedDate!.month,
-            selectedDate!.day,
-            endTime!.hour,
-            endTime!.minute,
-          )),
-          'placeName': selectedPlace!['name'],
-          'totalAmount': totalAmount?.toStringAsFixed(2) ?? '0.00',
-          'qrCodeData': reservationId ?? 'RES-${DateTime.now().millisecondsSinceEpoch}',
-        },
-      };
-      try {
-        final response = await http.post(
-          Uri.parse('http://10.0.2.2:8082/parking/api/sendConfirmationEmail'),
-          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-          body: json.encode(emailRequest),
-        );
-        if (response.statusCode == 200) {
-          print('Confirmation email sent successfully');
-        } else {
-          setState(() {
-            errorMessage = 'Erreur d\'envoi de l\'email: ${response.body}';
-          });
-        }
-      } catch (e) {
-        setState(() {
-          errorMessage = 'Erreur d\'envoi de l\'email: $e';
-        });
-      }
-    }
-  }
-
-  Future<void> _launchURL(String? url) async {
-    if (url == null) {
-      setState(() {
-        errorMessage = 'URL de paiement manquante.';
-      });
-      return;
-    }
-    print('Launching URL: $url');
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      setState(() {
-        errorMessage = 'Impossible de lancer l\'URL de paiement.';
-      });
-    }
-  }
-
-  void _nextStep() {
-    print('Proceeding to next step: $currentStep');
-    if (currentStep == 1 && selectedSpotId == null) {
-      setState(() {
-        errorMessage = 'Veuillez sélectionner une place.';
-      });
-      return;
-    }
-    if (currentStep == 2) {
-      if (!_formKey.currentState!.validate()) return;
-      if (selectedDate == null || startTime == null || endTime == null || _emailController.text.isEmpty) {
-        setState(() {
-          errorMessage = 'Veuillez remplir tous les champs.';
-        });
-        return;
-      }
-      _submitReservation();
-      return;
-    }
-    setState(() {
-      currentStep++;
-    });
-  }
-
-  void _prevStep() {
-    print('Going back to previous step: $currentStep');
-    setState(() {
-      if (currentStep > 1) currentStep--;
-    });
-  }
-
-  void _reset() {
-    print('Resetting form...');
-    setState(() {
-      currentStep = 1;
-      selectedDate = DateTime.now();
-      startTime = null;
-      endTime = null;
-      selectedVehicleIndex = userVehicles.isNotEmpty ? 0 : null;
-      selectedSpotId = null;
-      selectedPlace = null;
-      totalAmount = null;
-      _emailController.clear();
-      _cardNumberController.clear();
-      _expiryDateController.clear();
-      _cvvController.clear();
-      _brandController.clear();
-      _modelController.clear();
-      _matriculeImage = null;
-      errorMessage = null;
-      reservationId = null;
-      paymentVerificationCode = null;
-      _verificationCodeController.clear();
-    });
-  }
-
-  Future<void> _selectTime(BuildContext context, bool isStart) async {
-    print('Selecting time (isStart: $isStart)...');
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: isStart
-          ? (startTime ?? TimeOfDay.now())
-          : (endTime ?? TimeOfDay.now().replacing(hour: TimeOfDay.now().hour + 1)),
-    );
-    if (picked != null) {
-      setState(() {
-        if (isStart) {
-          startTime = picked;
-        } else {
-          endTime = picked;
-          if (startTime != null) {
-            final startMinutes = startTime!.hour * 60 + startTime!.minute;
-            final endMinutes = endTime!.hour * 60 + endTime!.minute;
-            if (endMinutes <= startMinutes) {
-              errorMessage = 'L\'heure de fin doit être après l\'heure de début.';
-              endTime = null;
-              return;
-            }
-          }
-        }
-        totalAmount = calculateTotalCost();
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: AppColors.backgroundColor,
+      appBar: AppBar(
+        title: const Text(
+          'Réservations',
+          style: TextStyle(
+            color: AppColors.textColor,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: AppColors.whiteColor,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.textColor),
+      ),
       body: SafeArea(
-        child: Column(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 24),
+              _buildSubscriptionBanner(),
+              const SizedBox(height: 24),
+              _buildProgressBar(),
+              const SizedBox(height: 24),
+              if (errorMessage.isNotEmpty) _buildErrorMessage(errorMessage),
+              _buildCurrentStep(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Text(
+          'Réservez avec Parkiny',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textColor,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Réservez votre place de parking en quelques étapes simples.',
+          style: TextStyle(
+            fontSize: 16,
+            color: AppColors.subtitleColor,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSubscriptionBanner() {
+    if (hasActiveSubscription) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.primaryColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.primaryColor.withOpacity(0.2),
+          ),
+        ),
+        child: Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
+            Icon(
+              Icons.verified,
+              color: AppColors.primaryColor,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.local_parking, color: primaryColor, size: 30),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Réservation de parking',
-                        style: GoogleFonts.roboto(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
                   Text(
-                    'Garantissez votre place en quelques étapes simples',
-                    style: GoogleFonts.roboto(fontSize: 12, color: subtitleColor),
+                    'Abonnement Premium (ID: $subscriptionId)',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textColor,
+                    ),
+                  ),
+                  Text(
+                    'Valide jusqu\'au $subscriptionEndDate | $remainingPlaces/10 places restantes',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.subtitleColor,
+                    ),
                   ),
                 ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildStepIndicator(1, 'Choix de la place'),
-                  Expanded(child: _buildStepLine(currentStep >= 2)),
-                  _buildStepIndicator(2, 'Informations'),
-                  Expanded(child: _buildStepLine(currentStep >= 3)),
-                  _buildStepIndicator(3, 'Confirmation'),
-                ],
-              ),
-            ),
-            Expanded(
-              child: isLoading
-                  ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const CircularProgressIndicator(color: primaryColor),
-                    const SizedBox(height: 10),
-                    Text('Traitement en cours...', style: GoogleFonts.roboto(color: textColor)),
-                  ],
-                ),
-              )
-                  : SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (errorMessage != null) _buildErrorMessage(errorMessage!),
-                    if (currentStep == 1) ...[
-                      Row(
-                        children: [
-                          const Icon(Icons.map, color: primaryColor, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Plan du parking',
-                            style: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 16,
-                        children: [
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(width: 12, height: 12, color: successColor),
-                              const SizedBox(width: 4),
-                              Text('Standard (5 TND/h)', style: GoogleFonts.roboto(fontSize: 12, color: textColor)),
-                            ],
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(width: 100, height: 12, color: secondaryColor),
-                              const SizedBox(width: 4),
-                              Text('Premium (8 TND/h)', style: GoogleFonts.roboto(fontSize: 12, color: textColor)),
-                            ],
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(width: 12, height: 12, color: errorColor),
-                              const SizedBox(width: 4),
-                              Text('Réservé', style: GoogleFonts.roboto(fontSize: 12, color: textColor)),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _selectParkingSpot,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          minimumSize: const Size(double.infinity, 48),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
-                        child: Text(
-                          selectedSpotId != null ? 'Place sélectionnée: ${selectedPlace?['name']}' : 'Choisir une place de parking',
-                          style: GoogleFonts.roboto(fontSize: 16, color: whiteColor),
-                        ),
-                      ),
-                      if (selectedPlace != null) ...[
-                        const SizedBox(height: 16),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: whiteColor,
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [BoxShadow(color: grayColor.withOpacity(0.2), blurRadius: 4, offset: Offset(0, 2))],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  const Icon(Icons.info, color: primaryColor, size: 16),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Détails de la place sélectionnée',
-                                    style: GoogleFonts.roboto(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  const Icon(Icons.place, color: primaryColor, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text('Place: ${selectedPlace!['name']}', style: GoogleFonts.roboto(fontSize: 12, color: textColor)),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.category, color: primaryColor, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text('Type: ${selectedPlace!['type']}', style: GoogleFonts.roboto(fontSize: 12, color: textColor)),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.attach_money, color: primaryColor, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text('Tarif: ${selectedPlace!['price']} TND/h', style: GoogleFonts.roboto(fontSize: 12, color: textColor)),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.star, color: primaryColor, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text('Avantages: ${selectedPlace!['features'].join(', ')}', style: GoogleFonts.roboto(fontSize: 12, color: textColor)),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
-                    if (currentStep == 2) ...[
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.info, color: primaryColor, size: 20),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Informations',
-                                  style: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            _buildDateTimePicker(),
-                            const SizedBox(height: 20),
-                            _buildInputField(
-                              controller: _emailController,
-                              label: 'Email (pour confirmation)',
-                              icon: Icons.email,
-                              validator: (v) => !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v!) ? 'Email invalide' : null,
-                            ),
-                            const SizedBox(height: 20),
-                            if (showAddVehicleForm) ...[
-                              _buildCameraCapture(),
-                              const SizedBox(height: 12),
-                              _buildInputField(
-                                controller: _brandController,
-                                label: 'Marque',
-                                icon: Icons.branding_watermark,
-                                validator: (v) => v!.isEmpty ? 'Champ requis' : null,
-                              ),
-                              const SizedBox(height: 12),
-                              _buildInputField(
-                                controller: _modelController,
-                                label: 'Modèle',
-                                icon: Icons.model_training,
-                                validator: (v) => v!.isEmpty ? 'Champ requis' : null,
-                              ),
-                              const SizedBox(height: 20),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      onPressed: _addVehicle,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: primaryColor,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                      ),
-                                      child: Text(
-                                        'Ajouter le véhicule',
-                                        style: GoogleFonts.roboto(fontSize: 14, color: whiteColor),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: () {
-                                        setState(() {
-                                          showAddVehicleForm = false;
-                                        });
-                                      },
-                                      style: OutlinedButton.styleFrom(
-                                        side: BorderSide(color: primaryColor),
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                      ),
-                                      child: Text(
-                                        'Passer',
-                                        style: GoogleFonts.roboto(fontSize: 14, color: primaryColor),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ] else ...[
-                              _buildVehicleSelector(),
-                            ],
-                            const SizedBox(height: 20),
-                            if (!isSubscribed && totalAmount != null && totalAmount! > 0) ...[
-                              Row(
-                                children: [
-                                  const Icon(Icons.payment, color: primaryColor, size: 20),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Détails de paiement',
-                                    style: GoogleFonts.roboto(fontSize: 16, fontWeight: FontWeight.bold, color: textColor),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              _buildInputField(
-                                controller: _cardNumberController,
-                                label: 'Numéro de carte',
-                                icon: Icons.credit_card,
-                                validator: (v) => v!.length != 16 ? 'Numéro invalide' : null,
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildInputField(
-                                      controller: _expiryDateController,
-                                      label: 'Date d\'expiration (MM/YY)',
-                                      icon: Icons.calendar_today,
-                                      validator: (v) => !RegExp(r'^\d{2}/\d{2}$').hasMatch(v!) ? 'Format invalide' : null,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _buildInputField(
-                                      controller: _cvvController,
-                                      label: 'CVV',
-                                      icon: Icons.lock,
-                                      validator: (v) => v!.length != 3 ? 'CVV invalide' : null,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Montant: ${totalAmount?.toStringAsFixed(2)} TND',
-                                style: GoogleFonts.roboto(fontSize: 14, color: subtitleColor),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (currentStep == 3) ...[
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: whiteColor,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [BoxShadow(color: grayColor.withOpacity(0.2), blurRadius: 4, offset: Offset(0, 2))],
-                        ),
-                        child: Column(
-                          children: [
-                            const Icon(Icons.check_circle, color: successColor, size: 50),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Réservation confirmée!',
-                              style: GoogleFonts.roboto(fontSize: 20, fontWeight: FontWeight.bold, color: textColor),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Un email de confirmation a été envoyé à ${_emailController.text}.',
-                              style: GoogleFonts.roboto(fontSize: 12, color: textColor),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.confirmation_number, color: primaryColor, size: 16),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'N° de réservation: $reservationId',
-                                  style: GoogleFonts.roboto(fontSize: 14, fontWeight: FontWeight.bold, color: textColor),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: whiteColor,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Column(
-                                children: [
-                                  SizedBox(
-                                    width: 100,
-                                    height: 100,
-                                    child: QrImageView(
-                                      data: reservationId ?? 'RES-${DateTime.now().millisecondsSinceEpoch}',
-                                      version: QrVersions.auto,
-                                      size: 100,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Présentez ce QR code à l\'arrivée',
-                                    style: GoogleFonts.roboto(fontSize: 12, color: textColor),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _reset,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                                minimumSize: const Size(double.infinity, 48),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.add, size: 18, color: whiteColor),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Nouvelle réservation',
-                                    style: GoogleFonts.roboto(fontSize: 16, color: whiteColor),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        if (currentStep == 1)
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _reset,
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: errorColor),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.refresh, size: 18, color: errorColor),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Réinitialiser',
-                                    style: GoogleFonts.roboto(fontSize: 14, color: errorColor),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        if (currentStep > 1)
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: _prevStep,
-                              style: OutlinedButton.styleFrom(
-                                side: BorderSide(color: primaryColor),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Icon(Icons.arrow_back, size: 18, color: primaryColor),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    currentStep == 2 ? 'Retour' : 'Modifier',
-                                    style: GoogleFonts.roboto(fontSize: 14, color: primaryColor),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        if (currentStep < 3) const SizedBox(width: 12),
-                        if (currentStep < 3)
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _nextStep,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'Suivant',
-                                    style: GoogleFonts.roboto(fontSize: 14, color: whiteColor),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const Icon(Icons.arrow_forward, size: 18, color: whiteColor),
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
               ),
             ),
           ],
         ),
-      ),
+      );
+    } else {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.primaryColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.primaryColor.withOpacity(0.2),
+          ),
+        ),
+        child: Center(
+          child: RichText(
+            text: TextSpan(
+              style: TextStyle(color: AppColors.subtitleColor),
+              children: [
+                const TextSpan(text: 'Vous n\'avez pas d\'abonnement actif. '),
+                TextSpan(
+                  text: 'Souscrire maintenant',
+                  style: const TextStyle(
+                    color: AppColors.primaryColor,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  Widget _buildProgressBar() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            _buildStepIndicator(1, 'Choix de la place'),
+            _buildProgressLine(currentStep >= 2),
+            _buildStepIndicator(2, 'Détails'),
+            _buildProgressLine(currentStep >= 3),
+            _buildStepIndicator(3, hasActiveSubscription ? 'Vérification' : 'Paiement'),
+            _buildProgressLine(currentStep >= 4),
+            _buildStepIndicator(4, 'Confirmation'),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildStepIndicator(int step, String label) {
-    return Column(
-      children: [
-        Container(
-          width: 30,
-          height: 30,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: currentStep >= step ? LinearGradient(colors: [primaryColor, secondaryColor]) : null,
-            color: currentStep < step ? grayColor : null,
-            border: Border.all(color: primaryColor, width: 2),
+    final isActive = currentStep >= step;
+    final isCompleted = currentStep > step;
+
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isActive ? AppColors.primaryColor : AppColors.whiteColor,
+              border: Border.all(
+                color: isActive ? AppColors.primaryColor : AppColors.grayColor,
+                width: 2,
+              ),
+            ),
+            child: Center(
+              child: isCompleted
+                  ? const Icon(
+                Icons.check,
+                color: AppColors.whiteColor,
+                size: 16,
+              )
+                  : Text(
+                step.toString(),
+                style: TextStyle(
+                  color: isActive ? AppColors.whiteColor : AppColors.subtitleColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
           ),
-          child: Center(
-            child: Text(
-              step.toString(),
-              style: GoogleFonts.roboto(
-                fontSize: 16,
-                color: currentStep >= step ? whiteColor : textColor,
-                fontWeight: FontWeight.bold,
-              ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: AppColors.subtitleColor,
             ),
+            textAlign: TextAlign.center,
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.roboto(fontSize: 12, color: textColor, fontWeight: FontWeight.w500),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStepLine(bool isActive) {
-    return Container(
-      height: 3,
-      color: isActive ? secondaryColor : grayColor.withOpacity(0.5),
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-    );
-  }
-
-  Widget _buildDateTimePicker() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedDate ?? DateTime.now(),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime(2026),
-                  );
-                  if (picked != null) setState(() => selectedDate = picked);
-                },
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'Date de réservation',
-                    labelStyle: GoogleFonts.roboto(color: subtitleColor),
-                    prefixIcon: const Icon(Icons.calendar_today, color: primaryColor),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: grayColor),
-                    ),
-                    filled: true,
-                    fillColor: whiteColor,
-                  ),
-                  child: Text(
-                    selectedDate == null ? 'Choisir une date' : DateFormat('dd/MM/yyyy').format(selectedDate!),
-                    style: GoogleFonts.roboto(color: textColor, fontSize: 14),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: InkWell(
-                onTap: () => _selectTime(context, true),
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'Heure de début',
-                    labelStyle: GoogleFonts.roboto(color: subtitleColor),
-                    prefixIcon: const Icon(Icons.access_time, color: primaryColor),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: grayColor),
-                    ),
-                    filled: true,
-                    fillColor: whiteColor,
-                  ),
-                  child: Text(
-                    startTime == null ? 'Choisir une heure' : startTime!.format(context),
-                    style: GoogleFonts.roboto(color: textColor, fontSize: 14),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: InkWell(
-                onTap: () => _selectTime(context, false),
-                child: InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'Heure de fin',
-                    labelStyle: GoogleFonts.roboto(color: subtitleColor),
-                    prefixIcon: const Icon(Icons.access_time, color: primaryColor),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: grayColor),
-                    ),
-                    filled: true,
-                    fillColor: whiteColor,
-                  ),
-                  child: Text(
-                    endTime == null ? 'Choisir une heure' : endTime!.format(context),
-                    style: GoogleFonts.roboto(color: textColor, fontSize: 14),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildVehicleSelector() {
-    return SizedBox(
-      height: 120,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: userVehicles.length + 1,
-        itemBuilder: (context, index) {
-          if (index == userVehicles.length) {
-            return GestureDetector(
-              onTap: () => setState(() => showAddVehicleForm = true),
-              child: Container(
-                width: 150,
-                margin: const EdgeInsets.only(right: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: whiteColor,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: primaryColor, width: 2),
-                  boxShadow: [BoxShadow(color: grayColor.withOpacity(0.2), blurRadius: 4, offset: Offset(0, 2))],
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.add, color: primaryColor, size: 30),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Ajouter un véhicule',
-                      style: GoogleFonts.roboto(color: primaryColor, fontSize: 14, fontWeight: FontWeight.w500),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-          final vehicle = userVehicles[index];
-          final selected = selectedVehicleIndex == index;
-          return GestureDetector(
-            onTap: () => setState(() => selectedVehicleIndex = index),
-            child: Container(
-              width: 150,
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: whiteColor,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: selected ? secondaryColor : grayColor, width: 2),
-                boxShadow: [BoxShadow(color: grayColor.withOpacity(0.2), blurRadius: 4, offset: Offset(0, 2))],
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.directions_car, color: primaryColor, size: 30),
-                  const SizedBox(height: 8),
-                  Text(
-                    vehicle['name'] ?? 'Véhicule',
-                    style: GoogleFonts.roboto(color: textColor, fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+        ],
       ),
     );
   }
 
-  Widget _buildCameraCapture() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Ajouter une image de la plaque d\'immatriculation (optionnel)',
-          style: GoogleFonts.roboto(fontSize: 14, color: textColor),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ElevatedButton.icon(
-              onPressed: _captureOrPickImage,
-              icon: const Icon(Icons.photo_library, color: whiteColor),
-              label: Text(
-                'Choisir une image',
-                style: GoogleFonts.roboto(fontSize: 14, color: whiteColor),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              ),
-            ),
-          ],
-        ),
-        if (_matriculeImage != null) ...[
-          const SizedBox(height: 12),
-          Container(
-            height: 100,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              border: Border.all(color: grayColor),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.file(
-                File(_matriculeImage!.path),
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Center(
-                  child: Text(
-                    'Erreur lors du chargement de l\'image',
-                    style: GoogleFonts.roboto(color: errorColor),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildInputField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    required String? Function(String?) validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      validator: validator,
-      style: GoogleFonts.roboto(color: textColor),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: whiteColor,
-        prefixIcon: Icon(icon, color: primaryColor),
-        labelText: label,
-        labelStyle: GoogleFonts.roboto(color: subtitleColor),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: grayColor),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: primaryColor, width: 2),
+  Widget _buildProgressLine(bool isCompleted) {
+    return Expanded(
+      child: Container(
+        height: 2,
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          color: isCompleted ? AppColors.primaryColor : AppColors.grayColor,
+          borderRadius: BorderRadius.circular(1),
         ),
       ),
     );
@@ -1573,21 +339,2152 @@ class _ReservationPageState extends State<ReservationPage> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: errorColor.withOpacity(0.1),
-        border: Border.all(color: errorColor),
+        color: AppColors.errorColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppColors.errorColor.withOpacity(0.2),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: errorColor, size: 20),
+          Icon(
+            Icons.error_outline,
+            color: AppColors.errorColor,
+            size: 20,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
-              style: GoogleFonts.roboto(color: errorColor, fontSize: 12),
+              style: TextStyle(
+                color: AppColors.errorColor,
+                fontSize: 14,
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCurrentStep() {
+    switch (currentStep) {
+      case 1:
+        return _buildSpotSelectionStep();
+      case 2:
+        return _buildReservationDetailsStep();
+      case 3:
+        return _buildPaymentVerificationStep();
+      case 4:
+        return _buildConfirmationStep();
+      default:
+        return _buildSpotSelectionStep();
+    }
+  }
+
+  Future<void> _fetchUserProfile(String token) async {
+    final response = await http.get(
+      Uri.parse('${ApiService.baseUrl}${ApiService.apiPrefix}/user/profile'),
+      headers: {'Authorization': 'Bearer $token'},
+    ).timeout(const Duration(seconds: 10));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        StorageService.setUserId(data['id']);
+        userVehicles = (data['vehicles'] as List? ?? []).map((v) => Vehicle.fromJson(v)).toList();
+      });
+    } else if (response.statusCode == 401) {
+      await _storage.delete(key: 'auth_token');
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      throw Exception('Échec de la récupération du profil : ${response.statusCode}');
+    }
+  }
+
+  Future<void> _fetchUserVehicles(String token) async {
+    final response = await http.get(
+      Uri.parse('${ApiService.baseUrl}${ApiService.apiPrefix}/user/profile'),
+      headers: {'Authorization': 'Bearer $token'},
+    ).timeout(const Duration(seconds: 10));
+
+    print('Vehicles Response Status: ${response.statusCode}');
+    print('Vehicles Response Body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        userVehicles = (data['vehicles'] as List? ?? []).map((v) => Vehicle.fromJson(v)).toList();
+      });
+    } else if (response.statusCode == 401) {
+      await _storage.delete(key: 'auth_token');
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      throw Exception('Échec de la récupération des véhicules : ${response.statusCode}');
+    }
+  }
+
+  Future<void> _checkSubscriptionStatus(String token) async {
+    final userId = StorageService.getUserId();
+    if (userId == null) throw Exception('User ID not found');
+
+    final response = await http.get(
+      Uri.parse('${ApiService.baseUrl}${ApiService.apiPrefix}/subscriptions/active?userId=$userId'),
+      headers: {'Authorization': 'Bearer $token'},
+    ).timeout(const Duration(seconds: 10));
+
+    print('Subscription Response Status: ${response.statusCode}');
+    print('Subscription Response Body: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        hasActiveSubscription = (data['status'] as String?)?.toUpperCase() == 'ACTIVE';
+        subscription = hasActiveSubscription ? Subscription.fromJson(data) : null;
+        if (subscription != null) {
+          subscriptionId = subscription!.id.toString();
+          subscriptionEndDate = subscription!.endDate;
+          remainingPlaces = subscription!.remainingPlaces;
+        } else {
+          subscriptionId = null;
+          subscriptionEndDate = null;
+          remainingPlaces = 0;
+        }
+      });
+    } else if (response.statusCode == 404) {
+      setState(() {
+        hasActiveSubscription = false;
+        subscription = null;
+        subscriptionId = null;
+        subscriptionEndDate = null;
+        remainingPlaces = 0;
+      });
+    } else {
+      throw Exception('Échec de la vérification de l\'abonnement : ${response.statusCode}');
+    }
+  }
+  Future<String?> _getToken() async {
+    return await _storage.read(key: 'auth_token');
+  }
+  Future<void> _checkSpotAvailability() async {
+    final startTime = _startTimeController.text;
+    final endTime = _endTimeController.text;
+    final dateText = _dateController.text;
+
+    if (startTime.isEmpty || endTime.isEmpty || dateText.isEmpty) {
+      setState(() {
+        availableSpots = [];
+      });
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('No authentication token available. Please log in.');
+      }
+
+      // Convert date from "dd/MM/yyyy" to "yyyy-MM-dd"
+      final dateParts = dateText.split('/');
+      if (dateParts.length != 3) throw Exception('Invalid date format');
+      final formattedDate = '${dateParts[2]}-${dateParts[1]}-${dateParts[0]}'; // "yyyy-MM-dd"
+
+      // Ensure time is in "HH:mm" format
+      final formattedStartTime = startTime.padLeft(5, '0');
+      final formattedEndTime = endTime.padLeft(5, '0');
+
+      final uri = Uri.parse('${ApiService.baseUrl}${ApiService.apiPrefix}/parking-spots/available')
+          .replace(queryParameters: {
+        'date': formattedDate,
+        'startTime': formattedStartTime,
+        'endTime': formattedEndTime,
+        if (hasActiveSubscription) 'subscriptionId': subscriptionId, // Include subscription ID if active
+      });
+
+      debugPrint('Fetching parking spots from: $uri');
+      debugPrint('Authorization: Bearer $token');
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ).timeout(const Duration(seconds: 10), onTimeout: () {
+        throw Exception('Délai de connexion dépassé');
+      });
+
+      debugPrint('Response status: ${response.statusCode}');
+      debugPrint('Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final List<dynamic> spots = json.decode(response.body);
+        if (spots.isEmpty) {
+          setState(() {
+            availableSpots = [];
+            isLoading = false;
+          });
+          return;
+        }
+
+        setState(() {
+          availableSpots = spots.map((spot) {
+            if (spot['id'] == null || spot['available'] == null) {
+              throw Exception('Données de place de parking incomplètes: $spot');
+            }
+            final spotId = spot['id'].toString();
+            final isSubscriptionSpot = hasActiveSubscription && spotId.startsWith('S');
+            return ParkingSpot(
+              id: spotId,
+              type: spot['type'] ?? 'standard',
+              price: isSubscriptionSpot ? 0.0 : (spot['price'] as num?)?.toDouble() ?? 0.0,
+              status: spot['available'] == true ? 'available' : 'reserved',
+              features: List<String>.from(spot['features'] ?? []),
+              available: spot['available'] ?? true,
+            );
+          }).toList();
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Erreur de récupération des places: ${response.statusCode} - ${response.body}';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        availableSpots = [];
+        errorMessage = 'Erreur de récupération des places: $e';
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors de la vérification des places disponibles'),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+    }
+  }
+
+  String _formatDateForBackend(String dateText) {
+    final parts = dateText.split('/');
+    if (parts.length == 3) {
+      return dateText; // Return as "dd/MM/yyyy" without reformatting
+    }
+    return dateText;
+  }
+
+  Future<void> _submitReservation() async {
+    if (!_reservationFormKey.currentState!.validate() || selectedSpot == null || selectedVehicleIndex == null) {
+      setState(() {
+        errorMessage = 'Veuillez compléter tous les champs requis.';
+      });
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final userId = StorageService.getUserId();
+      final token = StorageService.getToken();
+
+      if (userId == null) {
+        throw Exception('User not logged in');
+      }
+
+      final dateValue = _dateController.text;
+      final startTime = _startTimeController.text;
+      final endTime = _endTimeController.text;
+      final vehicleMatricule = userVehicles[selectedVehicleIndex!].matricule;
+      final email = _emailController.text;
+
+      final parkingPlaceId = int.parse(selectedSpot!.id);
+      final formattedDate = _formatDateForBackend(dateValue);
+
+      final startTimeParts = startTime.split(':');
+      final endTimeParts = endTime.split(':');
+      if (startTimeParts.length == 2 && endTimeParts.length == 2) {
+        final formattedStartTime = '${startTimeParts[0].padLeft(2, '0')}:${startTimeParts[1].padLeft(2, '0')}';
+        final formattedEndTime = '${endTimeParts[0].padLeft(2, '0')}:${endTimeParts[1].padLeft(2, '0')}';
+
+        final startDateTime = DateTime.parse('2025-${formattedDate.split('/')[1]}-${formattedDate.split('/')[0]}T$formattedStartTime:00');
+        final endDateTime = DateTime.parse('2025-${formattedDate.split('/')[1]}-${formattedDate.split('/')[0]}T$formattedEndTime:00');
+
+        final request = ReservationRequest(
+          userId: userId,
+          parkingPlaceId: parkingPlaceId,
+          matricule: vehicleMatricule,
+          startTime: startDateTime.toIso8601String(),
+          endTime: endDateTime.toIso8601String(),
+          vehicleType: userVehicles[selectedVehicleIndex!].vehicleType,
+          paymentMethod: hasActiveSubscription && totalAmount == 0 ? 'SUBSCRIPTION' : 'CARTE_BANCAIRE',
+          email: email,
+          subscriptionId: hasActiveSubscription ? int.tryParse(subscriptionId ?? '') : null,
+          specialRequest: '',
+        );
+
+        final response = await ReservationService.createReservation(request, token);
+
+        if (response != null && response.reservationId.isNotEmpty) {
+          setState(() {
+            reservationId = response.reservationId.replaceAll('RES-', '');
+            emailConfirmation = true;
+
+            if (response.reservationConfirmationCode != null) {
+              _verificationCodeController.text = response.reservationConfirmationCode!;
+            }
+
+            currentStep = 3;
+            isLoading = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(hasActiveSubscription
+                  ? 'Réservation créée. Vérifiez votre email pour le code de confirmation.'
+                  : 'Réservation créée. Veuillez procéder au paiement.'),
+              backgroundColor: AppColors.successColor,
+            ),
+          );
+        } else {
+          throw Exception('Aucune ID de réservation retournée');
+        }
+      } else {
+        throw Exception('Format d\'heure invalide.');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Erreur lors de la réservation: $e';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors de la réservation'),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+    }
+  }
+
+  Future<void> _submitPayment() async {
+    if (hasActiveSubscription && totalAmount == 0) {
+      setState(() {
+        currentStep = 4;
+        qrCodeString = 'RES-${reservationId ?? '123456'}';
+      });
+      return;
+    }
+
+    if (!_paymentFormKey.currentState!.validate() || reservationId == null) {
+      setState(() {
+        errorMessage = 'Veuillez compléter les informations de paiement.';
+      });
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final token = StorageService.getToken();
+
+      final request = PaymentRequest(
+        reservationId: int.parse(reservationId!),
+        amount: totalAmount,
+        paymentMethod: 'CARTE_BANCAIRE',
+        paymentReference: _cardNumberController.text.replaceAll(' ', '').substring(12),
+        cardDetails: {
+          'cardName': _cardNameController.text,
+          'cardNumber': _cardNumberController.text.replaceAll(' ', ''),
+          'cardExpiry': _cardExpiryController.text,
+          'cardCvv': _cardCvvController.text,
+        },
+      );
+
+      final response = await PaymentService.processPayment(request, token);
+
+      if (response != null && response.success) {
+        setState(() {
+          currentStep = 4;
+          qrCodeString = 'RES-$reservationId';
+          isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Paiement effectué avec succès!'),
+            backgroundColor: AppColors.successColor,
+          ),
+        );
+      } else {
+        throw Exception(response?.message ?? 'Échec du paiement');
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Erreur lors du paiement: $e';
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors du paiement'),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+    }
+  }
+
+  void _calculateTotalAmount() {
+    if (selectedSpot == null || _startTimeController.text.isEmpty || _endTimeController.text.isEmpty) {
+      setState(() {
+        totalAmount = 0.0;
+      });
+      return;
+    }
+
+    final startParts = _startTimeController.text.split(':');
+    final endParts = _endTimeController.text.split(':');
+
+    if (startParts.length != 2 || endParts.length != 2) return;
+
+    final startHours = int.tryParse(startParts[0]) ?? 0;
+    final startMinutes = int.tryParse(startParts[1]) ?? 0;
+    final endHours = int.tryParse(endParts[0]) ?? 0;
+    final endMinutes = int.tryParse(endParts[1]) ?? 0;
+
+    final durationHours = (endHours + endMinutes / 60) - (startHours + startMinutes / 60);
+    final basePrice = selectedSpot!.price;
+    double cost = durationHours * basePrice;
+
+    if (hasActiveSubscription && remainingPlaces > 0) {
+      cost = 0;
+    } else if (durationHours > 5) {
+      cost *= 0.9; // 10% discount for long reservations
+    }
+
+    setState(() {
+      totalAmount = cost > 0 ? double.parse(cost.toStringAsFixed(2)) : 0.0;
+    });
+  }
+
+  void _selectSpot(ParkingSpot spot) {
+    if (spot.status == 'available') {
+      setState(() {
+        selectedSpot = spot;
+      });
+      _calculateTotalAmount();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cette place est déjà réservée.'),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+    }
+  }
+
+  void _selectVehicle(int index) {
+    setState(() {
+      selectedVehicleIndex = index;
+    });
+  }
+
+  void _nextStep() {
+    if (currentStep == 2) {
+      _submitReservation();
+    } else if (currentStep == 3) {
+      if (hasActiveSubscription) {
+        if (_verificationCodeController.text.isNotEmpty) {
+          setState(() {
+            currentStep = 4;
+            qrCodeString = 'RES-${reservationId ?? '123456'}';
+          });
+        }
+      } else {
+        _submitPayment();
+      }
+    } else if (currentStep < 4) {
+      setState(() {
+        currentStep++;
+        errorMessage = '';
+      });
+    }
+  }
+
+  void _prevStep() {
+    if (currentStep > 1) {
+      setState(() {
+        currentStep--;
+        errorMessage = '';
+      });
+    }
+  }
+
+  void _reset() {
+    setState(() {
+      currentStep = 1;
+      selectedSpot = null;
+      selectedVehicleIndex = null;
+      errorMessage = '';
+      totalAmount = 0.0;
+      userVehicles.clear();
+      availableSpots.clear();
+      hasActiveSubscription = false;
+      subscriptionId = null;
+      subscriptionEndDate = null;
+      remainingPlaces = 0;
+      subscription = null;
+    });
+    _initializeDefaultValues();
+    _loadTokenAndFetchData();
+  }
+
+  Widget _buildSpotSelectionStep() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Choix de la place',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textColor,
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildSpotTypeLegend(),
+          const SizedBox(height: 20),
+          if (isLoading)
+            const Center(
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
+              ),
+            )
+          else if (availableSpots.isEmpty)
+            _buildNoSpotsAvailable()
+          else
+            _buildParkingMap(),
+          const SizedBox(height: 20),
+          if (selectedSpot != null) _buildSelectedPlaceDetails(),
+          const SizedBox(height: 20),
+          _buildStepNavigationButtons(
+            onReset: _reset,
+            onNext: selectedSpot != null ? _nextStep : null,
+            showBack: false,
+          ),
+          const SizedBox(height: 16),
+          _buildSpotLegend(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpotTypeLegend() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _buildLegendItem(AppColors.whiteColor, 'Standard (5 TND/h)'),
+          const SizedBox(width: 12),
+          _buildLegendItem(AppColors.deepPurple, 'Premium (8 TND/h)'),
+          const SizedBox(width: 12),
+          _buildLegendItem(AppColors.grayColor, 'Réservé'),
+          const SizedBox(width: 12),
+          _buildLegendItem(AppColors.pastelPurple, 'Incluse dans abonnement'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color,
+            border: Border.all(
+              color: AppColors.secondaryColor,
+              width: 1.5,
+            ),
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            color: AppColors.subtitleColor,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildParkingMap() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 1.2,
+      ),
+      itemCount: availableSpots.length,
+      itemBuilder: (context, index) {
+        final spot = availableSpots[index];
+        return _buildParkingSpot(spot);
+      },
+    );
+  }
+
+  Widget _buildParkingSpot(ParkingSpot spot) {
+    final isSelected = selectedSpot?.id == spot.id;
+    final isAvailable = spot.status == 'available';
+    final isPremium = spot.type == 'premium';
+    final isIncluded = hasActiveSubscription && spot.id.startsWith('S');
+
+    Color backgroundColor;
+    if (isSelected) {
+      backgroundColor = AppColors.primaryColor.withOpacity(0.1);
+    } else if (!isAvailable) {
+      backgroundColor = AppColors.grayColor;
+    } else if (isIncluded) {
+      backgroundColor = AppColors.pastelPurple;
+    } else if (isPremium) {
+      backgroundColor = AppColors.deepPurple;
+    } else {
+      backgroundColor = AppColors.whiteColor;
+    }
+
+    return GestureDetector(
+      onTap: isAvailable ? () => _selectSpot(spot) : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          border: Border.all(
+            color: isSelected ? AppColors.primaryColor : AppColors.secondaryColor,
+            width: isSelected ? 3 : 2,
+          ),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              AppIcons.vehicle,
+              color: isAvailable ? AppColors.textColor : AppColors.subtitleColor,
+              size: 20,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              spot.id,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isAvailable ? AppColors.textColor : AppColors.subtitleColor,
+              ),
+            ),
+            Text(
+              _getSpotStatusText(spot),
+              style: TextStyle(
+                fontSize: 10,
+                color: isAvailable ? AppColors.textColor : AppColors.subtitleColor,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getSpotStatusText(ParkingSpot spot) {
+    if (spot.status == 'reserved') return 'Réservé';
+    if (hasActiveSubscription && spot.id.startsWith('S')) return 'Incluse';
+    return '${spot.price.toStringAsFixed(0)} TND/h';
+  }
+
+  Widget _buildNoSpotsAvailable() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        children: [
+          Icon(
+            Icons.sentiment_dissatisfied,
+            color: AppColors.subtitleColor,
+            size: 48,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Aucune place disponible.',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.subtitleColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedPlaceDetails() {
+    if (selectedSpot == null) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Détails de la place',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildDetailRow(Icons.location_on, 'Place', selectedSpot!.id),
+          _buildDetailRow(AppIcons.vehicle, 'Type', selectedSpot!.type),
+          _buildDetailRow(
+            Icons.monetization_on,
+            'Tarif',
+            hasActiveSubscription && selectedSpot!.id.startsWith('S')
+                ? 'Incluse'
+                : '${selectedSpot!.price.toStringAsFixed(0)} TND/h',
+          ),
+          _buildDetailRow(Icons.star, 'Avantages', selectedSpot!.features.join(', ')),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: AppColors.primaryColor,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$label: ',
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textColor,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textColor,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSpotLegend() {
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      alignment: WrapAlignment.center,
+      children: [
+        _buildSmallLegendItem(AppColors.primaryColor.withOpacity(0.1), 'Sélectionné'),
+        _buildSmallLegendItem(AppColors.whiteColor, 'Disponible (${_getAvailableSpotCount()})'),
+        _buildSmallLegendItem(AppColors.grayColor, 'Réservé'),
+        _buildSmallLegendItem(AppColors.deepPurple, 'Premium'),
+        _buildSmallLegendItem(AppColors.pastelPurple, 'Incluse'),
+      ],
+    );
+  }
+
+  Widget _buildSmallLegendItem(Color color, String label) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            border: Border.all(
+              color: AppColors.secondaryColor,
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: AppColors.subtitleColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  int _getAvailableSpotCount() {
+    return availableSpots.where((spot) => spot.status == 'available').length;
+  }
+
+  Widget _buildReservationDetailsStep() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Form(
+        key: _reservationFormKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Détails de la réservation',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textColor,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildDateTimeFields(),
+            const SizedBox(height: 20),
+            _buildEmailField(),
+            const SizedBox(height: 20),
+            _buildVehicleSelection(),
+            const SizedBox(height: 20),
+            _buildStepNavigationButtons(
+              onBack: _prevStep,
+              onNext: _isReservationFormValid() ? _nextStep : null,
+              showBack: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDateTimeFields() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _buildInputField(
+                controller: _dateController,
+                label: 'Date de réservation',
+                icon: Icons.calendar_today,
+                hintText: 'jj/MM/aaaa',
+                validator: _validateDate,
+                onTap: () => _selectDate(context),
+                readOnly: true,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildInputField(
+                controller: _startTimeController,
+                label: 'Heure de début',
+                icon: Icons.access_time,
+                hintText: 'HH:mm',
+                validator: _validateStartTime,
+                onTap: () => _selectTime(context, _startTimeController),
+                readOnly: true,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildInputField(
+                controller: _endTimeController,
+                label: 'Heure de fin',
+                icon: Icons.access_time,
+                hintText: 'HH:mm',
+                validator: _validateEndTime,
+                onTap: () => _selectTime(context, _endTimeController),
+                readOnly: true,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailField() {
+    return _buildInputField(
+      controller: _emailController,
+      label: 'Email',
+      icon: Icons.email,
+      hintText: 'votre@email.com',
+      validator: _validateEmail,
+      keyboardType: TextInputType.emailAddress,
+    );
+  }
+
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    required String hintText,
+    String? Function(String?)? validator,
+    VoidCallback? onTap,
+    bool readOnly = false,
+    TextInputType? keyboardType,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textColor,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          validator: validator,
+          onTap: onTap,
+          readOnly: readOnly,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            hintText: hintText,
+            prefixIcon: Icon(icon, color: AppColors.primaryColor),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.grayColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.secondaryColor, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.errorColor),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+          onChanged: (value) {
+            _calculateTotalAmount();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVehicleSelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Sélectionnez votre véhicule',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textColor,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.grayColor),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: userVehicles.isEmpty
+              ? _buildNoVehiclesMessage()
+              : Column(
+            children: userVehicles.asMap().entries.map((entry) {
+              final index = entry.key;
+              final vehicle = entry.value;
+              return _buildVehicleItem(vehicle, index);
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVehicleItem(Vehicle vehicle, int index) {
+    final isSelected = selectedVehicleIndex == index;
+    final isLast = index == userVehicles.length - 1;
+
+    return GestureDetector(
+      onTap: () => _selectVehicle(index),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primaryColor.withOpacity(0.1) : AppColors.whiteColor,
+          border: isLast ? null : const Border(
+            bottom: BorderSide(color: AppColors.grayColor),
+          ),
+          borderRadius: isLast
+              ? const BorderRadius.only(
+            bottomLeft: Radius.circular(8),
+            bottomRight: Radius.circular(8),
+          )
+              : index == 0
+              ? const BorderRadius.only(
+            topLeft: Radius.circular(8),
+            topRight: Radius.circular(8),
+          )
+              : null,
+        ),
+        child: Row(
+          children: [
+            Icon(
+              AppIcons.vehicle,
+              color: AppColors.primaryColor,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    vehicle.name,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textColor,
+                    ),
+                  ),
+                  Text(
+                    vehicle.matricule,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.subtitleColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.primaryColor,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoVehiclesMessage() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Icon(
+            AppIcons.vehicle,
+            color: AppColors.subtitleColor,
+            size: 32,
+          ),
+          const SizedBox(height: 8),
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.subtitleColor,
+              ),
+              children: [
+                const TextSpan(text: 'Aucun véhicule. '),
+                TextSpan(
+                  text: 'Ajoutez un véhicule',
+                  style: const TextStyle(
+                    color: AppColors.primaryColor,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                const TextSpan(text: '.'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentVerificationStep() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          hasActiveSubscription ? _buildVerificationForm() : _buildPaymentForm(),
+          if (!hasActiveSubscription) ...[
+            const SizedBox(height: 24),
+            _buildSummarySection(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerificationForm() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Vérification de la réservation',
+          style: const TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textColor,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Un code de vérification a été envoyé à ${_emailController.text}.',
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.subtitleColor,
+          ),
+        ),
+        const SizedBox(height: 20),
+        _buildInputField(
+          controller: _verificationCodeController,
+          label: 'Code de Vérification',
+          icon: Icons.security,
+          hintText: 'Entrez le code',
+          validator: _validateVerificationCode,
+        ),
+        if (!emailConfirmation) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.errorColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  color: AppColors.errorColor,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Échec de l\'envoi de l\'email',
+                    style: TextStyle(
+                      color: AppColors.errorColor,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _resendConfirmation,
+                  child: const Text(
+                    'Renvoyer',
+                    style: TextStyle(
+                      color: AppColors.primaryColor,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: 20),
+        _buildStepNavigationButtons(
+          onBack: _prevStep,
+          onNext: _verificationCodeController.text.isNotEmpty ? _nextStep : null,
+          showBack: true,
+          nextLabel: 'Vérifier',
+          nextIcon: Icons.check,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentForm() {
+    return Form(
+      key: _paymentFormKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Paiement',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textColor,
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildInputField(
+            controller: _cardNameController,
+            label: 'Nom sur la carte',
+            icon: Icons.person,
+            hintText: 'Ex: Jean Dupont',
+            validator: _validateCardName,
+          ),
+          const SizedBox(height: 16),
+          _buildCardNumberField(),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _buildInputField(
+                  controller: _cardExpiryController,
+                  label: 'Date d\'expiration',
+                  icon: Icons.calendar_today,
+                  hintText: 'MM/AAAA',
+                  validator: _validateCardExpiry,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildInputField(
+                  controller: _cardCvvController,
+                  label: 'CVV',
+                  icon: Icons.help_outline,
+                  hintText: '123',
+                  validator: _validateCardCvv,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Checkbox(
+                value: saveCard,
+                onChanged: (value) {
+                  setState(() {
+                    saveCard = value ?? false;
+                  });
+                },
+                activeColor: AppColors.primaryColor,
+              ),
+              Expanded(
+                child: Text(
+                  'Sauvegarder cette carte pour mes prochains paiements',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.subtitleColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildStepNavigationButtons(
+            onBack: _prevStep,
+            onNext: _isPaymentFormValid() ? _nextStep : null,
+            showBack: true,
+            nextLabel: 'Payer',
+            nextIcon: Icons.payment,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCardNumberField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Numéro de carte',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textColor,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _cardNumberController,
+          validator: _validateCardNumber,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(16),
+            _CardNumberInputFormatter(),
+          ],
+          decoration: InputDecoration(
+            hintText: 'XXXX XXXX XXXX XXXX',
+            prefixIcon: const Icon(Icons.credit_card, color: AppColors.primaryColor),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.credit_card, color: Colors.blue[600], size: 20),
+                const SizedBox(width: 4),
+                Icon(Icons.credit_card, color: Colors.orange[600], size: 20),
+                const SizedBox(width: 8),
+              ],
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.grayColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.secondaryColor, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: AppColors.errorColor),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummarySection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.grayColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Récapitulatif',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primaryColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.backgroundColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Réservation',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textColor,
+                      ),
+                    ),
+                    Text(
+                      '${totalAmount.toStringAsFixed(2)} TND',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Détails :',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (selectedSpot != null) ...[
+                  _buildSummaryDetailRow(Icons.location_on, 'Place', selectedSpot!.id),
+                  _buildSummaryDetailRow(AppIcons.vehicle, 'Type', selectedSpot!.type),
+                  _buildSummaryDetailRow(Icons.access_time, 'Durée', _getDurationText()),
+                  _buildSummaryDetailRow(Icons.calendar_today, 'Date', _dateController.text),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            color: AppColors.primaryColor,
+            size: 16,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            '$label: $value',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.subtitleColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getDurationText() {
+    if (_startTimeController.text.isEmpty || _endTimeController.text.isEmpty) {
+      return 'N/A';
+    }
+
+    final startParts = _startTimeController.text.split(':');
+    final endParts = _endTimeController.text.split(':');
+
+    if (startParts.length != 2 || endParts.length != 2) return 'N/A';
+
+    final startHours = int.tryParse(startParts[0]) ?? 0;
+    final startMinutes = int.tryParse(startParts[1]) ?? 0;
+    final endHours = int.tryParse(endParts[0]) ?? 0;
+    final endMinutes = int.tryParse(endParts[1]) ?? 0;
+
+    final durationHours = (endHours + endMinutes / 60) - (startHours + startMinutes / 60);
+
+    if (durationHours >= 1) {
+      return '${durationHours.toStringAsFixed(1)}h';
+    } else {
+      return '${(durationHours * 60).toStringAsFixed(0)}min';
+    }
+  }
+
+  Widget _buildConfirmationStep() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.successColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.check_circle,
+              color: AppColors.successColor,
+              size: 64,
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Réservation confirmée !',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Votre place de parking a été réservée avec succès.',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.subtitleColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          _buildQRCodeSection(),
+          const SizedBox(height: 32),
+          _buildConfirmationDetails(),
+          const SizedBox(height: 32),
+          _buildConfirmationActions(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQRCodeSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.grayColor),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'Code QR de réservation',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: 200,
+            height: 200,
+            decoration: BoxDecoration(
+              color: AppColors.whiteColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.grayColor),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.qr_code,
+                  size: 120,
+                  color: AppColors.subtitleColor,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  reservationId ?? 'RES-123456',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Présentez ce code QR à l\'entrée du parking',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.subtitleColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfirmationDetails() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Détails de la réservation',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildConfirmationDetailRow(
+            Icons.confirmation_number,
+            'ID de réservation',
+            reservationId ?? 'RES-123456',
+          ),
+          _buildConfirmationDetailRow(
+            Icons.location_on,
+            'Place de parking',
+            selectedSpot?.id ?? 'N/A',
+          ),
+          _buildConfirmationDetailRow(
+            Icons.calendar_today,
+            'Date',
+            _dateController.text,
+          ),
+          _buildConfirmationDetailRow(
+            Icons.access_time,
+            'Heure',
+            '${_startTimeController.text} - ${_endTimeController.text}',
+          ),
+          _buildConfirmationDetailRow(
+            AppIcons.vehicle,
+            'Véhicule',
+            selectedVehicleIndex != null
+                ? '${userVehicles[selectedVehicleIndex!].name} (${userVehicles[selectedVehicleIndex!].matricule})'
+                : 'N/A',
+          ),
+          _buildConfirmationDetailRow(
+            Icons.email,
+            'Email de confirmation',
+            _emailController.text,
+          ),
+          if (!hasActiveSubscription)
+            _buildConfirmationDetailRow(
+              Icons.payment,
+              'Montant payé',
+              '${totalAmount.toStringAsFixed(2)} TND',
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfirmationDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            icon,
+            color: AppColors.primaryColor,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.subtitleColor,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textColor,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfirmationActions() {
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _downloadQRCode,
+            icon: const Icon(Icons.download),
+            label: const Text('Télécharger le QR Code'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryColor,
+              foregroundColor: AppColors.whiteColor,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _shareReservation,
+            icon: const Icon(Icons.share),
+            label: const Text('Partager'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primaryColor,
+              side: const BorderSide(color: AppColors.primaryColor),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: TextButton.icon(
+            onPressed: _newReservation,
+            icon: const Icon(Icons.add),
+            label: const Text('Nouvelle réservation'),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.secondaryColor,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStepNavigationButtons({
+    VoidCallback? onBack,
+    VoidCallback? onNext,
+    VoidCallback? onReset,
+    bool showBack = true,
+    String? nextLabel,
+    IconData? nextIcon,
+  }) {
+    return Container(
+      padding: const EdgeInsets.only(top: 16),
+      decoration: const BoxDecoration(
+        border: Border(
+          top: BorderSide(color: AppColors.grayColor),
+        ),
+      ),
+      child: Row(
+        children: [
+          if (onReset != null) ...[
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: onReset,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Réinitialiser'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.secondaryColor,
+                  side: const BorderSide(color: AppColors.secondaryColor),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          if (showBack && onBack != null) ...[
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: onBack,
+                icon: const Icon(Icons.arrow_back),
+                label: const Text('Retour'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.secondaryColor,
+                  side: const BorderSide(color: AppColors.secondaryColor),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: onNext,
+              icon: Icon(nextIcon ?? Icons.arrow_forward),
+              label: Text(nextLabel ?? 'Suivant'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: onNext != null ? AppColors.primaryColor : AppColors.grayColor,
+                foregroundColor: AppColors.whiteColor,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CardNumberInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue,
+      TextEditingValue newValue,
+      ) {
+    final text = newValue.text.replaceAll(' ', '');
+    final buffer = StringBuffer();
+
+    for (int i = 0; i < text.length; i++) {
+      if (i > 0 && i % 4 == 0) {
+        buffer.write(' ');
+      }
+      buffer.write(text[i]);
+    }
+
+    return TextEditingValue(
+      text: buffer.toString(),
+      selection: TextSelection.collapsed(offset: buffer.length),
+    );
+  }
+}
+
+extension ReservationsPageValidation on _ReservationsPageState {
+  String? _validateDate(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Date requise';
+    }
+
+    final parts = value.split('/');
+    if (parts.length != 3) {
+      return 'Format: jj/MM/aaaa';
+    }
+
+    final day = int.tryParse(parts[0]);
+    final month = int.tryParse(parts[1]);
+    final year = int.tryParse(parts[2]);
+
+    if (day == null || month == null || year == null) {
+      return 'Date invalide';
+    }
+
+    final date = DateTime(year, month, day);
+    final today = DateTime.now();
+
+    if (date.isBefore(DateTime(today.year, today.month, today.day))) {
+      return 'Date doit être aujourd\'hui ou après';
+    }
+
+    return null;
+  }
+
+  String? _validateStartTime(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Heure requise';
+    }
+
+    final parts = value.split(':');
+    if (parts.length != 2) {
+      return 'Format invalide';
+    }
+
+    final hours = int.tryParse(parts[0]);
+    final minutes = int.tryParse(parts[1]);
+
+    if (hours == null || minutes == null || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return 'Heure invalide';
+    }
+
+    final dateText = _dateController.text;
+    if (dateText.isNotEmpty) {
+      final dateParts = dateText.split('/');
+      if (dateParts.length == 3) {
+        final day = int.tryParse(dateParts[0]);
+        final month = int.tryParse(dateParts[1]);
+        final year = int.tryParse(dateParts[2]);
+
+        if (day != null && month != null && year != null) {
+          final selectedDate = DateTime(year, month, day);
+          final today = DateTime.now();
+
+          if (selectedDate.year == today.year &&
+              selectedDate.month == today.month &&
+              selectedDate.day == today.day) {
+            final selectedTime = DateTime(year, month, day, hours, minutes);
+            final oneHourFromNow = DateTime.now().add(const Duration(hours: 1));
+
+            if (selectedTime.isBefore(oneHourFromNow)) {
+              return 'Heure doit être dans 1h minimum';
+            }
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  String? _validateEndTime(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Heure requise';
+    }
+
+    final parts = value.split(':');
+    if (parts.length != 2) {
+      return 'Format invalide';
+    }
+
+    final hours = int.tryParse(parts[0]);
+    final minutes = int.tryParse(parts[1]);
+
+    if (hours == null || minutes == null || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      return 'Heure invalide';
+    }
+
+    final startTimeText = _startTimeController.text;
+    if (startTimeText.isNotEmpty) {
+      final startParts = startTimeText.split(':');
+      if (startParts.length == 2) {
+        final startHours = int.tryParse(startParts[0]);
+        final startMinutes = int.tryParse(startParts[1]);
+
+        if (startHours != null && startMinutes != null) {
+          final startTotalMinutes = startHours * 60 + startMinutes;
+          final endTotalMinutes = hours * 60 + minutes;
+
+          if (endTotalMinutes <= startTotalMinutes) {
+            return 'Doit être après le début';
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Email requis';
+    }
+
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Email invalide';
+    }
+
+    return null;
+  }
+
+  String? _validateCardName(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Nom requis';
+    }
+    return null;
+  }
+
+  String? _validateCardNumber(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Numéro requis';
+    }
+
+    final cleanValue = value.replaceAll(' ', '');
+    if (cleanValue.length != 16) {
+      return 'Doit être 16 chiffres';
+    }
+
+    return null;
+  }
+
+  String? _validateCardExpiry(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Date requise';
+    }
+
+    final parts = value.split('/');
+    if (parts.length != 2) {
+      return 'Format invalide, ex: 07/2029';
+    }
+
+    final month = int.tryParse(parts[0]);
+    final year = int.tryParse(parts[1]);
+
+    if (month == null || year == null || month < 1 || month > 12) {
+      return 'Format invalide, ex: 07/2029';
+    }
+
+    final currentDate = DateTime.now();
+    final expiryDate = DateTime(year, month);
+
+    if (expiryDate.isBefore(DateTime(currentDate.year, currentDate.month))) {
+      return 'Carte expirée';
+    }
+
+    return null;
+  }
+
+  String? _validateCardCvv(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'CVV requis';
+    }
+
+    if (value.length != 3) {
+      return 'Doit être 3 chiffres';
+    }
+
+    return null;
+  }
+
+  String? _validateVerificationCode(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Code requis';
+    }
+    return null;
+  }
+
+  bool _isReservationFormValid() {
+    return _reservationFormKey.currentState?.validate() ?? false && selectedVehicleIndex != null;
+  }
+
+  bool _isPaymentFormValid() {
+    return _paymentFormKey.currentState?.validate() ?? false;
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryColor,
+              onPrimary: AppColors.whiteColor,
+              surface: AppColors.whiteColor,
+              onSurface: AppColors.textColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        _dateController.text = '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+      });
+      _checkSpotAvailability();
+      _calculateTotalAmount();
+    }
+  }
+
+  Future<void> _selectTime(BuildContext context, TextEditingController controller) async {
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryColor,
+              onPrimary: AppColors.whiteColor,
+              surface: AppColors.whiteColor,
+              onSurface: AppColors.textColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      setState(() {
+        controller.text = '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
+      });
+      _checkSpotAvailability();
+      _calculateTotalAmount();
+    }
+  }
+
+  void _downloadQRCode() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Téléchargement du QR code...'),
+        backgroundColor: AppColors.successColor,
+      ),
+    );
+  }
+
+  void _shareReservation() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Partage de la réservation...'),
+        backgroundColor: AppColors.primaryColor,
+      ),
+    );
+  }
+
+  void _newReservation() {
+    _reset();
+  }
+
+  void _resendConfirmation() {
+    setState(() {
+      emailConfirmation = true;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Code de vérification renvoyé'),
+        backgroundColor: AppColors.successColor,
       ),
     );
   }

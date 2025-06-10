@@ -21,11 +21,13 @@ class AppColors {
   static const errorColor = Color(0xFFE57373); // Soft Red
   static const successColor = Color(0xFF81C784); // Light Green
 
-  // Additional Colors
+  // Additional Colors (from ReservationPage)
   static const whiteColor = Color(0xFFFFFFFF);
   static const grayColor = Color(0xFFEEEEEE);
+  static const pastelPurple = Color(0xFFE9D5FF);
+  static const deepPurple = Color(0xFF4A148C);
+  static const gold100 = Color(0xFFFDf6E3);
 }
-
 class AppIcons {
   static const reservation = Icons.receipt_long;
   static const scan = Icons.camera_alt;

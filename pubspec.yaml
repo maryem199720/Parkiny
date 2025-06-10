@@ -34,6 +34,9 @@ dependencies:
   permission_handler: ^11.3.1  # For handling permissions
   connectivity_plus: ^6.0.5
   qr_flutter: ^4.0.0
+  web_socket_channel: ^3.0.1
+  animated_text_kit: ^4.2.2
+  animations: ^2.0.7
 
 dev_dependencies:
   flutter_test:

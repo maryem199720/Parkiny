@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_parking/core/constants.dart';
 import 'package:smart_parking/views/reservation/reservation_page.dart';
-import 'package:smart_parking/views/scan/scan_vehicle_page.dart';
 
 class BottomSheetInfo extends StatelessWidget {
   final String spotId;
@@ -51,7 +50,7 @@ class BottomSheetInfo extends StatelessWidget {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ReservationPage()),
+                      MaterialPageRoute(builder: (context) => const ReservationsPage()),
                     );
                   },
                   icon: const Icon(Icons.bookmark_add, color: AppColors.textColor),
@@ -65,24 +64,7 @@ class BottomSheetInfo extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ScanVehiclePage()),
-                    );
-                  },
-                  icon: const Icon(AppIcons.scan, color: AppColors.primaryColor),
-                  label: const Text("Scanner"),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primaryColor,
-                    side: const BorderSide(color: AppColors.primaryColor),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
+
             ],
           ),
         ],
