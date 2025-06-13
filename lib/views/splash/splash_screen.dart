@@ -1,50 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:smart_parking/views/auth/login_page.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:async';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
   @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Navigate after 3 seconds
+    Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacementNamed('/login');
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Container(
+      color: const Color(0xFF4A306D), // Match native splash background
+      child: Center(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Image.asset(
-              'assets/images/parkiny.jpeg',
-              height: 150,
+            Icon(
+              Icons.local_parking,
+              color: const Color(0xFFD4AF37),
+              size: 40,
             ),
-            const SizedBox(height: 20),
-            const Text(
-              "Parkiny",
-              style: TextStyle(
+            const SizedBox(width: 12),
+            Text(
+              'Parkiny',
+              style: GoogleFonts.pacifico(
                 fontSize: 40,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                foreground: Paint()
+                  ..shader = const LinearGradient(
+                    colors: <Color>[
+                      Color(0xFFD4AF37),
+                      Color(0xFFF4E04D),
+                    ],
+                  ).createShader(const Rect.fromLTWH(0.0, 0.0, 200.0, 70.0)),
               ),
             ),
-            const SizedBox(height: 50),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orangeAccent,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-              ),
-              child: const Text(
-                "Get Started",
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
-            )
           ],
         ),
       ),

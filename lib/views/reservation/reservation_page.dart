@@ -1,10 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:smart_parking/core/constants.dart';
-
+import 'package:path_provider/path_provider.dart';
 import '../../services/api_service.dart';
 
 
@@ -69,27 +73,27 @@ class _ReservationsPageState extends State<ReservationsPage> {
       final userId = await _storage.read(key: 'user_id');
       if (userId == null) {
         await _fetchUserProfile(token);
-        if (userId == null) throw Exception('User ID not found');
+        if (StorageService.getUserId() == null) throw Exception('User ID not found');
       } else {
         StorageService.setUserId(int.parse(userId));
       }
       StorageService.setToken(token);
 
-      await Future.wait([
-        _fetchUserVehicles(token),
-        _checkSubscriptionStatus(token),
-        _checkSpotAvailability(),
-      ]);
+      await _fetchUserVehicles(token); // Ensure this completes first
+      await _checkSubscriptionStatus(token); // Then this
+      await _checkSpotAvailability(); // Then this
 
       if (userVehicles.isEmpty) {
-        errorMessage = 'Veuillez ajouter un véhicule dans votre profil.';
+        setState(() => errorMessage = 'Veuillez ajouter un véhicule dans votre profil.');
       }
     } catch (e) {
-      setState(() {
-        errorMessage = 'Erreur lors du chargement des données : $e';
-      });
+      if (mounted) {
+        setState(() => errorMessage = 'Erreur lors du chargement des données : $e');
+      }
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -472,15 +476,15 @@ class _ReservationsPageState extends State<ReservationsPage> {
     final dateText = _dateController.text;
 
     if (startTime.isEmpty || endTime.isEmpty || dateText.isEmpty) {
-      setState(() {
-        availableSpots = [];
-      });
+      if (mounted) {
+        setState(() => availableSpots = []);
+      }
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
+    if (mounted) {
+      setState(() => isLoading = true);
+    }
 
     try {
       final token = await _getToken();
@@ -488,12 +492,10 @@ class _ReservationsPageState extends State<ReservationsPage> {
         throw Exception('No authentication token available. Please log in.');
       }
 
-      // Convert date from "dd/MM/yyyy" to "yyyy-MM-dd"
       final dateParts = dateText.split('/');
       if (dateParts.length != 3) throw Exception('Invalid date format');
-      final formattedDate = '${dateParts[2]}-${dateParts[1]}-${dateParts[0]}'; // "yyyy-MM-dd"
+      final formattedDate = '${dateParts[2]}-${dateParts[1]}-${dateParts[0]}';
 
-      // Ensure time is in "HH:mm" format
       final formattedStartTime = startTime.padLeft(5, '0');
       final formattedEndTime = endTime.padLeft(5, '0');
 
@@ -502,11 +504,8 @@ class _ReservationsPageState extends State<ReservationsPage> {
         'date': formattedDate,
         'startTime': formattedStartTime,
         'endTime': formattedEndTime,
-        if (hasActiveSubscription) 'subscriptionId': subscriptionId, // Include subscription ID if active
+        if (hasActiveSubscription) 'subscriptionId': subscriptionId,
       });
-
-      debugPrint('Fetching parking spots from: $uri');
-      debugPrint('Authorization: Bearer $token');
 
       final response = await http.get(
         uri,
@@ -515,59 +514,59 @@ class _ReservationsPageState extends State<ReservationsPage> {
           'Content-Type': 'application/json',
         },
       ).timeout(const Duration(seconds: 10), onTimeout: () {
-        throw Exception('Délai de connexion dépassé');
+        throw Exception('Délai de connexion dépassé. Veuillez réessayer.');
       });
-
-      debugPrint('Response status: ${response.statusCode}');
-      debugPrint('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> spots = json.decode(response.body);
         if (spots.isEmpty) {
-          setState(() {
-            availableSpots = [];
-            isLoading = false;
-          });
+          if (mounted) {
+            setState(() {
+              availableSpots = [];
+              isLoading = false;
+            });
+          }
           return;
         }
 
-        setState(() {
-          availableSpots = spots.map((spot) {
-            if (spot['id'] == null || spot['available'] == null) {
-              throw Exception('Données de place de parking incomplètes: $spot');
-            }
-            final spotId = spot['id'].toString();
-            final isSubscriptionSpot = hasActiveSubscription && spotId.startsWith('S');
-            return ParkingSpot(
-              id: spotId,
-              type: spot['type'] ?? 'standard',
-              price: isSubscriptionSpot ? 0.0 : (spot['price'] as num?)?.toDouble() ?? 0.0,
-              status: spot['available'] == true ? 'available' : 'reserved',
-              features: List<String>.from(spot['features'] ?? []),
-              available: spot['available'] ?? true,
-            );
-          }).toList();
-          isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            availableSpots = spots.map((spot) {
+              if (spot['id'] == null || spot['available'] == null) {
+                throw Exception('Données de place de parking incomplètes: $spot');
+              }
+              final spotId = spot['id'].toString();
+              final isSubscriptionSpot = hasActiveSubscription && spotId.startsWith('S');
+              return ParkingSpot(
+                id: spotId,
+                type: spot['type'] ?? 'standard',
+                price: isSubscriptionSpot ? 0.0 : (spot['price'] as num?)?.toDouble() ?? 0.0,
+                status: spot['available'] == true ? 'available' : 'reserved',
+                features: List<String>.from(spot['features'] ?? []),
+                available: spot['available'] ?? true,
+              );
+            }).toList();
+            isLoading = false;
+          });
+        }
       } else {
-        setState(() {
-          errorMessage = 'Erreur de récupération des places: ${response.statusCode} - ${response.body}';
-          isLoading = false;
-        });
+        throw Exception('Erreur API: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      setState(() {
-        availableSpots = [];
-        errorMessage = 'Erreur de récupération des places: $e';
-        isLoading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de la vérification des places disponibles'),
-          backgroundColor: AppColors.errorColor,
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          availableSpots = [];
+          errorMessage = 'Erreur: $e. Veuillez vérifier votre connexion ou réessayer plus tard.';
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e. Réessayez.'),
+            backgroundColor: AppColors.errorColor,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -618,12 +617,16 @@ class _ReservationsPageState extends State<ReservationsPage> {
         final startDateTime = DateTime.parse('2025-${formattedDate.split('/')[1]}-${formattedDate.split('/')[0]}T$formattedStartTime:00');
         final endDateTime = DateTime.parse('2025-${formattedDate.split('/')[1]}-${formattedDate.split('/')[0]}T$formattedEndTime:00');
 
+        // Format without milliseconds and timezone
+        final formattedStartTimeString = startDateTime.toIso8601String().split('.')[0]; // e.g., "2025-06-12T11:28:00"
+        final formattedEndTimeString = endDateTime.toIso8601String().split('.')[0];     // e.g., "2025-06-12T12:28:00"
+
         final request = ReservationRequest(
           userId: userId,
           parkingPlaceId: parkingPlaceId,
           matricule: vehicleMatricule,
-          startTime: startDateTime.toIso8601String(),
-          endTime: endDateTime.toIso8601String(),
+          startTime: formattedStartTimeString,
+          endTime: formattedEndTimeString,
           vehicleType: userVehicles[selectedVehicleIndex!].vehicleType,
           paymentMethod: hasActiveSubscription && totalAmount == 0 ? 'SUBSCRIPTION' : 'CARTE_BANCAIRE',
           email: email,
@@ -631,31 +634,45 @@ class _ReservationsPageState extends State<ReservationsPage> {
           specialRequest: '',
         );
 
-        final response = await ReservationService.createReservation(request, token);
+        // Debug: Log the request details
+        final requestJson = json.encode(request.toJson());
+        print('Request URL: ${ApiService.baseUrl}${ApiService.apiPrefix}/createReservation');
+        print('Request Body: $requestJson');
 
-        if (response != null && response.reservationId.isNotEmpty) {
-          setState(() {
-            reservationId = response.reservationId.replaceAll('RES-', '');
-            emailConfirmation = true;
+        final httpResponse = await ReservationService.createReservation(request, token);
 
-            if (response.reservationConfirmationCode != null) {
-              _verificationCodeController.text = response.reservationConfirmationCode!;
-            }
+        // Debug: Log the raw response
+        print('Response Status: ${httpResponse.statusCode}');
+        print('Response Body: ${httpResponse.body}');
 
-            currentStep = 3;
-            isLoading = false;
-          });
+        if (httpResponse.statusCode == 200 || httpResponse.statusCode == 201) {
+          final response = ReservationResponse.fromJson(json.decode(httpResponse.body));
+          if (response.reservationId.isNotEmpty) {
+            setState(() {
+              reservationId = response.reservationId.replaceAll('RES-', '');
+              emailConfirmation = true;
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(hasActiveSubscription
-                  ? 'Réservation créée. Vérifiez votre email pour le code de confirmation.'
-                  : 'Réservation créée. Veuillez procéder au paiement.'),
-              backgroundColor: AppColors.successColor,
-            ),
-          );
+              if (response.reservationConfirmationCode != null) {
+                _verificationCodeController.text = response.reservationConfirmationCode!;
+              }
+
+              currentStep = 3;
+              isLoading = false;
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(hasActiveSubscription
+                    ? 'Réservation créée. Vérifiez votre email pour le code de confirmation.'
+                    : 'Réservation créée. Veuillez procéder au paiement.'),
+                backgroundColor: AppColors.successColor,
+              ),
+            );
+          } else {
+            throw Exception('Aucune ID de réservation retournée dans la réponse: ${response.toString()}');
+          }
         } else {
-          throw Exception('Aucune ID de réservation retournée');
+          throw Exception('Échec de la requête: Statut ${httpResponse.statusCode}, Body: ${httpResponse.body}');
         }
       } else {
         throw Exception('Format d\'heure invalide.');
@@ -668,10 +685,13 @@ class _ReservationsPageState extends State<ReservationsPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur lors de la réservation'),
+          content: Text('Erreur lors de la réservation: $e'),
           backgroundColor: AppColors.errorColor,
         ),
       );
+
+      // Debug: Log the full exception
+      print('Exception: $e');
     }
   }
 
@@ -1363,7 +1383,173 @@ class _ReservationsPageState extends State<ReservationsPage> {
       ],
     );
   }
+  Widget _buildQRCodeSection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.grayColor),
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'Code QR de réservation',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textColor,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: 200,
+            height: 200,
+            decoration: BoxDecoration(
+              color: AppColors.whiteColor,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.grayColor),
+            ),
+            child: Center(
+              child: reservationId != null
+                  ? QrImageView(
+                data: 'RES-$reservationId',
+                version: QrVersions.auto,
+                size: 180.0,
+              )
+                  : const Text(
+                'Génération du QR en cours...',
+                style: TextStyle(color: AppColors.subtitleColor),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Présentez ce code QR à l\'entrée du parking',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.subtitleColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
 
+  Future<void> _downloadQRCode() async {
+    if (reservationId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Aucune réservation pour télécharger le QR code.'),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+      return;
+    }
+
+    if (await Permission.storage.request().isGranted) {
+      try {
+        final directory = await getApplicationDocumentsDirectory(); // Use getApplicationDocumentsDirectory
+        if (directory == null) {
+          throw Exception('Impossible de trouver le répertoire de stockage.');
+        }
+
+        final filePath = '${directory.path}/reservation_qr_${reservationId}.png';
+        final qrImage = await QrPainter(
+          data: 'RES-$reservationId',
+          version: QrVersions.auto,
+          gapless: false,
+        ).toImage(200);
+        final byteData = await qrImage.toByteData(format: ImageByteFormat.png);
+        if (byteData == null) {
+          throw Exception('Échec de la génération de l\'image QR.');
+        }
+
+        final file = File(filePath);
+        await file.writeAsBytes(byteData.buffer.asUint8List());
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('QR Code téléchargé avec succès à $filePath'),
+            backgroundColor: AppColors.successColor,
+          ),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors du téléchargement: $e'),
+            backgroundColor: AppColors.errorColor,
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Permission de stockage refusée.'),
+          backgroundColor: AppColors.errorColor,
+        ),
+      );
+    }
+  }
+
+  Widget _buildConfirmationStep() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: AppColors.successColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.check_circle,
+              color: AppColors.successColor,
+              size: 64,
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Réservation confirmée !',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Votre place de parking a été réservée avec succès.',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.subtitleColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          _buildQRCodeSection(),
+          const SizedBox(height: 32),
+          _buildConfirmationDetails(),
+          const SizedBox(height: 32),
+          _buildConfirmationActions(),
+        ],
+      ),
+    );
+  }
   Widget _buildVehicleItem(Vehicle vehicle, int index) {
     final isSelected = selectedVehicleIndex == index;
     final isLast = index == userVehicles.length - 1;
@@ -1827,124 +2013,7 @@ class _ReservationsPageState extends State<ReservationsPage> {
     }
   }
 
-  Widget _buildConfirmationStep() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: AppColors.successColor.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.check_circle,
-              color: AppColors.successColor,
-              size: 64,
-            ),
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Réservation confirmée !',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textColor,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Votre place de parking a été réservée avec succès.',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.subtitleColor,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          _buildQRCodeSection(),
-          const SizedBox(height: 32),
-          _buildConfirmationDetails(),
-          const SizedBox(height: 32),
-          _buildConfirmationActions(),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildQRCodeSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundColor,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.grayColor),
-      ),
-      child: Column(
-        children: [
-          const Text(
-            'Code QR de réservation',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textColor,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              color: AppColors.whiteColor,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.grayColor),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.qr_code,
-                  size: 120,
-                  color: AppColors.subtitleColor,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  reservationId ?? 'RES-123456',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Présentez ce code QR à l\'entrée du parking',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.subtitleColor,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildConfirmationDetails() {
     return Container(
@@ -2455,14 +2524,6 @@ extension ReservationsPageValidation on _ReservationsPageState {
     }
   }
 
-  void _downloadQRCode() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Téléchargement du QR code...'),
-        backgroundColor: AppColors.successColor,
-      ),
-    );
-  }
 
   void _shareReservation() {
     ScaffoldMessenger.of(context).showSnackBar(

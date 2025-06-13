@@ -1,0 +1,8 @@
+flutter_native_splash:
+  color: "#4A306D"  # Deep purple background matching your SplashScreen
+  image: assets/images/parkiny.png  # Path to your custom logo image
+  android: true
+  ios: true
+  android_gravity: center
+  ios_content_mode: center
+  web: false

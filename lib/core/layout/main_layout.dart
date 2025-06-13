@@ -1,105 +1,102 @@
-
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../constants.dart';
 
 class MainLayout extends StatelessWidget {
-final String userName;
-final bool isDarkMode;
-final VoidCallback toggleDarkMode;
-final int currentIndex;
-final Function(int) onNavTap;
-final Widget child;
+  final int currentIndex;
+  final Function(int) onTabChanged;
+  final Widget body;
 
-const MainLayout({
-super.key,
-required this.userName,
-required this.isDarkMode,
-required this.toggleDarkMode,
-required this.currentIndex,
-required this.onNavTap,
-required this.child,
-});
+  const MainLayout({
+    super.key,
+    required this.currentIndex,
+    required this.onTabChanged,
+    required this.body,
+  });
 
-@override
-Widget build(BuildContext context) {
-return Scaffold(
-extendBody: true,
-appBar: AppBar(
-backgroundColor: AppColors.primaryColor,
-elevation: 0,
-automaticallyImplyLeading: false,
-actions: [
-GestureDetector(
-onTap: () => onNavTap(3), // ProfilePage at index 3
-child: Padding(
-padding: const EdgeInsets.only(right: 16),
-child: CircleAvatar(
-radius: 24, // Increased size
-backgroundColor: AppColors.accentLightColor,
-child: Icon(
-Icons.person,
-color: AppColors.textColor,
-size: 30, // Larger icon
-),
-),
-),
-),
-],
-),
-body: child,
-bottomNavigationBar: Container(
-margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-padding: const EdgeInsets.symmetric(horizontal: 8),
-height: 70,
-decoration: BoxDecoration(
-color: AppColors.whiteColor,
-borderRadius: BorderRadius.circular(30),
-boxShadow: [
-BoxShadow(
-color: Colors.black.withOpacity(0.2),
-blurRadius: 10,
-offset: const Offset(0, 4),
-),
-],
-),
-child: Row(
-mainAxisAlignment: MainAxisAlignment.spaceAround,
-children: [
-_buildNavItem(Icons.home_outlined, 'Accueil', 0),
-_buildNavItem(Icons.event_note_outlined, 'Réservation', 1),
-_buildNavItem(Icons.subscriptions, 'Abonnement', 2),
-_buildNavItem(Icons.notifications, 'Notification', 3),
-],
-),
-),
-);
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.backgroundColor,
+      body: body,
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BottomNavigationBar(
+            currentIndex: currentIndex,
+            onTap: onTabChanged,
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: AppColors.whiteColor,
+            selectedItemColor: AppColors.primaryColor,
+            unselectedItemColor: AppColors.subtitleColor,
+            elevation: 0,
+            selectedLabelStyle: GoogleFonts.poppins(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: GoogleFonts.poppins(
+              fontSize: 10,
+              fontWeight: FontWeight.normal,
+            ),
+            items: [
+              BottomNavigationBarItem(
+                icon: _buildNavIcon(Icons.home_outlined, 0),
+                activeIcon: _buildNavIcon(Icons.home, 0),
+                label: 'Accueil',
+              ),
+              BottomNavigationBarItem(
+                icon: _buildNavIcon(Icons.local_parking_outlined, 1),
+                activeIcon: _buildNavIcon(Icons.local_parking, 1),
+                label: 'Réserver',
+              ),
+              BottomNavigationBarItem(
+                icon: _buildNavIcon(Icons.subscriptions_outlined, 2),
+                activeIcon: _buildNavIcon(Icons.subscriptions, 2),
+                label: 'Abonnement',
+              ),
+              BottomNavigationBarItem(
+                icon: _buildNavIcon(Icons.notifications_outlined, 3),
+                activeIcon: _buildNavIcon(Icons.notifications, 3),
+                label: 'Notifications',
+              ),
+              BottomNavigationBarItem(
+                icon: _buildNavIcon(Icons.person_outline, 4),
+                activeIcon: _buildNavIcon(Icons.person, 4),
+                label: 'Profil',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavIcon(IconData icon, int index) {
+    final isSelected = currentIndex == index;
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.primaryColor.withOpacity(0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(
+        icon,
+        size: 24,
+        color: isSelected ? AppColors.primaryColor : AppColors.subtitleColor,
+      ),
+    );
+  }
 }
 
-Widget _buildNavItem(IconData icon, String label, int index) {
-return GestureDetector(
-onTap: () => onNavTap(index),
-child: Column(
-mainAxisSize: MainAxisSize.min,
-children: [
-Icon(
-icon,
-size: 26,
-color: currentIndex == index
-? AppColors.secondaryColor
-    : AppColors.subtitleColor,
-),
-const SizedBox(height: 4),
-Text(
-label,
-style: TextStyle(
-fontSize: 12,
-color: currentIndex == index
-? AppColors.secondaryColor
-    : AppColors.subtitleColor,
-),
-),
-],
-),
-);
-}
-}

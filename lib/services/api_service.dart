@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+import 'logging_service.dart';
+
 // API Service Classes
 class ApiService {
   // Base URL as a static constant that could be configured from environment
@@ -120,25 +122,24 @@ class ParkingService {
   }
 }
 class ReservationService {
-  static Future<ReservationResponse?> createReservation(
+  static Future<http.Response> createReservation(
       ReservationRequest request,
       String? token,
       ) async {
     try {
+      LoggingService.httpRequest('POST', '${ApiService.baseUrl}${ApiService.apiPrefix}/createReservation', body: request.toJson());
       final response = await http.post(
-        Uri.parse('${ApiService.baseUrl}${ApiService.apiPrefix}/reservations'),
+        Uri.parse('${ApiService.baseUrl}${ApiService.apiPrefix}/createReservation'),
         headers: ApiService.getHeaders(token ?? ''),
         body: json.encode(request.toJson()),
-      );
+      ).timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = json.decode(response.body);
-        return ReservationResponse.fromJson(data);
-      }
-      return null;
+      LoggingService.httpResponse(response.statusCode, '${ApiService.baseUrl}${ApiService.apiPrefix}/createReservation', body: response.body);
+
+      return response;
     } catch (e) {
-      print('Error creating reservation: $e');
-      return null;
+      LoggingService.reservationError('createReservation', e);
+      rethrow;
     }
   }
 }
@@ -287,6 +288,13 @@ class ReservationRequest {
   });
 
   Map<String, dynamic> toJson() {
+    if (!RegExp(r'^[A-Z0-9\s\u0600-\u06FF]{3,15}$').hasMatch(matricule)) {
+      throw Exception('Invalid matricule format');
+    }
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(email)) {
+      throw Exception('Invalid email format');
+    }
+
     return {
       'userId': userId,
       'parkingPlaceId': parkingPlaceId,
@@ -324,7 +332,6 @@ class ReservationResponse {
     );
   }
 }
-
 class PaymentRequest {
   final int reservationId;
   final double amount;
@@ -404,3 +411,4 @@ extension StringExtension on String {
     return pad * (length - this.length) + this;
   }
 }
+

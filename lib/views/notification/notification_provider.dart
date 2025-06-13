@@ -5,7 +5,7 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:smart_parking/models/notification.dart';
 
-class NotificationProvider with material.ChangeNotifier {
+class NotificationProviderImproved with material.ChangeNotifier {
   List<ParkingNotification> _notifications = [];
   bool _isConnected = false;
   WebSocketChannel? _channel;
@@ -36,27 +36,45 @@ class NotificationProvider with material.ChangeNotifier {
     try {
       _channel = WebSocketChannel.connect(
         Uri.parse('ws://10.0.2.2:8082/parking/ws'),
+        protocols: ['v10.stomp', 'v11.stomp'],
       );
+
+      _isConnected = true;
+      notifyListeners();
 
       // Send STOMP CONNECT frame with JWT
       _channel!.sink.add(
-        'CONNECT\naccept-version:1.1,1.0\nAuthorization:Bearer $_token\n\n\x00',
-      );
-
-      // Subscribe to user-specific notifications
-      _channel!.sink.add(
-        'SUBSCRIBE\nid:sub-0\ndestination:/user/$_userId/topic/notifications\n\n\x00',
+        'CONNECT\naccept-version:1.1,1.0\nhost:10.0.2.2:8082\nAuthorization:Bearer $_token\n\n\x00',
       );
 
       _channel!.stream.listen(
             (message) {
-          if (message.contains('MESSAGE')) {
-            final body = message.split('\n\n')[1].trim();
-            final data = jsonDecode(body);
-            final notification = ParkingNotification.fromJson(data);
-            _notifications.insert(0, notification);
-            _isConnected = true;
-            notifyListeners();
+          print('WebSocket message received: $message');
+
+          if (message.contains('CONNECTED')) {
+            print('WebSocket connected successfully');
+            // Subscribe to user-specific notifications after connection
+            _channel!.sink.add(
+              'SUBSCRIBE\nid:sub-0\ndestination:/user/$_userId/topic/notifications\n\n\x00',
+            );
+          } else if (message.contains('MESSAGE')) {
+            try {
+              final lines = message.split('\n');
+              final bodyIndex = lines.indexWhere((line) => line.isEmpty);
+              if (bodyIndex != -1 && bodyIndex + 1 < lines.length) {
+                final body = lines.sublist(bodyIndex + 1).join('\n').trim();
+                if (body.isNotEmpty && body != '\x00') {
+                  final cleanBody = body.replaceAll('\x00', '');
+                  final data = jsonDecode(cleanBody);
+                  final notification = ParkingNotification.fromJson(data);
+                  _notifications.insert(0, notification);
+                  notifyListeners();
+                  print('Notification added: ${notification.message}');
+                }
+              }
+            } catch (e) {
+              print('Error parsing notification: $e');
+            }
           }
         },
         onError: (error) {
@@ -87,7 +105,7 @@ class NotificationProvider with material.ChangeNotifier {
 
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:8082/parking/api/notifications'),
+        Uri.parse('http://10.0.2.2:8082/parking/api/notifications/my'),
         headers: {'Authorization': 'Bearer $_token'},
       );
 
@@ -108,7 +126,7 @@ class NotificationProvider with material.ChangeNotifier {
 
     try {
       final response = await http.post(
-        Uri.parse('http://10.0.2.2:8082/parking/api/notifications/$id/read'),
+        Uri.parse('http://10.0.2.2:8082/parking/api/notifications/my/$id/read'),
         headers: {'Authorization': 'Bearer $_token'},
       );
 
